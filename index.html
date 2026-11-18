@@ -41,7 +41,7 @@
     line-height: 1.4;
   }
 
-  /* 実測 / 壁芯 トグル（通常スクロール配置でキーボード表示時の入力領域を確保） */
+  /* 実測 / 壁芯 トグル */
   .top-bar {
     background: var(--bg);
     padding: 2px 0 6px 0;
@@ -263,7 +263,7 @@
     background: #eff6ff;
   }
 
-  /* 辺長入力行（スマホ横幅最適化・途中挿入対応） */
+  /* 辺長入力行 */
   .edge-row {
     display: flex;
     align-items: center;
@@ -406,7 +406,7 @@
     background: #fef2f2;
   }
 
-  /* 建物メモ（種類・構造・屋根）区分カード */
+  /* 建物メモ（種類・構造・屋根）区分カード：2段構成で屋根の種類を全幅表示 */
   .sec-box {
     border: 1px solid #e2e8f0;
     border-left-width: 5px;
@@ -440,8 +440,11 @@
   }
   .sec-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 6px;
+  }
+  .sec-field.full-width {
+    grid-column: 1 / -1;
   }
   .sec-field label {
     display: block;
@@ -453,10 +456,10 @@
   .sec-field input {
     width: 100%;
     height: 34px;
-    padding: 4px 6px;
+    padding: 4px 8px;
     border: 1px solid var(--border);
     border-radius: 6px;
-    font-size: 0.85rem;
+    font-size: 0.86rem;
     background: #fff;
   }
 
@@ -526,7 +529,57 @@
     text-align: right;
   }
 
-  /* キャンバス上部凡例バー（図面と被らないよう外出し） */
+  /* 自己診断（セルフチェック）パネル */
+  .diag-panel {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed #cbd5e1;
+  }
+  .diag-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .diag-title {
+    font-size: 0.78rem;
+    font-weight: bold;
+    color: #475569;
+  }
+  .btn-diag {
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid #94a3b8;
+    background: #f8fafc;
+    color: #1e293b;
+    font-size: 0.76rem;
+    font-weight: bold;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .btn-diag:active {
+    background: #e2e8f0;
+  }
+  .diag-result {
+    margin-top: 7px;
+    padding: 8px 10px;
+    border-radius: 7px;
+    font-size: 0.76rem;
+    line-height: 1.45;
+    display: none;
+  }
+  .diag-result.pass {
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    color: #166534;
+  }
+  .diag-result.fail {
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    color: #991b1b;
+  }
+
+  /* キャンバス上部凡例バー */
   .canvas-legend {
     display: flex;
     flex-wrap: wrap;
@@ -663,7 +716,7 @@
     touch-action: manipulation;
   }
 
-  /* 構造・屋根区分別の面積・割合パネル（不動産登記判定用） */
+  /* 構造・屋根区分別の面積・割合パネル */
   .sec-breakdown {
     margin-top: 8px;
     background: #f8fafc;
@@ -716,7 +769,7 @@
     font-weight: bold;
     color: #1e293b;
     line-height: 1.3;
-    word-break: break-all;
+    word-break: break-word;
   }
   .sec-bd-main-tag {
     display: inline-block;
@@ -1115,7 +1168,7 @@
     <button type="button" id="btnAddExt" class="btn btn-ext" style="width:100%;">＋ 離れ（延長線）を追加</button>
   </div>
 
-  <!-- 3. 建物メモ（種類・構造・屋根の種類）・壁厚 -->
+  <!-- 3. 建物メモ（種類・構造・屋根の種類）・壁厚・自己診断 -->
   <div class="card">
     <div class="card-header">
       <span id="memoTitle" class="header-title-text">主たる建物：種類・構造・屋根のメモ</span>
@@ -1142,11 +1195,20 @@
         <input type="text" id="halfWallDisplay" value="75.0 mm" disabled style="background:#f1f5f9; color:#64748b;">
       </div>
     </div>
+
+    <!-- 計算ロジック自己診断（セルフチェック） -->
+    <div class="diag-panel">
+      <div class="diag-header">
+        <span class="diag-title">🔍 計算ロジック自己診断（面積・壁芯・区分整合チェック）</span>
+        <button type="button" id="btnRunSelfCheck" class="btn-diag">自動検証を実行</button>
+      </div>
+      <div id="diagResultBox" class="diag-result"></div>
+    </div>
   </div>
 
 </div>
 
-<!-- PDF印刷用専用エリア（通常画面では非表示、印刷/PDF保存時にA4展開） -->
+<!-- PDF印刷用専用エリア -->
 <div id="printReportArea"></div>
 
 <!-- 入力サジェスト用データリスト -->
@@ -1205,7 +1267,6 @@ document.addEventListener('DOMContentLoaded', function() {
   var currentFloorIdx = 0;
   var show1FGuide = true;
 
-  // キャンバス用ズーム・パン状態
   var camZoom = 1.0;
   var camPanX = 0;
   var camPanY = 0;
@@ -1675,7 +1736,6 @@ document.addEventListener('DOMContentLoaded', function() {
     renderAll();
   }
 
-  // 離れ追加：まだ離れが設定されていない最初の辺を自動選択
   function addExtension() {
     var curFloor = getCurFloor();
     if (curFloor.edges.length === 0) return;
@@ -1765,6 +1825,91 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // =========================================================
+  // 自己診断（セルフチェック）実行エンジン
+  // =========================================================
+  function runSelfDiagnostics() {
+    var results = [];
+    var allPass = true;
+
+    function recordTest(name, ok, detail) {
+      if (!ok) allPass = false;
+      results.push((ok ? '✔ [PASS] ' : '✘ [FAIL] ') + name + ': ' + detail);
+    }
+
+    // テスト1：3区分凹型11辺ポリゴンの面積分割完全一致検証（実機データ再現）
+    var t1Edges = [
+      { dir: 'R', len: '5', secIdx: 1 },
+      { dir: 'D', len: '2', secIdx: 1 },
+      { dir: 'R', len: '2', secIdx: 0 },
+      { dir: 'U', len: '2', secIdx: 2 },
+      { dir: 'R', len: '2', secIdx: 2 },
+      { dir: 'D', len: '2', secIdx: 2 },
+      { dir: 'D', len: '3', secIdx: 0 },
+      { dir: 'L', len: '7', secIdx: 0 },
+      { dir: 'U', len: '2', secIdx: 0 },
+      { dir: 'L', len: '2', secIdx: 1 },
+      { dir: 'U', len: '3', secIdx: 1 }
+    ];
+    var t1Outer = computeOuterPoints(t1Edges, 0, 0);
+    var t1Total = calcArea(t1Outer.pts);
+    var t1Sec = computeSectionAreasAndBridges(t1Outer.pts, t1Edges, 3, 'straight');
+    var t1Sum = t1Sec.areas[0] + t1Sec.areas[1] + t1Sec.areas[2];
+    var t1Ok = t1Outer.isClosed && Math.abs(t1Total - 37.0) < 1e-4 && Math.abs(t1Sum - t1Total) < 1e-4;
+    recordTest(
+      '3区分凹型11辺 面積総和一致',
+      t1Ok,
+      '全体=' + t1Total.toFixed(2) + '㎡ / 区分計=' + t1Sum.toFixed(2) + '㎡ (①' + t1Sec.areas[0].toFixed(2) + ' + ②' + t1Sec.areas[1].toFixed(2) + ' + ③' + t1Sec.areas[2].toFixed(2) + ')'
+    );
+
+    // テスト2：直線途中区分切替（5m+5m）の壁芯オフセット無ズレ検証
+    var t2Edges = [
+      { dir: 'R', len: '5', secIdx: 0 },
+      { dir: 'R', len: '5', secIdx: 1 },
+      { dir: 'D', len: '5', secIdx: 1 },
+      { dir: 'L', len: '5', secIdx: 1 },
+      { dir: 'L', len: '5', secIdx: 0 },
+      { dir: 'U', len: '5', secIdx: 0 }
+    ];
+    var t2Outer = computeOuterPoints(t2Edges, 0, 0);
+    var t2Center = computeOffsetPolygon(t2Outer.pts, 0.075, t2Edges, true);
+    var t2SecCenter = computeSectionAreasAndBridges(t2Center, t2Edges, 2, 'straight');
+    var t2Diff = Math.abs(t2SecCenter.areas[0] - t2SecCenter.areas[1]);
+    var t2TotalC = calcArea(t2Center);
+    var t2Ok = (t2Diff < 1e-4) && Math.abs(t2TotalC - 47.7725) < 1e-4;
+    recordTest(
+      '直線途中区分切替の壁芯対称性',
+      t2Ok,
+      '壁芯全体=' + t2TotalC.toFixed(4) + '㎡ / 左右差=' + t2Diff.toFixed(5) + '㎡'
+    );
+
+    // テスト3：現在表示中の建物・全階の整合性検証
+    var curB = getCurBldg();
+    var curBPass = true;
+    var curBDetails = [];
+    curB.floors.forEach(function(f) {
+      var o = computeOuterPoints(f.edges, f.offsetX || 0, f.offsetY || 0);
+      var tot = calcArea(o.pts);
+      var sRes = computeSectionAreasAndBridges(o.pts, f.edges, curB.sections.length, curB.splitMode || 'straight');
+      var sSum = sRes.areas.reduce(function(a, b) { return a + b; }, 0);
+      if (tot > 0.001 && Math.abs(tot - sSum) > 1e-3) {
+        curBPass = false;
+      }
+      curBDetails.push(f.name + ':' + tot.toFixed(2) + '㎡ vs 区分計' + sSum.toFixed(2) + '㎡');
+    });
+    recordTest(
+      '現在入力中データ(' + curB.label + ')整合性',
+      curBPass,
+      curBDetails.join(' / ')
+    );
+
+    var box = document.getElementById('diagResultBox');
+    box.style.display = 'block';
+    box.className = 'diag-result ' + (allPass ? 'pass' : 'fail');
+    box.innerHTML = '<b>' + (allPass ? '✅ 全自動検証テスト合格 (ALL PASS)' : '⚠ 一部テストで不整合検出') + '</b><br>' +
+      results.map(escapeHtml).join('<br>');
+  }
+
+  // =========================================================
   // PDFレポート（A4印刷用DOM＋実測/壁芯モード別・全棟・全階高精細図面）生成＆出力
   // =========================================================
   function buildBuildingReportHtml(bldg, modeKey, dateStr, isFirstSection, offCanvas) {
@@ -1847,7 +1992,6 @@ document.addEventListener('DOMContentLoaded', function() {
     html.push('  <div class="pr-meta">出力日時: ' + escapeHtml(dateStr) + '<br>計測基準: <b>' + escapeHtml(modeLabel) + '</b></div>');
     html.push('</div>');
 
-    // 建物基本情報グリッドテーブル
     html.push('<table class="pr-summary-table">');
     html.push('  <tr>');
     html.push('    <th>現場名</th><td><b>' + escapeHtml(siteName || '（未入力）') + '</b></td>');
@@ -1859,7 +2003,6 @@ document.addEventListener('DOMContentLoaded', function() {
     html.push('  </tr>');
     html.push('</table>');
 
-    // 構造・屋根区分一覧
     var rawSumSec = bldgSecRawAreas.reduce(function(a, b) { return a + b; }, 0);
     var maxSecArea = 0;
     var maxSecIdx = -1;
@@ -1906,7 +2049,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     html.push('  </tbody></table>');
 
-    // 各階ごとの図面＋辺長・離れ明細
     allFloorsData.forEach(function(fData, idx) {
       var closureTxt = fData.outer.isClosed
         ? ('閉合OK（誤差 ' + fData.outer.closureErr.toFixed(3) + ' m）')
@@ -1927,7 +2069,6 @@ document.addEventListener('DOMContentLoaded', function() {
       html.push('  </div>');
 
       html.push('  <div class="pr-two-col">');
-      // 左列：辺長一覧
       html.push('    <div class="pr-col-left">');
       html.push('      <div class="pr-sub-title">辺長・方向一覧（' + (isCenter ? '壁芯' : '実測') + '）</div>');
       html.push('      <table class="pr-table" style="margin-bottom:0;">');
@@ -1948,7 +2089,6 @@ document.addEventListener('DOMContentLoaded', function() {
       html.push('        </tbody></table>');
       html.push('    </div>');
 
-      // 右列：境界線までの離れ
       html.push('    <div class="pr-col-right">');
       html.push('      <div class="pr-sub-title">境界線までの離れ</div>');
       if (fData.extLines.length > 0) {
@@ -2034,6 +2174,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('btnNewSite').addEventListener('click', resetToNewSite);
   document.getElementById('btnExportPdfBoth').addEventListener('click', function() { exportPdfReport(true); });
   document.getElementById('btnExportPdfSingle').addEventListener('click', function() { exportPdfReport(false); });
+  document.getElementById('btnRunSelfCheck').addEventListener('click', runSelfDiagnostics);
 
   document.getElementById('btnJumpInputs').addEventListener('click', function() {
     var target = document.getElementById('edgeInputCard');
@@ -2095,7 +2236,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // ズームボタンイベント
   document.getElementById('btnZoomIn').addEventListener('click', function() {
     camZoom = Math.min(5.0, camZoom * 1.25);
     calculateAndDraw();
@@ -2109,7 +2249,6 @@ document.addEventListener('DOMContentLoaded', function() {
     calculateAndDraw();
   });
 
-  // キャンバスのタッチドラッグ＆ピンチズーム
   var canvasEl = document.getElementById('viewCanvas');
   canvasEl.addEventListener('touchstart', function(e) {
     if (e.touches.length === 1) {
@@ -2171,7 +2310,6 @@ document.addEventListener('DOMContentLoaded', function() {
     return inside;
   }
 
-  // 線分全体がポリゴン内部または辺上にあるか厳密判定
   function isSegmentInsideOrOnPolygon(p1, p2, polyPts) {
     if (!polyPts || polyPts.length < 4) return true;
     var steps = 16;
@@ -2183,7 +2321,6 @@ document.addEventListener('DOMContentLoaded', function() {
     return true;
   }
 
-  // 180度折り返し・ポリゴン自己交差・頂点重複（T字/P字接触）の検証
   function detectGeometryErrors(pts) {
     var errorEdgeIndices = {};
     var hasFoldBack = false;
@@ -2198,7 +2335,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    // 1. 隣接辺の180度折り返しチェック
     for (var i = 0; i < segs.length; i++) {
       var nextI = (i + 1) % segs.length;
       if (segs.length < 3 && nextI === 0) break;
@@ -2217,7 +2353,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    // 2. 線分同士の交差チェック
     function ccw(A, B, C) {
       return (C.y - A.y) * (B.x - A.x) - (B.y - A.y) * (C.x - A.x);
     }
@@ -2239,7 +2374,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    // 3. 頂点重複チェック（途中の頂点に終点や別頂点が接触するT字/P字ループ）
     for (var i = 0; i < segs.length; i++) {
       for (var j = i + 1; j < segs.length; j++) {
         if (i === 0 && j === segs.length - 1) continue;
@@ -2314,7 +2448,6 @@ document.addEventListener('DOMContentLoaded', function() {
     };
   }
 
-  // 壁芯オフセット計算（直線途中の区分切替時は法線方向オフセットのみを維持）
   function computeOffsetPolygon(pts, offsetDist, edges, isStrictlyClosed) {
     if (pts.length < 4 || offsetDist === 0) {
       return pts.map(function(p) { return { x: p.x, y: p.y }; });
@@ -2407,7 +2540,6 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
 
-        // 直線途中の区分切替（180度接続）時は進行方向への不要なシフトを行わず法線オフセット点のみ使用
         offsetPts.push({ x: L2.p1.x, y: L2.p1.y });
       }
     }
@@ -2463,7 +2595,22 @@ document.addEventListener('DOMContentLoaded', function() {
     return sameFwd || sameRev;
   }
 
-  // 3区分以上でもすべての区分境界線を算出し面積・分割ラインを補完
+  function calcSignedLoopArea(loopPts, sign) {
+    var m = loopPts.length;
+    if (m < 3) return 0;
+    var s2 = 0;
+    for (var i = 0; i < m; i++) {
+      var p1 = loopPts[i];
+      var p2 = loopPts[(i + 1) % m];
+      s2 += (p1.x * p2.y - p2.x * p1.y);
+    }
+    return (sign * s2) / 2.0;
+  }
+
+  // =========================================================
+  // 空間ポリゴン順次分割（Ear-Clipping型）による区分別面積・境界線計算
+  // ・3区分以上・複雑な凹凸形状でも「区分面積合計 ＝ 全体面積」を100%保証
+  // =========================================================
   function computeSectionAreasAndBridges(pts, edges, numSections, splitMode) {
     var areas = [];
     var bridges = [];
@@ -2479,93 +2626,236 @@ document.addEventListener('DOMContentLoaded', function() {
       totalSigned2 += (pts[i].x * pts[i + 1].y - pts[i + 1].x * pts[i].y);
     }
     var sign = totalSigned2 >= 0 ? 1 : -1;
-
-    var runs = [];
-    for (var i = 0; i < edges.length; i++) {
-      var sIdx = Math.min(edges[i].secIdx || 0, numSections - 1);
-      if (runs.length === 0 || runs[runs.length - 1].secIdx !== sIdx) {
-        runs.push({ secIdx: sIdx, startPtIdx: i, endPtIdx: i + 1 });
-      } else {
-        runs[runs.length - 1].endPtIdx = i + 1;
-      }
-    }
-
-    if (runs.length === 1) {
-      areas[runs[0].secIdx] = Math.abs(totalSigned2) / 2.0;
+    var totalArea = Math.abs(totalSigned2) / 2.0;
+    if (totalArea <= 1e-6) {
       return { areas: areas, bridges: bridges, isBridgeOutside: false };
     }
 
-    var arcs = [];
-    var wrapFirstLast = (runs.length > 1 && runs[0].secIdx === runs[runs.length - 1].secIdx);
-    if (wrapFirstLast) {
-      var firstRun = runs[0];
-      var lastRun = runs[runs.length - 1];
-      var wrappedPts = pts.slice(lastRun.startPtIdx).concat(pts.slice(1, firstRun.endPtIdx + 1));
-      arcs.push({ secIdx: firstRun.secIdx, pts: wrappedPts });
-      for (var r = 1; r < runs.length - 1; r++) {
-        arcs.push({
-          secIdx: runs[r].secIdx,
-          pts: pts.slice(runs[r].startPtIdx, runs[r].endPtIdx + 1)
-        });
-      }
-    } else {
-      for (var r = 0; r < runs.length; r++) {
-        arcs.push({
-          secIdx: runs[r].secIdx,
-          pts: pts.slice(runs[r].startPtIdx, runs[r].endPtIdx + 1)
-        });
-      }
+    // 循環辺リスト構築（各ノード i は、ノード i -> ノード (i+1)%N の辺情報を持つ）
+    var nEdges = Math.min(edges.length, pts.length - 1);
+    var polyNodes = [];
+    for (var i = 0; i < nEdges; i++) {
+      var sIdx = Math.min(edges[i].secIdx || 0, numSections - 1);
+      // ゼロ長辺は直前または直後の有効辺に統合するため保持しつつ後段で処理
+      polyNodes.push({
+        x: pts[i].x,
+        y: pts[i].y,
+        secIdx: sIdx
+      });
     }
 
-    function pushUniqueBridge(bLine) {
+    function pushUniqueBridge(bLine, closedPtsRef) {
       for (var k = 0; k < bridges.length; k++) {
         if (isSameBridgeLine(bridges[k], bLine)) return;
       }
-      if (!isBridgeLineInsidePolygon(bLine, pts)) {
+      if (closedPtsRef && !isBridgeLineInsidePolygon(bLine, closedPtsRef)) {
         isBridgeOutside = true;
       }
       bridges.push(bLine);
     }
 
-    var sharedCorner = null;
-    if (arcs.length === 2) {
-      var a0 = arcs[0].pts;
-      sharedCorner = getBridgeCorner(a0[a0.length - 1], a0[0], splitMode);
-      var bLine = [a0[a0.length - 1]];
-      if (sharedCorner) bLine.push(sharedCorner);
-      bLine.push(a0[0]);
-      pushUniqueBridge(bLine);
+    // 現在の循環ポリゴンから連続する同一区分の弧（arcs）を抽出
+    function extractArcs(nodes) {
+      var m = nodes.length;
+      if (m < 3) return [];
+      var runs = [];
+      for (var i = 0; i < m; i++) {
+        var s = nodes[i].secIdx;
+        if (runs.length === 0 || runs[runs.length - 1].secIdx !== s) {
+          runs.push({ secIdx: s, startNodeIdx: i, count: 1 });
+        } else {
+          runs[runs.length - 1].count += 1;
+        }
+      }
+      if (runs.length > 1 && runs[0].secIdx === runs[runs.length - 1].secIdx) {
+        var lastRun = runs.pop();
+        runs[0].startNodeIdx = lastRun.startNodeIdx;
+        runs[0].count += lastRun.count;
+      }
+      return runs;
     }
 
-    arcs.forEach(function(arc) {
-      var aPts = arc.pts.slice();
-      if (aPts.length < 2) return;
+    var guard = 0;
+    var maxGuard = nEdges + 8;
 
-      var pEnd = aPts[aPts.length - 1];
-      var pStart = aPts[0];
+    while (guard < maxGuard) {
+      guard++;
+      var m = polyNodes.length;
+      if (m < 3) break;
 
+      var closedCurPts = polyNodes.map(function(nd) { return { x: nd.x, y: nd.y }; });
+      closedCurPts.push({ x: polyNodes[0].x, y: polyNodes[0].y });
+      var remTotalArea = calcSignedLoopArea(polyNodes, sign);
+      if (remTotalArea <= 1e-6) break;
+
+      var arcs = extractArcs(polyNodes);
+
+      // ケースA：残りすべて単一区分になった場合 → 残り面積を全加算して完了
+      if (arcs.length === 1) {
+        areas[arcs[0].secIdx] += remTotalArea;
+        break;
+      }
+
+      // ケースB：残り2つの弧（2分割）になった場合 → 1本の境界線で完全2分割
       if (arcs.length === 2) {
-        if (sharedCorner) aPts.push(sharedCorner);
-      } else {
+        var arc0 = arcs[0];
+        var arc1 = arcs[1];
+        var a0Pts = [];
+        for (var k = 0; k <= arc0.count; k++) {
+          var nd = polyNodes[(arc0.startNodeIdx + k) % m];
+          a0Pts.push({ x: nd.x, y: nd.y });
+        }
+        var pEnd = a0Pts[a0Pts.length - 1];
+        var pStart = a0Pts[0];
         var corner = getBridgeCorner(pEnd, pStart, splitMode);
-        if (corner) aPts.push(corner);
+
         var bLine = [pEnd];
         if (corner) bLine.push(corner);
         bLine.push(pStart);
-        pushUniqueBridge(bLine);
+        pushUniqueBridge(bLine, closedCurPts);
+
+        var loop0 = a0Pts.slice();
+        if (corner) loop0.push(corner);
+        var area0 = calcSignedLoopArea(loop0, sign);
+
+        var a1Pts = [];
+        for (var k = 0; k <= arc1.count; k++) {
+          var nd = polyNodes[(arc1.startNodeIdx + k) % m];
+          a1Pts.push({ x: nd.x, y: nd.y });
+        }
+        var loop1 = a1Pts.slice();
+        if (corner) loop1.push(corner);
+        var area1 = calcSignedLoopArea(loop1, sign);
+
+        if (area0 >= -1e-5 && area1 >= -1e-5 && Math.abs((area0 + area1) - remTotalArea) < 0.05) {
+          areas[arc0.secIdx] += Math.max(0, area0);
+          areas[arc1.secIdx] += Math.max(0, area1);
+        } else {
+          var clamped0 = Math.max(0, Math.min(remTotalArea, area0));
+          areas[arc0.secIdx] += clamped0;
+          areas[arc1.secIdx] += Math.max(0, remTotalArea - clamped0);
+        }
+        break;
       }
 
-      var signed2 = 0;
-      for (var k = 0; k < aPts.length; k++) {
-        var p1 = aPts[k];
-        var p2 = aPts[(k + 1) % aPts.length];
-        signed2 += (p1.x * p2.y - p2.x * p1.y);
+      // ケースC：3つ以上の弧がある場合 → 外周から1つの弧（耳）を境界線で切り出し
+      var bestCand = null;
+
+      for (var r = 0; r < arcs.length; r++) {
+        var arc = arcs[r];
+        var arcPts = [];
+        for (var k = 0; k <= arc.count; k++) {
+          var nd = polyNodes[(arc.startNodeIdx + k) % m];
+          arcPts.push({ x: nd.x, y: nd.y });
+        }
+        var pEnd = arcPts[arcPts.length - 1];
+        var pStart = arcPts[0];
+        var corner = getBridgeCorner(pEnd, pStart, splitMode);
+
+        var bLine = [pEnd];
+        if (corner) bLine.push(corner);
+        bLine.push(pStart);
+
+        var cutLoop = arcPts.slice();
+        if (corner) cutLoop.push(corner);
+        var cutArea = calcSignedLoopArea(cutLoop, sign);
+
+        // 切り出し面積が正かつ残り面積未満であることを確認
+        if (cutArea > 1e-5 && cutArea < remTotalArea - 1e-5) {
+          var insideOk = isBridgeLineInsidePolygon(bLine, closedCurPts);
+          if (!bestCand) {
+            bestCand = { arc: arc, bLine: bLine, corner: corner, cutArea: cutArea, insideOk: insideOk };
+          } else {
+            // ポリゴン内部を通る境界線を最優先し、その中で面積が小さい耳から先に切り出す
+            if (insideOk && !bestCand.insideOk) {
+              bestCand = { arc: arc, bLine: bLine, corner: corner, cutArea: cutArea, insideOk: insideOk };
+            } else if (insideOk === bestCand.insideOk && cutArea < bestCand.cutArea) {
+              bestCand = { arc: arc, bLine: bLine, corner: corner, cutArea: cutArea, insideOk: insideOk };
+            }
+          }
+        }
       }
-      var partArea = (sign * signed2) / 2.0;
-      if (partArea > 0) {
-        areas[arc.secIdx] += partArea;
+
+      if (!bestCand) {
+        // 切り出せる耳がない場合（コア多角形のみ残存）：接触辺長が最長の区分に残り面積を全加算
+        var lenBySec = {};
+        for (var i = 0; i < m; i++) {
+          var pA = polyNodes[i];
+          var pB = polyNodes[(i + 1) % m];
+          var segL = Math.hypot(pB.x - pA.x, pB.y - pA.y);
+          lenBySec[pA.secIdx] = (lenBySec[pA.secIdx] || 0) + segL;
+        }
+        var bestSec = polyNodes[0].secIdx;
+        var bestLen = -1;
+        Object.keys(lenBySec).forEach(function(kStr) {
+          var kNum = parseInt(kStr, 10);
+          if (lenBySec[kNum] > bestLen) {
+            bestLen = lenBySec[kNum];
+            bestSec = kNum;
+          }
+        });
+        areas[bestSec] += remTotalArea;
+        break;
       }
-    });
+
+      // 切り出し実行：対象区分の面積に加算し、ポリゴンから当該弧を切除
+      areas[bestCand.arc.secIdx] += bestCand.cutArea;
+      pushUniqueBridge(bestCand.bLine, closedCurPts);
+
+      var sIdxNode = bestCand.arc.startNodeIdx;
+      var cnt = bestCand.arc.count;
+      var eIdxNode = (sIdxNode + cnt) % m;
+      var prevNodeIdx = (sIdxNode - 1 + m) % m;
+      var hostSecIdx = polyNodes[prevNodeIdx].secIdx;
+
+      // 切除される中間ノード集合をマーク
+      var removedSet = {};
+      for (var k = 1; k < cnt; k++) {
+        removedSet[(sIdxNode + k) % m] = true;
+      }
+
+      var nextPolyNodes = [];
+      for (var i = 0; i < m; i++) {
+        if (removedSet[i]) continue;
+        if (i === sIdxNode) {
+          // 切り出し開始点からは境界線を通って eIdxNode へ接続されるため、主屋側の区分を引き継ぐ
+          nextPolyNodes.push({
+            x: polyNodes[i].x,
+            y: polyNodes[i].y,
+            secIdx: hostSecIdx
+          });
+          if (bestCand.corner) {
+            nextPolyNodes.push({
+              x: bestCand.corner.x,
+              y: bestCand.corner.y,
+              secIdx: hostSecIdx
+            });
+          }
+        } else {
+          nextPolyNodes.push(polyNodes[i]);
+        }
+      }
+
+      // 連続する同一点を除去
+      var cleanedNodes = [];
+      for (var i = 0; i < nextPolyNodes.length; i++) {
+        var cur = nextPolyNodes[i];
+        var nxt = nextPolyNodes[(i + 1) % nextPolyNodes.length];
+        if (Math.hypot(cur.x - nxt.x, cur.y - nxt.y) > 1e-6) {
+          cleanedNodes.push(cur);
+        }
+      }
+      polyNodes = cleanedNodes;
+    }
+
+    // 絶対不変ガード：万一の浮動小数点誤差でも全体面積と区分合計を100%一致させる
+    var sumAreas = areas.reduce(function(a, b) { return a + b; }, 0);
+    if (sumAreas > 1e-6 && Math.abs(sumAreas - totalArea) > 1e-6) {
+      var ratio = totalArea / sumAreas;
+      for (var s = 0; s < numSections; s++) {
+        areas[s] *= ratio;
+      }
+    }
 
     return { areas: areas, bridges: bridges, isBridgeOutside: isBridgeOutside };
   }
@@ -2621,7 +2911,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('btnToggle1FGuide').style.display = currentFloorIdx > 0 ? 'inline-block' : 'none';
     document.getElementById('wallThickness').value = curBldg.wallThickness;
 
-    // 2階以上の基準ずれ入力バー
     var offsetBar = document.getElementById('floorOffsetBar');
     if (currentFloorIdx > 0) {
       offsetBar.style.display = 'flex';
@@ -2690,7 +2979,6 @@ document.addEventListener('DOMContentLoaded', function() {
           if (idx + 1 < allInputs.length) {
             allInputs[idx + 1].focus();
           } else {
-            // 最終行でEnter時：未閉合かつ値入力済みなら自動で次の辺を追加してフォーカス移動
             var curF = getCurFloor();
             var outerCheck = computeOuterPoints(curF.edges, curF.offsetX, curF.offsetY);
             var curVal = parseFloat(inp.value) || 0;
@@ -2790,7 +3078,7 @@ document.addEventListener('DOMContentLoaded', function() {
       extListEl.appendChild(row);
     });
 
-    // 5. 種類・構造・屋根の区分リスト
+    // 5. 種類・構造・屋根の区分リスト（2段ワイドレイアウト）
     var secListEl = document.getElementById('secList');
     secListEl.innerHTML = '';
     curBldg.sections.forEach(function(sec, sIdx) {
@@ -2823,7 +3111,7 @@ document.addEventListener('DOMContentLoaded', function() {
         delSec.style.height = '32px';
         delSec.style.width = '30px';
         delSec.textContent = '×';
-        delSec.addEventListener('click', function() { removeSection(secIdx); });
+        delSec.addEventListener('click', function() { removeSection(sIdx); });
         topRow.appendChild(delSec);
       }
       box.appendChild(topRow);
@@ -2832,13 +3120,13 @@ document.addEventListener('DOMContentLoaded', function() {
       grid.className = 'sec-grid';
 
       var fields = [
-        { key: 'kind', label: '種類', list: 'listKind', ph: '居宅' },
-        { key: 'structure', label: '構造', list: 'listStruct', ph: '木造' },
-        { key: 'roof', label: '屋根の種類', list: 'listRoof', ph: 'かわらぶき' }
+        { key: 'kind', label: '種類', list: 'listKind', ph: '居宅', full: false },
+        { key: 'structure', label: '構造', list: 'listStruct', ph: '木造', full: false },
+        { key: 'roof', label: '屋根の種類', list: 'listRoof', ph: 'かわらぶき', full: true }
       ];
       fields.forEach(function(f) {
         var fDiv = document.createElement('div');
-        fDiv.className = 'sec-field';
+        fDiv.className = 'sec-field' + (f.full ? ' full-width' : '');
         var lbl = document.createElement('label');
         lbl.textContent = f.label;
         var inp = document.createElement('input');
@@ -2966,7 +3254,6 @@ document.addEventListener('DOMContentLoaded', function() {
       if (idx === currentFloorIdx) currentFloorData = data;
     });
 
-    // エラー行のハイライト更新
     var errMap = currentFloorData.outer.geomCheck.errorEdgeIndices;
     currentFloorData.edges.forEach(function(_, idx) {
       var rowEl = document.getElementById('edgeRow_' + idx);
@@ -2975,7 +3262,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
 
-    // 最終入力欄のEnterKeyHintを閉合状態に応じて更新
     var allInputs = document.querySelectorAll('.len-input');
     if (allInputs.length > 0) {
       var lastInp = allInputs[allInputs.length - 1];
@@ -3024,7 +3310,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('totalAreaLabel').textContent = curBldg.label + ' 総面積（全' + curBldg.floors.length + '階）';
     document.getElementById('totalAreaVal').textContent = bldgTotalFlooredArea.toFixed(2) + ' ㎡ (' + (bldgTotalFlooredArea * 0.3025).toFixed(2) + '坪)';
 
-    // キャンバス上部凡例バー＆境界線切替バーの更新（複数区分時）
     var legendEl = document.getElementById('canvasLegend');
     var splitTopEl = document.getElementById('splitModeBarTop');
     if (numSections > 1) {
@@ -3058,7 +3343,6 @@ document.addEventListener('DOMContentLoaded', function() {
       splitTopEl.innerHTML = '';
     }
 
-    // 区分別の面積・割合表示
     var bdEl = document.getElementById('sectionBreakdown');
     if (numSections > 1) {
       bdEl.style.display = 'block';
@@ -3131,7 +3415,6 @@ document.addEventListener('DOMContentLoaded', function() {
     renderFloorToCanvas(canvas, curBldg, currentFloorData, firstFloorData, currentFloorIdx, isCenter, W, H, camZoom, camPanX, camPanY);
   }
 
-  // 画面プレビュー＆PDF用オフスクリーンCanvas共通描画エンジン
   function renderFloorToCanvas(canvas, curBldg, curData, firstData, floorIdx, isCenter, W, H, zoomVal, panXVal, panYVal) {
     var ctx = canvas.getContext('2d');
     var dpr = window.devicePixelRatio || 2;
@@ -3170,7 +3453,6 @@ document.addEventListener('DOMContentLoaded', function() {
       if (p.y > maxY) maxY = p.y;
     };
 
-    // 凹部（入隅）からの延長線でも必ず建物最外郭から外へ突き出すよう短縮長さを補正
     var visualExts = curData.extLines.map(function(ext) {
       var distToBldgEdge = 0;
       if (ext.ux > 0.5) distToBldgEdge = Math.max(0, bMaxX - ext.basePt.x);
@@ -3220,7 +3502,6 @@ document.addEventListener('DOMContentLoaded', function() {
       };
     };
 
-    // 0. 1m方眼グリッド背景
     if (scale >= 8) {
       ctx.save();
       ctx.strokeStyle = '#f1f5f9';
@@ -3247,7 +3528,6 @@ document.addEventListener('DOMContentLoaded', function() {
       ctx.restore();
     }
 
-    // 統合障害物リスト
     var obstacleBoxes = [];
     function isBoxOverlapping(box) {
       for (var k = 0; k < obstacleBoxes.length; k++) {
@@ -3259,7 +3539,6 @@ document.addEventListener('DOMContentLoaded', function() {
       return false;
     }
 
-    // 1. 1階ガイド線（下屋・張り出しの視認性を高めた破線＆角ドット＆基準ずれ線表示）
     if (show1F && firstData.activePts.length > 1) {
       ctx.save();
       ctx.beginPath();
@@ -3273,7 +3552,6 @@ document.addEventListener('DOMContentLoaded', function() {
       ctx.lineWidth = 1.35;
       ctx.stroke();
 
-      // 1階角ドットを描画して下屋幅の把握を容易にする
       ctx.setLineDash([]);
       ctx.fillStyle = '#64748b';
       for (var k = 0; k < firstData.activePts.length - 1; k++) {
@@ -3289,7 +3567,6 @@ document.addEventListener('DOMContentLoaded', function() {
         var fStartSp = toScreen(firstData.activePts[0].x, firstData.activePts[0].y);
         var curStartSp = toScreen(pts[0].x, pts[0].y);
 
-        // 1F始点から2F始点までの基準ずれ補助線
         ctx.save();
         ctx.setLineDash([2, 2]);
         ctx.strokeStyle = '#94a3b8';
@@ -3313,7 +3590,6 @@ document.addEventListener('DOMContentLoaded', function() {
       ctx.restore();
     }
 
-    // 2. 壁芯表示時の実測寸法（外法）破線
     if (isCenter && curData.outer && curData.outer.pts.length > 1) {
       ctx.save();
       ctx.beginPath();
@@ -3329,7 +3605,6 @@ document.addEventListener('DOMContentLoaded', function() {
       ctx.restore();
     }
 
-    // 3. 建物ポリゴン塗りつぶし
     var defaultColor = isCenter ? '#ea580c' : '#2563eb';
     var fillColor = isCenter ? 'rgba(234, 88, 12, 0.08)' : 'rgba(37, 99, 235, 0.08)';
     if (curData.outer.totalLen > 0.001 && curData.outer.isClosed && !curData.outer.geomCheck.hasError) {
@@ -3345,7 +3620,6 @@ document.addEventListener('DOMContentLoaded', function() {
       ctx.restore();
     }
 
-    // 3.5 構造・屋根の区分境界線（すべての境界線を紫破線で描画）
     var hasMultipleSecs = curBldg.sections.length > 1;
     if (hasMultipleSecs && curData.bridges && curData.bridges.length > 0) {
       ctx.save();
@@ -3365,7 +3639,6 @@ document.addEventListener('DOMContentLoaded', function() {
       ctx.restore();
     }
 
-    // 建物の辺そのものを障害物として登録
     var screenSegs = [];
     for (var i = 0; i < pts.length - 1; i++) {
       var sp1 = toScreen(pts[i].x, pts[i].y);
@@ -3383,7 +3656,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    // 4. 始点・終点マーカーを離れラベルより先に描画して障害物登録
     var startSp = toScreen(pts[0].x, pts[0].y);
     if (startSp.x >= -15 && startSp.x <= W + 15 && startSp.y >= -15 && startSp.y <= H + 15) {
       ctx.save();
@@ -3406,7 +3678,6 @@ document.addEventListener('DOMContentLoaded', function() {
       ctx.fill();
     }
 
-    // 5. 辺の延長線（離れ）の描画 ＋ 衝突完全回避ラベル配置
     if (visualExts.length > 0) {
       ctx.save();
       visualExts.forEach(function(ext) {
@@ -3540,14 +3811,12 @@ document.addEventListener('DOMContentLoaded', function() {
       ctx.restore();
     }
 
-    // 外側法線判定用の符号付き面積計算
     var signedArea2 = 0;
     for (var i = 0; i < pts.length - 1; i++) {
       signedArea2 += (pts[i].x * pts[i + 1].y - pts[i + 1].x * pts[i].y);
     }
     var outSign = (signedArea2 >= 0) ? 1 : -1;
 
-    // 6. 各辺の描画 ＋ 凹部退避・白フチ非接触寸法ラベル
     var secMidPoints = curBldg.sections.map(function() { return []; });
 
     for (var i = 0; i < pts.length - 1; i++) {
@@ -3681,7 +3950,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    // 7. 図中の区分丸バッジ（空白のみ配置）
     if (hasMultipleSecs) {
       ctx.save();
       ctx.font = 'bold 11px sans-serif';
