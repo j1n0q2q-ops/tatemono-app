@@ -174,17 +174,17 @@
     margin-bottom: 10px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.06);
   }
-  /* プレビュー上部固定（ピン留め）状態 */
+  /* プレビュー上部固定（ピン留め）状態：下部入力欄の視認スペースを最大確保 */
   .card.pinned-preview {
     position: sticky;
     top: 48px;
     z-index: 100;
     border: 2px solid #93c5fd;
     box-shadow: 0 6px 16px rgba(15, 23, 42, 0.16);
-    padding: 7px 9px;
+    padding: 6px 8px;
   }
   .card.pinned-preview canvas {
-    height: 205px;
+    height: 175px;
   }
   .card.pinned-preview .status-grid,
   .card.pinned-preview .sec-breakdown,
@@ -192,9 +192,14 @@
     display: none !important;
   }
   .card.pinned-preview .closure-banner {
-    margin-top: 5px;
-    padding: 4px 8px;
-    font-size: 0.78rem;
+    margin-top: 4px;
+    padding: 4px 7px;
+    font-size: 0.74rem;
+    flex-wrap: nowrap;
+  }
+  .card.pinned-preview .btn-auto-close {
+    padding: 3px 7px;
+    font-size: 0.71rem;
   }
 
   .card-header {
@@ -216,11 +221,11 @@
   .header-right-group {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
     flex-shrink: 0;
   }
   .mode-badge-txt {
-    font-size: 0.73rem;
+    font-size: 0.72rem;
     white-space: nowrap;
   }
   .card-sub-note {
@@ -231,12 +236,12 @@
   }
 
   .pin-btn {
-    padding: 3px 7px;
+    padding: 3px 6px;
     border-radius: 6px;
     border: 1px solid #cbd5e1;
     background: #f8fafc;
     color: #334155;
-    font-size: 0.73rem;
+    font-size: 0.72rem;
     font-weight: bold;
     cursor: pointer;
     white-space: nowrap;
@@ -246,6 +251,46 @@
     background: #dbeafe;
     color: #1d4ed8;
     border-color: #60a5fa;
+  }
+
+  /* 2階以上の基準位置オフセット（1階始点からのずれ）バー */
+  .floor-offset-bar {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    padding: 5px 8px;
+    margin-bottom: 8px;
+    font-size: 0.75rem;
+    color: #334155;
+    flex-wrap: wrap;
+  }
+  .floor-offset-label {
+    font-weight: bold;
+    white-space: nowrap;
+  }
+  .offset-pair {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .offset-inp {
+    width: 64px;
+    height: 28px;
+    padding: 2px 5px;
+    border: 1px solid #94a3b8;
+    border-radius: 5px;
+    font-size: 0.84rem;
+    font-weight: bold;
+    text-align: right;
+    background: #ffffff;
+  }
+  .offset-inp:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: #eff6ff;
   }
 
   /* 辺長入力行（スマホ横幅最適化・途中挿入対応） */
@@ -510,14 +555,6 @@
     font-size: 0.95rem;
     text-align: right;
   }
-  .checkbox-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.82rem;
-    color: var(--muted);
-    margin-top: 8px;
-  }
 
   /* キャンバス上部凡例バー（図面と被らないよう外出し） */
   .canvas-legend {
@@ -633,7 +670,7 @@
     padding: 8px 10px;
     border-radius: 6px;
     font-weight: bold;
-    font-size: 0.85rem;
+    font-size: 0.83rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -649,7 +686,7 @@
     border: none;
     border-radius: 5px;
     padding: 5px 9px;
-    font-size: 0.78rem;
+    font-size: 0.76rem;
     font-weight: bold;
     cursor: pointer;
     white-space: nowrap;
@@ -812,6 +849,14 @@
         <button type="button" id="btnDeleteBldg" class="del-btn" style="width:auto; height:28px; padding:0 8px; font-size:0.75rem; display:none;">附属削除</button>
       </div>
     </div>
+
+    <!-- 2階以上の基準位置オフセット（1階始点からのずれ） -->
+    <div id="floorOffsetBar" class="floor-offset-bar" style="display:none;">
+      <span class="floor-offset-label">1階始点からのずれ:</span>
+      <span class="offset-pair">X(→) <input type="number" inputmode="decimal" step="0.001" id="inpFloorOffsetX" class="offset-inp" value="0"></span>
+      <span class="offset-pair">Y(↓) <input type="number" inputmode="decimal" step="0.001" id="inpFloorOffsetY" class="offset-inp" value="0"> m</span>
+    </div>
+
     <div id="secHint" style="font-size:0.75rem; color:#475569; margin-bottom:6px; display:none;">
       ※ <b>① / ②</b> で区分切替、右の <b>＋</b> で直下に辺を途中挿入できます。
     </div>
@@ -868,6 +913,7 @@
         <span id="previewTitle" class="header-title-text">主たる建物 1階</span>
         <div class="header-right-group">
           <span id="modeBadge" class="mode-badge-txt" style="color: var(--primary);">● 実測</span>
+          <button type="button" id="btnToggle1FGuide" class="pin-btn active" style="display:none;">1F重ね</button>
           <button type="button" id="btnPinPreview" class="pin-btn">📌 上部固定</button>
         </div>
       </div>
@@ -885,11 +931,6 @@
           <button type="button" id="btnZoomReset" class="zoom-btn">全体</button>
           <button type="button" id="btnZoomIn" class="zoom-btn">＋</button>
         </div>
-      </div>
-
-      <div id="overlayOption" class="checkbox-row" style="display:none;">
-        <input type="checkbox" id="showFirstFloor" checked>
-        <label for="showFirstFloor">1階の外周線をガイド表示する</label>
       </div>
 
       <div id="closureBanner" class="closure-banner closure-empty">
@@ -975,6 +1016,7 @@ document.addEventListener('DOMContentLoaded', function() {
   var currentBldgIdx = 0;
   var currentFloorIdx = 0;
   var isPreviewPinned = false;
+  var show1FGuide = true;
 
   // キャンバス用ズーム・パン状態
   var camZoom = 1.0;
@@ -1020,6 +1062,8 @@ document.addEventListener('DOMContentLoaded', function() {
       floors: [
         {
           name: '1階',
+          offsetX: 0,
+          offsetY: 0,
           edges: [
             { dir: 'R', len: '', secIdx: 0 },
             { dir: 'D', len: '', secIdx: 0 },
@@ -1035,6 +1079,21 @@ document.addEventListener('DOMContentLoaded', function() {
   var buildings = [
     createBuildingData('主たる建物', '居宅')
   ];
+
+  function normalizeFloorsData() {
+    buildings.forEach(function(b) {
+      if (!b.splitMode) b.splitMode = 'straight';
+      b.floors.forEach(function(f, fIdx) {
+        if (fIdx === 0) {
+          f.offsetX = 0;
+          f.offsetY = 0;
+        } else {
+          if (typeof f.offsetX !== 'number' || !isFinite(f.offsetX)) f.offsetX = 0;
+          if (typeof f.offsetY !== 'number' || !isFinite(f.offsetY)) f.offsetY = 0;
+        }
+      });
+    });
+  }
 
   function saveToLocalStorage() {
     try {
@@ -1056,9 +1115,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (data && Array.isArray(data.buildings) && data.buildings.length > 0) {
         siteName = data.siteName || '';
         buildings = data.buildings;
-        buildings.forEach(function(b) {
-          if (!b.splitMode) b.splitMode = 'straight';
-        });
+        normalizeFloorsData();
         currentBldgIdx = Math.min(data.currentBldgIdx || 0, buildings.length - 1);
         currentFloorIdx = Math.min(data.currentFloorIdx || 0, buildings[currentBldgIdx].floors.length - 1);
       }
@@ -1121,9 +1178,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         siteName = data.siteName || file.name.replace(/\.json$/i, '');
         buildings = data.buildings;
-        buildings.forEach(function(b) {
-          if (!b.splitMode) b.splitMode = 'straight';
-        });
+        normalizeFloorsData();
         currentBldgIdx = 0;
         currentFloorIdx = 0;
         resetCamera();
@@ -1175,7 +1230,7 @@ document.addEventListener('DOMContentLoaded', function() {
       topAnchor.appendChild(card);
       card.classList.add('pinned-preview');
       btn.classList.add('active');
-      btn.textContent = '📌 固定解除';
+      btn.textContent = '📌 解除';
     } else {
       bottomAnchor.appendChild(card);
       card.classList.remove('pinned-preview');
@@ -1242,6 +1297,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var nextNum = bldg.floors.length + 1;
     bldg.floors.push({
       name: nextNum + '階',
+      offsetX: 0,
+      offsetY: 0,
       edges: [
         { dir: 'R', len: '', secIdx: 0 },
         { dir: 'D', len: '', secIdx: 0 },
@@ -1261,7 +1318,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (bldg.floors.length <= 1) return;
     if (!confirm(getCurFloor().name + ' を削除しますか？')) return;
     bldg.floors.splice(currentFloorIdx, 1);
-    bldg.floors.forEach(function(f, i) { f.name = (i + 1) + '階'; });
+    bldg.floors.forEach(function(f, i) {
+      f.name = (i + 1) + '階';
+      if (i === 0) {
+        f.offsetX = 0;
+        f.offsetY = 0;
+      }
+    });
     currentFloorIdx = Math.max(0, currentFloorIdx - 1);
     resetCamera();
     saveToLocalStorage();
@@ -1272,6 +1335,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var bldg = getCurBldg();
     if (currentFloorIdx === 0) return;
     var src = bldg.floors[0];
+    bldg.floors[currentFloorIdx].offsetX = 0;
+    bldg.floors[currentFloorIdx].offsetY = 0;
     bldg.floors[currentFloorIdx].edges = src.edges.map(function(e) {
       return { dir: e.dir, len: e.len, secIdx: e.secIdx || 0 };
     });
@@ -1283,11 +1348,12 @@ document.addEventListener('DOMContentLoaded', function() {
     renderAll();
   }
 
-  function predictNextDirection(edges) {
+  function predictNextDirection(floor) {
+    var edges = floor.edges;
     var order = ['R', 'D', 'L', 'U'];
     if (edges.length === 0) return 'R';
 
-    var outer = computeOuterPoints(edges);
+    var outer = computeOuterPoints(edges, floor.offsetX, floor.offsetY);
     var lastDir = edges[edges.length - 1].dir;
     var lastIdx = order.indexOf(lastDir);
 
@@ -1304,8 +1370,9 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function addEdge() {
-    var edges = getCurFloor().edges;
-    var nextDir = predictNextDirection(edges);
+    var curFloor = getCurFloor();
+    var edges = curFloor.edges;
+    var nextDir = predictNextDirection(curFloor);
     var nextSec = edges.length > 0 ? (edges[edges.length - 1].secIdx || 0) : 0;
     edges.push({ dir: nextDir, len: '', secIdx: nextSec });
     saveToLocalStorage();
@@ -1379,7 +1446,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function autoCloseCurrentFloor() {
     var curFloor = getCurFloor();
-    var outer = computeOuterPoints(curFloor.edges);
+    var outer = computeOuterPoints(curFloor.edges, curFloor.offsetX, curFloor.offsetY);
+    if (outer.geomCheck.hasError) return;
+
     var remMmX = -outer.dxMm;
     var remMmY = -outer.dyMm;
 
@@ -1516,8 +1585,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var bldgSecRaw = [];
     for (var s = 0; s < numSections; s++) bldgSecRaw.push(0);
 
-    curBldg.floors.forEach(function(f) {
-      var outer = computeOuterPoints(f.edges);
+    curBldg.floors.forEach(function(f, fIdx) {
+      var outer = computeOuterPoints(f.edges, f.offsetX, f.offsetY);
       var centerPts = computeOffsetPolygon(outer.pts, halfWallM, f.edges, outer.isClosed);
       var activePts = isCenter ? centerPts : outer.pts;
       var rawA = calcArea(activePts);
@@ -1530,6 +1599,9 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       lines.push('■ ' + f.name + '（閉合誤差: ' + outer.closureErr.toFixed(3) + 'm）');
+      if (fIdx > 0 && ((f.offsetX || 0) !== 0 || (f.offsetY || 0) !== 0)) {
+        lines.push('1階始点からの基準ずれ: X=' + (f.offsetX || 0).toFixed(3) + 'm, Y=' + (f.offsetY || 0).toFixed(3) + 'm');
+      }
       lines.push('床面積: ' + flA.toFixed(2) + ' ㎡（' + (flA * 0.3025).toFixed(2) + '坪 / 切捨前: ' + rawA.toFixed(4) + '㎡）');
 
       var edgeStrs = [];
@@ -1598,6 +1670,29 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('btnPinPreview').addEventListener('click', togglePinPreview);
   document.getElementById('btnCopySummary').addEventListener('click', copySummaryText);
 
+  document.getElementById('btnToggle1FGuide').addEventListener('click', function() {
+    show1FGuide = !show1FGuide;
+    this.classList.toggle('active', show1FGuide);
+    calculateAndDraw();
+  });
+
+  var inpOffX = document.getElementById('inpFloorOffsetX');
+  var inpOffY = document.getElementById('inpFloorOffsetY');
+  selectAllOnFocus(inpOffX);
+  selectAllOnFocus(inpOffY);
+  inpOffX.addEventListener('input', function(e) {
+    if (currentFloorIdx === 0) return;
+    getCurFloor().offsetX = parseFloat(e.target.value) || 0;
+    saveToLocalStorage();
+    calculateAndDraw();
+  });
+  inpOffY.addEventListener('input', function(e) {
+    if (currentFloorIdx === 0) return;
+    getCurFloor().offsetY = parseFloat(e.target.value) || 0;
+    saveToLocalStorage();
+    calculateAndDraw();
+  });
+
   document.getElementById('btnModeOuter').addEventListener('click', function() { setMode('outer'); });
   document.getElementById('btnModeCenter').addEventListener('click', function() { setMode('center'); });
   document.getElementById('btnDeleteFloor').addEventListener('click', deleteCurrentFloor);
@@ -1625,8 +1720,6 @@ document.addEventListener('DOMContentLoaded', function() {
       calculateAndDraw();
     });
   });
-
-  document.getElementById('showFirstFloor').addEventListener('change', renderAll);
 
   // ズームボタンイベント
   document.getElementById('btnZoomIn').addEventListener('click', function() {
@@ -1679,11 +1772,10 @@ document.addEventListener('DOMContentLoaded', function() {
     pinchStartDist = 0;
   }, { passive: true });
 
-  // 点が閉合ポリゴン内部または辺上にあるか判定（L字境界線の建物外はみ出し検知用）
+  // 点が閉合ポリゴン内部または辺上にあるか判定
   function isPointInsideOrOnPolygon(pt, polyPts) {
     if (!polyPts || polyPts.length < 4) return true;
     var n = polyPts.length - 1;
-    // 辺上判定
     for (var i = 0; i < n; i++) {
       var a = polyPts[i], b = polyPts[i + 1];
       var cross = Math.abs((pt.y - a.y) * (b.x - a.x) - (pt.x - a.x) * (b.y - a.y));
@@ -1694,7 +1786,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
     }
-    // Ray casting
     var inside = false;
     for (var i = 0, j = n - 1; i < n; j = i++) {
       var xi = polyPts[i].x, yi = polyPts[i].y;
@@ -1706,11 +1797,12 @@ document.addEventListener('DOMContentLoaded', function() {
     return inside;
   }
 
-  // 180度折り返し＆ポリゴン自己交差の検証
+  // 180度折り返し・ポリゴン自己交差・頂点重複（T字/P字接触）の検証
   function detectGeometryErrors(pts) {
     var errorEdgeIndices = {};
     var hasFoldBack = false;
     var hasCross = false;
+    var hasVertexDup = false;
 
     var segs = [];
     for (var i = 0; i < pts.length - 1; i++) {
@@ -1720,6 +1812,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
+    // 1. 隣接辺の180度折り返しチェック
     for (var i = 0; i < segs.length; i++) {
       var nextI = (i + 1) % segs.length;
       if (segs.length < 3 && nextI === 0) break;
@@ -1738,6 +1831,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
+    // 2. 線分同士の交差チェック
     function ccw(A, B, C) {
       return (C.y - A.y) * (B.x - A.x) - (B.y - A.y) * (C.x - A.x);
     }
@@ -1759,17 +1853,34 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
+    // 3. 頂点重複チェック（途中の頂点に終点や別頂点が接触するT字/P字ループ）
+    for (var i = 0; i < segs.length; i++) {
+      for (var j = i + 1; j < segs.length; j++) {
+        // 最後の辺の終点が最初の辺の始点に閉じる正常閉合は除外
+        if (i === 0 && j === segs.length - 1) continue;
+        if (Math.hypot(segs[i].p1.x - segs[j].p2.x, segs[i].p1.y - segs[j].p2.y) < 0.005) {
+          hasVertexDup = true;
+          errorEdgeIndices[segs[i].idx] = true;
+          errorEdgeIndices[segs[j].idx] = true;
+        }
+      }
+    }
+
     return {
-      hasError: hasFoldBack || hasCross,
+      hasError: hasFoldBack || hasCross || hasVertexDup,
       hasFoldBack: hasFoldBack,
       hasCross: hasCross,
+      hasVertexDup: hasVertexDup,
       errorEdgeIndices: errorEdgeIndices
     };
   }
 
-  function computeOuterPoints(edges) {
-    var xMm = 0, yMm = 0;
-    var pts = [{ x: 0, y: 0 }];
+  function computeOuterPoints(edges, offsetX, offsetY) {
+    var startXMm = Math.round((offsetX || 0) * 1000);
+    var startYMm = Math.round((offsetY || 0) * 1000);
+    var xMm = startXMm;
+    var yMm = startYMm;
+    var pts = [{ x: xMm / 1000, y: yMm / 1000 }];
     var totalLenMm = 0;
 
     edges.forEach(function(e) {
@@ -1782,7 +1893,9 @@ document.addEventListener('DOMContentLoaded', function() {
       totalLenMm += lenMm;
     });
 
-    var closureErrMm = Math.hypot(xMm, yMm);
+    var dxMm = xMm - startXMm;
+    var dyMm = yMm - startYMm;
+    var closureErrMm = Math.hypot(dxMm, dyMm);
     var isClosed = (totalLenMm > 0 && closureErrMm < 5);
 
     if (isClosed && pts.length > 1) {
@@ -1794,10 +1907,10 @@ document.addEventListener('DOMContentLoaded', function() {
     return {
       pts: pts,
       totalLen: totalLenMm / 1000,
-      dx: xMm / 1000,
-      dy: yMm / 1000,
-      dxMm: xMm,
-      dyMm: yMm,
+      dx: dxMm / 1000,
+      dy: dyMm / 1000,
+      dxMm: dxMm,
+      dyMm: dyMm,
       closureErr: closureErrMm / 1000,
       isClosed: isClosed,
       geomCheck: geomCheck
@@ -2107,8 +2220,18 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('btnDeleteFloor').style.display = curBldg.floors.length > 1 ? 'inline-block' : 'none';
     document.getElementById('btnDeleteBldg').style.display = currentBldgIdx > 0 ? 'inline-block' : 'none';
     document.getElementById('btnCopyFloor').style.display = currentFloorIdx > 0 ? 'inline-block' : 'none';
-    document.getElementById('overlayOption').style.display = currentFloorIdx > 0 ? 'flex' : 'none';
+    document.getElementById('btnToggle1FGuide').style.display = currentFloorIdx > 0 ? 'inline-block' : 'none';
     document.getElementById('wallThickness').value = curBldg.wallThickness;
+
+    // 2階以上の基準ずれ入力バー
+    var offsetBar = document.getElementById('floorOffsetBar');
+    if (currentFloorIdx > 0) {
+      offsetBar.style.display = 'flex';
+      document.getElementById('inpFloorOffsetX').value = curFloor.offsetX || 0;
+      document.getElementById('inpFloorOffsetY').value = curFloor.offsetY || 0;
+    } else {
+      offsetBar.style.display = 'none';
+    }
 
     var hasMultipleSecs = curBldg.sections.length > 1;
     document.getElementById('secHint').style.display = hasMultipleSecs ? 'block' : 'none';
@@ -2292,7 +2415,7 @@ document.addEventListener('DOMContentLoaded', function() {
         delSec.style.height = '32px';
         delSec.style.width = '30px';
         delSec.textContent = '×';
-        delSec.addEventListener('click', function() { removeSection(sIdx); });
+        delSec.addEventListener('click', function() { removeSection(secIdx); });
         topRow.appendChild(delSec);
       }
       box.appendChild(topRow);
@@ -2397,7 +2520,9 @@ document.addEventListener('DOMContentLoaded', function() {
     var firstFloorData = null;
 
     curBldg.floors.forEach(function(f, idx) {
-      var outer = computeOuterPoints(f.edges);
+      var offX = (idx === 0) ? 0 : (f.offsetX || 0);
+      var offY = (idx === 0) ? 0 : (f.offsetY || 0);
+      var outer = computeOuterPoints(f.edges, offX, offY);
       var centerPts = computeOffsetPolygon(outer.pts, halfWallM, f.edges, outer.isClosed);
       var activePts = isCenter ? centerPts : outer.pts;
       var rawArea = calcArea(activePts);
@@ -2423,7 +2548,9 @@ document.addEventListener('DOMContentLoaded', function() {
         isBridgeOutside: secRes.isBridgeOutside,
         extLines: extLines,
         name: f.name,
-        edges: f.edges
+        edges: f.edges,
+        offsetX: offX,
+        offsetY: offY
       };
       if (idx === 0) firstFloorData = data;
       if (idx === currentFloorIdx) currentFloorData = data;
@@ -2448,8 +2575,10 @@ document.addEventListener('DOMContentLoaded', function() {
       banner.innerHTML = '<span>辺長未入力</span><span>-</span>';
     } else if (geomCheck.hasError) {
       banner.className = 'closure-banner closure-ng';
-      var reason = geomCheck.hasFoldBack ? '辺が180度折り返し重複しています' : '辺同士が交差（ねじれ）しています';
-      banner.innerHTML = '<span>⚠ 形状エラー: ' + reason + '</span><span>方向を確認</span>';
+      var reason = '辺同士が交差（ねじれ）しています';
+      if (geomCheck.hasFoldBack) reason = '辺が180度折り返し重複しています';
+      else if (geomCheck.hasVertexDup) reason = '頂点が重複（移動辺の混入は「1階始点からのずれ」へ）';
+      banner.innerHTML = '<span>⚠ ' + reason + '</span><span>要修正</span>';
     } else if (currentFloorData.outer.isClosed) {
       banner.className = 'closure-banner closure-ok';
       banner.innerHTML = '<span>✔ 閉合 OK</span><span>誤差: ' + err.toFixed(3) + ' m</span>';
@@ -2608,7 +2737,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (isCenter && curData.outer && curData.outer.pts) {
       curData.outer.pts.forEach(expandBldgBounds);
     }
-    var show1F = (currentFloorIdx > 0 && document.getElementById('showFirstFloor').checked);
+    var show1F = (currentFloorIdx > 0 && show1FGuide);
     if (show1F) firstData.activePts.forEach(expandBldgBounds);
 
     var bldgSpan = Math.max(bMaxX - bMinX, bMaxY - bMinY, 2.0);
@@ -2641,7 +2770,7 @@ document.addEventListener('DOMContentLoaded', function() {
       };
     });
 
-    var pad = isPreviewPinned ? 44 : 58;
+    var pad = isPreviewPinned ? 38 : 58;
     var rangeX = (maxX - minX) || 1;
     var rangeY = (maxY - minY) || 1;
     var baseScale = Math.min((W - pad * 2) / rangeX, (H - pad * 2) / rangeY);
@@ -2684,7 +2813,19 @@ document.addEventListener('DOMContentLoaded', function() {
       ctx.restore();
     }
 
-    // 1. 1階ガイド線
+    // 統合障害物リスト
+    var obstacleBoxes = [];
+    function isBoxOverlapping(box) {
+      for (var k = 0; k < obstacleBoxes.length; k++) {
+        var b = obstacleBoxes[k];
+        if (box.x1 < b.x2 && box.x2 > b.x1 && box.y1 < b.y2 && box.y2 > b.y1) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // 1. 1階ガイド線（視認性を高めた破線＆基準ずれ時は1F-S表示）
     if (show1F && firstData.activePts.length > 1) {
       ctx.save();
       ctx.beginPath();
@@ -2693,10 +2834,25 @@ document.addEventListener('DOMContentLoaded', function() {
         if (i === 0) ctx.moveTo(sp.x, sp.y);
         else ctx.lineTo(sp.x, sp.y);
       });
-      ctx.setLineDash([2, 3]);
-      ctx.strokeStyle = '#94a3b8';
-      ctx.lineWidth = 1.0;
+      ctx.setLineDash([5, 4]);
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 1.25;
       ctx.stroke();
+
+      // 2階始点が1階始点と異なる場合、1階始点に 1F-S を描画
+      if ((curData.offsetX !== 0 || curData.offsetY !== 0) && firstData.activePts[0]) {
+        var fStartSp = toScreen(firstData.activePts[0].x, firstData.activePts[0].y);
+        if (fStartSp.x >= -15 && fStartSp.x <= W + 15 && fStartSp.y >= -15 && fStartSp.y <= H + 15) {
+          ctx.setLineDash([]);
+          ctx.fillStyle = '#64748b';
+          ctx.beginPath();
+          ctx.arc(fStartSp.x, fStartSp.y, 3.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.font = 'bold 9.5px sans-serif';
+          ctx.fillText('1F-S', fStartSp.x - 16, fStartSp.y - 5);
+          obstacleBoxes.push({ x1: fStartSp.x - 18, x2: fStartSp.x + 8, y1: fStartSp.y - 14, y2: fStartSp.y + 5 });
+        }
+      }
       ctx.restore();
     }
 
@@ -2752,19 +2908,7 @@ document.addEventListener('DOMContentLoaded', function() {
       ctx.restore();
     }
 
-    // 統合障害物リスト（離れ・建物線・始点・寸法ラベル・丸バッジの衝突を完全回避）
-    var obstacleBoxes = [];
-    function isBoxOverlapping(box) {
-      for (var k = 0; k < obstacleBoxes.length; k++) {
-        var b = obstacleBoxes[k];
-        if (box.x1 < b.x2 && box.x2 > b.x1 && box.y1 < b.y2 && box.y2 > b.y1) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    // 建物の辺そのものを細い障害物として登録（丸バッジ等が辺を跨がないようにする）
+    // 建物の辺そのものを細い障害物として登録
     var screenSegs = [];
     for (var i = 0; i < pts.length - 1; i++) {
       var sp1 = toScreen(pts[i].x, pts[i].y);
@@ -2916,7 +3060,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     var outSign = (signedArea2 >= 0) ? 1 : -1;
 
-    // 6. 各辺の描画 ＋ 衝突完全回避寸法ラベル（画面外の辺は自然にクリップ）
+    // 6. 各辺の描画 ＋ 衝突完全回避寸法ラベル
     var secMidPoints = curBldg.sections.map(function() { return []; });
 
     for (var i = 0; i < pts.length - 1; i++) {
@@ -2944,7 +3088,6 @@ document.addEventListener('DOMContentLoaded', function() {
         var my = (sp1.y + sp2.y) / 2;
         secMidPoints[sIdx].push({ x: mx, y: my });
 
-        // ズーム等で辺の中点がキャンバス表示域から外れた場合はラベルを描画せず自然に非表示にする
         if (mx < 4 || mx > W - 4 || my < 4 || my > H - 4) {
           continue;
         }
@@ -2985,7 +3128,6 @@ document.addEventListener('DOMContentLoaded', function() {
           var tx = mx + outNx * cand.n + sux * cand.t;
           var ty = my + outNy * cand.n + suy * cand.t;
 
-          // キャンバス枠内に収まる候補のみ採用（枠外押し込みクランプによる端の積み重なりを防止）
           if (tx < tw / 2 + 2 || tx > W - tw / 2 - 2 || ty < 8 || ty > H - 8) {
             continue;
           }
@@ -3005,7 +3147,6 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
 
-        // すべて重複する場合は基本位置（外側13px）を枠内限定でフォールバック表示
         if (chosenX === null) {
           var fbX = mx + outNx * 13;
           var fbY = my + outNy * 13;
@@ -3045,7 +3186,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    // 7. 図中の区分丸バッジ（寸法ラベルや建物線と絶対に重ならない空白位置のみに配置）
+    // 7. 図中の区分丸バッジ（空白のみ配置）
     if (hasMultipleSecs) {
       ctx.save();
       ctx.font = 'bold 11px sans-serif';
@@ -3085,7 +3226,6 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
 
-        // 重ならない空白が見つかった場合のみ描画（重なる場合は上部の凡例チップがあるため無理に描かない）
         if (placedX !== null) {
           var shortBadge = CIRCLED_NUMS[sIdx] || String(sIdx + 1);
           var bgCol = SEC_COLORS[sIdx % SEC_COLORS.length];
