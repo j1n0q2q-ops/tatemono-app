@@ -41,20 +41,17 @@
     line-height: 1.4;
   }
 
-  /* 実測 / 壁芯 トグル */
+  /* 実測 / 壁芯 トグル（通常スクロール配置でキーボード表示時の入力領域を確保） */
   .top-bar {
-    position: sticky;
-    top: 0;
-    z-index: 120;
     background: var(--bg);
-    padding: 4px 0 6px 0;
+    padding: 2px 0 6px 0;
   }
   .toggle-switch {
     display: flex;
     background: #e2e8f0;
     border-radius: 10px;
     padding: 4px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
   }
   .toggle-btn {
     flex: 1;
@@ -175,36 +172,13 @@
     box-shadow: 0 1px 2px rgba(0,0,0,0.06);
   }
 
-  /* 常時上部固定プレビューカード */
-  .card.sticky-preview {
-    position: sticky;
-    top: 48px;
-    z-index: 100;
-    border: 2px solid #93c5fd;
-    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.14);
-    padding: 6px 8px;
-  }
-  .card.sticky-preview canvas {
-    height: 185px;
-  }
-  .card.sticky-preview .closure-banner {
-    margin-top: 5px;
-    padding: 5px 8px;
-    font-size: 0.76rem;
-    flex-wrap: nowrap;
-  }
-  .card.sticky-preview .btn-auto-close {
-    padding: 3px 7px;
-    font-size: 0.72rem;
-  }
-
   .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 6px;
     font-weight: bold;
-    font-size: 0.85rem;
+    font-size: 0.86rem;
     color: #334155;
     gap: 4px;
   }
@@ -221,7 +195,7 @@
     flex-shrink: 0;
   }
   .mode-badge-txt {
-    font-size: 0.72rem;
+    font-size: 0.73rem;
     white-space: nowrap;
   }
   .card-sub-note {
@@ -232,12 +206,12 @@
   }
 
   .mini-hdr-btn {
-    padding: 3px 6px;
+    padding: 4px 7px;
     border-radius: 6px;
     border: 1px solid #cbd5e1;
     background: #f8fafc;
     color: #334155;
-    font-size: 0.72rem;
+    font-size: 0.73rem;
     font-weight: bold;
     cursor: pointer;
     white-space: nowrap;
@@ -556,8 +530,8 @@
   .canvas-legend {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
-    margin-bottom: 4px;
+    gap: 5px;
+    margin-bottom: 5px;
   }
   .legend-chip {
     display: inline-flex;
@@ -566,31 +540,31 @@
     padding: 2px 7px;
     border-radius: 12px;
     color: #fff;
-    font-size: 0.71rem;
+    font-size: 0.72rem;
     font-weight: bold;
   }
 
-  /* 区分境界線切替バー（常時操作可能） */
+  /* 区分境界線切替バー */
   .split-bar-top {
     display: flex;
     align-items: center;
     gap: 4px;
-    margin-bottom: 5px;
-    padding: 3px 7px;
+    margin-bottom: 6px;
+    padding: 4px 7px;
     background: #f5f3ff;
     border: 1px solid #ddd6fe;
     border-radius: 6px;
-    font-size: 0.72rem;
+    font-size: 0.73rem;
     color: #4c1d95;
     flex-wrap: wrap;
   }
   .split-btn {
-    padding: 2px 7px;
+    padding: 2px 8px;
     border-radius: 5px;
     border: 1px solid #c4b5fd;
     background: #ffffff;
     color: #4c1d95;
-    font-size: 0.71rem;
+    font-size: 0.72rem;
     font-weight: bold;
     cursor: pointer;
     touch-action: manipulation;
@@ -603,7 +577,7 @@
   .split-warn-tag {
     color: #dc2626;
     font-weight: bold;
-    font-size: 0.7rem;
+    font-size: 0.71rem;
     width: 100%;
     margin-top: 2px;
   }
@@ -615,7 +589,7 @@
   }
   canvas {
     width: 100%;
-    height: 185px;
+    height: 270px;
     background: #ffffff;
     border: 1px solid var(--border);
     border-radius: 6px;
@@ -624,21 +598,21 @@
   }
   .zoom-controls {
     position: absolute;
-    right: 6px;
-    bottom: 6px;
+    right: 8px;
+    bottom: 8px;
     display: flex;
     gap: 4px;
     z-index: 10;
   }
   .zoom-btn {
-    height: 28px;
-    min-width: 28px;
-    padding: 0 7px;
+    height: 30px;
+    min-width: 30px;
+    padding: 0 8px;
     border: 1px solid #cbd5e1;
     background: rgba(255, 255, 255, 0.92);
     color: #1e293b;
     font-weight: bold;
-    font-size: 0.78rem;
+    font-size: 0.8rem;
     border-radius: 6px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.12);
     cursor: pointer;
@@ -649,6 +623,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
+    margin-top: 8px;
   }
   .stat-box {
     background: #f8fafc;
@@ -661,15 +636,16 @@
   .stat-sub { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
 
   .closure-banner {
-    margin-top: 5px;
-    padding: 5px 8px;
+    margin-top: 7px;
+    padding: 7px 9px;
     border-radius: 6px;
     font-weight: bold;
-    font-size: 0.76rem;
+    font-size: 0.8rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 6px;
+    flex-wrap: wrap;
   }
   .closure-ok { background: #dcfce7; color: var(--ok); border: 1px solid #86efac; }
   .closure-ng { background: #fee2e2; color: var(--ng); border: 1px solid #fca5a5; }
@@ -679,8 +655,8 @@
     color: #fff;
     border: none;
     border-radius: 5px;
-    padding: 3px 8px;
-    font-size: 0.72rem;
+    padding: 4px 9px;
+    font-size: 0.75rem;
     font-weight: bold;
     cursor: pointer;
     white-space: nowrap;
@@ -779,21 +755,162 @@
     color: var(--muted);
   }
 
-  .copy-note-btn {
+  /* PDF出力ボタン */
+  .pdf-export-btn {
     width: 100%;
-    margin-top: 8px;
-    padding: 9px;
-    border: 1px solid #94a3b8;
-    background: #f1f5f9;
-    color: #1e293b;
+    margin-top: 9px;
+    padding: 10px 12px;
+    border: none;
+    background: #1e293b;
+    color: #ffffff;
     border-radius: 8px;
     font-weight: bold;
-    font-size: 0.82rem;
+    font-size: 0.86rem;
     cursor: pointer;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.2);
     touch-action: manipulation;
   }
-  .copy-note-btn:active {
-    background: #e2e8f0;
+  .pdf-export-btn:active {
+    background: #0f172a;
+  }
+
+  /* =========================================================
+     PDF出力（A4印刷用レポート）専用スタイル
+     ========================================================= */
+  #printReportArea {
+    display: none;
+  }
+
+  @media print {
+    @page {
+      size: A4 portrait;
+      margin: 11mm;
+    }
+    body {
+      background: #ffffff !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      color: #0f172a !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .container {
+      display: none !important;
+    }
+    #printReportArea {
+      display: block !important;
+      width: 100%;
+      font-size: 10pt;
+      line-height: 1.4;
+    }
+    .pr-header {
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 6px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .pr-title {
+      font-size: 15pt;
+      font-weight: bold;
+      letter-spacing: 0.04em;
+    }
+    .pr-meta {
+      font-size: 8.5pt;
+      color: #475569;
+      text-align: right;
+    }
+    .pr-meta-box {
+      border: 1px solid #94a3b8;
+      border-radius: 4px;
+      padding: 7px 10px;
+      margin-bottom: 10px;
+      background: #f8fafc;
+    }
+    .pr-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 3px;
+    }
+    .pr-meta-row:last-child {
+      margin-bottom: 0;
+    }
+    .pr-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 5px;
+      margin-bottom: 10px;
+      font-size: 9pt;
+    }
+    .pr-table th, .pr-table td {
+      border: 1px solid #94a3b8;
+      padding: 4px 6px;
+      text-align: left;
+    }
+    .pr-table th {
+      background: #e2e8f0;
+      font-weight: bold;
+      text-align: center;
+    }
+    .pr-table td.num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .pr-table td.center {
+      text-align: center;
+    }
+    .pr-floor-block {
+      border: 1px solid #94a3b8;
+      border-radius: 5px;
+      padding: 8px 10px;
+      margin-bottom: 12px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .pr-floor-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #cbd5e1;
+      padding-bottom: 4px;
+      margin-bottom: 7px;
+      font-weight: bold;
+      font-size: 10.5pt;
+    }
+    .pr-drawing-box {
+      text-align: center;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 4px;
+      margin-bottom: 8px;
+      background: #ffffff;
+    }
+    .pr-drawing-box img {
+      max-width: 100%;
+      height: auto;
+      max-height: 235px;
+      display: block;
+      margin: 0 auto;
+    }
+    .pr-two-col {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .pr-col-left {
+      flex: 1.3;
+    }
+    .pr-col-right {
+      flex: 1;
+    }
+    .pr-sub-title {
+      font-size: 9pt;
+      font-weight: bold;
+      color: #1e293b;
+      margin-bottom: 2px;
+    }
   }
 </style>
 </head>
@@ -831,14 +948,14 @@
   <!-- 階層タブ（1階 / 2階...） -->
   <div class="tab-row" id="floorTabs"></div>
 
-  <!-- 常時上部固定 図面プレビュー ＆ 閉合・床面積バー -->
-  <div class="card sticky-preview" id="previewCard">
+  <!-- 図面プレビュー ＆ 計算結果 ＆ PDF出力 -->
+  <div class="card" id="previewCard">
     <div class="card-header">
       <span id="previewTitle" class="header-title-text">主たる建物 1階</span>
       <div class="header-right-group">
-        <span id="modeBadge" class="mode-badge-txt" style="color: var(--primary);">● 実測</span>
+        <span id="modeBadge" class="mode-badge-txt" style="color: var(--primary);">● 実測(外法)</span>
         <button type="button" id="btnToggle1FGuide" class="mini-hdr-btn active" style="display:none;">1F重ね</button>
-        <button type="button" id="btnJumpSummary" class="mini-hdr-btn">集計▼</button>
+        <button type="button" id="btnJumpInputs" class="mini-hdr-btn">入力へ▼</button>
       </div>
     </div>
 
@@ -861,13 +978,33 @@
       <span>辺長未入力</span>
       <span>-</span>
     </div>
+
+    <div class="status-grid">
+      <div class="stat-box">
+        <div class="stat-label" id="floorAreaLabel">1階 床面積（実測）</div>
+        <div class="stat-val" id="floorAreaVal">0.00 ㎡</div>
+        <div class="stat-sub" id="floorAreaSub">登記床面積（小数第2位切捨）</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label" id="totalAreaLabel">建物合計 床面積</div>
+        <div class="stat-val" id="totalAreaVal">0.00 ㎡</div>
+        <div class="stat-sub" id="totalAreaSub">各階床面積の合計</div>
+      </div>
+    </div>
+
+    <!-- 構造・屋根区分別の面積・割合パネル -->
+    <div id="sectionBreakdown" class="sec-breakdown" style="display:none;"></div>
+
+    <!-- PDF出力ボタン -->
+    <button type="button" id="btnExportPdf" class="pdf-export-btn">📄 野帳レポート・図面をPDF出力</button>
   </div>
 
   <!-- 1. 辺長・方向入力 -->
-  <div class="card">
+  <div class="card" id="edgeInputCard">
     <div class="card-header">
       <span id="inputTitle" class="header-title-text">主たる建物 1階 辺長・方向</span>
-      <div style="display:flex; gap:4px; flex-shrink:0;">
+      <div style="display:flex; gap:4px; flex-shrink:0; align-items:center;">
+        <button type="button" id="btnJumpPreview" class="mini-hdr-btn">図面へ▲</button>
         <button type="button" id="btnDeleteFloor" class="del-btn" style="width:auto; height:28px; padding:0 8px; font-size:0.75rem; display:none;">階削除</button>
         <button type="button" id="btnDeleteBldg" class="del-btn" style="width:auto; height:28px; padding:0 8px; font-size:0.75rem; display:none;">附属削除</button>
       </div>
@@ -929,33 +1066,10 @@
     </div>
   </div>
 
-  <!-- 4. 詳細床面積・登記判定・野帳出力 -->
-  <div class="card" id="summaryCard">
-    <div class="card-header">
-      <span class="header-title-text">集計結果・登記判定・野帳出力</span>
-    </div>
-
-    <div class="status-grid">
-      <div class="stat-box">
-        <div class="stat-label" id="floorAreaLabel">1階 床面積（実測）</div>
-        <div class="stat-val" id="floorAreaVal">0.00 ㎡</div>
-        <div class="stat-sub" id="floorAreaSub">登記床面積（小数第2位切捨）</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label" id="totalAreaLabel">建物合計 床面積</div>
-        <div class="stat-val" id="totalAreaVal">0.00 ㎡</div>
-        <div class="stat-sub" id="totalAreaSub">各階床面積の合計</div>
-      </div>
-    </div>
-
-    <!-- 構造・屋根区分別の面積・割合パネル -->
-    <div id="sectionBreakdown" class="sec-breakdown" style="display:none;"></div>
-
-    <!-- 野帳テキストコピーボタン -->
-    <button type="button" id="btnCopySummary" class="copy-note-btn">📋 野帳集計データをテキストコピー</button>
-  </div>
-
 </div>
+
+<!-- PDF印刷用専用エリア（通常画面では非表示、印刷/PDF保存時にA4展開） -->
+<div id="printReportArea"></div>
 
 <!-- 入力サジェスト用データリスト -->
 <datalist id="listKind">
@@ -1556,91 +1670,228 @@ document.addEventListener('DOMContentLoaded', function() {
     calculateAndDraw();
   }
 
-  // 野帳集計データのテキスト生成＆クリップボードコピー
-  function copySummaryText() {
+  // =========================================================
+  // PDFレポート（A4印刷用DOM＋全階高精細図面画像）生成＆出力
+  // =========================================================
+  function exportPdfReport() {
     var curBldg = getCurBldg();
     var isCenter = (viewMode === 'center');
-    var modeLabel = isCenter ? '壁芯寸法' : '実測寸法（外法）';
+    var modeLabel = isCenter ? '壁芯寸法（変換値）' : '実測寸法（外法）';
     var wallThickMm = Math.max(0, parseFloat(curBldg.wallThickness) || 0);
     var halfWallM = (wallThickMm / 2) / 1000.0;
     var numSections = curBldg.sections.length;
     var splitMode = curBldg.splitMode || 'straight';
 
-    var lines = [];
-    lines.push('【建物現場野帳データ】');
-    if (siteName) lines.push('現場名: ' + siteName);
-    lines.push('対象建物: ' + curBldg.label);
-    lines.push('表示基準: ' + modeLabel + '（外壁厚: ' + wallThickMm + 'mm）');
-    lines.push('');
+    var now = new Date();
+    var dateStr = now.getFullYear() + '年' + (now.getMonth() + 1) + '月' + now.getDate() + '日 ' +
+      ('0' + now.getHours()).slice(-2) + ':' + ('0' + now.getMinutes()).slice(-2);
 
     var totalFloored = 0;
-    var bldgSecRaw = [];
-    for (var s = 0; s < numSections; s++) bldgSecRaw.push(0);
+    var bldgSecFlooredAreas = [];
+    var bldgSecRawAreas = [];
+    for (var s = 0; s < numSections; s++) {
+      bldgSecFlooredAreas.push(0);
+      bldgSecRawAreas.push(0);
+    }
 
-    curBldg.floors.forEach(function(f, fIdx) {
-      var outer = computeOuterPoints(f.edges, f.offsetX, f.offsetY);
+    var allFloorsData = curBldg.floors.map(function(f, idx) {
+      var offX = (idx === 0) ? 0 : (f.offsetX || 0);
+      var offY = (idx === 0) ? 0 : (f.offsetY || 0);
+      var outer = computeOuterPoints(f.edges, offX, offY);
       var centerPts = computeOffsetPolygon(outer.pts, halfWallM, f.edges, outer.isClosed);
       var activePts = isCenter ? centerPts : outer.pts;
-      var rawA = calcArea(activePts);
-      var flA = floorArea2(rawA);
-      totalFloored = Math.round((totalFloored + flA) * 100) / 100;
+      var rawArea = calcArea(activePts);
+      var flooredArea = floorArea2(rawArea);
+      totalFloored = Math.round((totalFloored + flooredArea) * 100) / 100;
 
       var secRes = computeSectionAreasAndBridges(activePts, f.edges, numSections, splitMode);
       for (var s = 0; s < numSections; s++) {
-        bldgSecRaw[s] += secRes.areas[s];
+        bldgSecRawAreas[s] += secRes.areas[s];
+        bldgSecFlooredAreas[s] = Math.round((bldgSecFlooredAreas[s] + floorArea2(secRes.areas[s])) * 100) / 100;
       }
 
-      lines.push('■ ' + f.name + '（閉合誤差: ' + outer.closureErr.toFixed(3) + 'm）');
-      if (fIdx > 0 && ((f.offsetX || 0) !== 0 || (f.offsetY || 0) !== 0)) {
-        lines.push('1階始点からの基準ずれ: X=' + (f.offsetX || 0).toFixed(3) + 'm, Y=' + (f.offsetY || 0).toFixed(3) + 'm');
-      }
-      lines.push('床面積: ' + flA.toFixed(2) + ' ㎡（' + (flA * 0.3025).toFixed(2) + '坪 / 切捨前: ' + rawA.toFixed(4) + '㎡）');
-
-      var edgeStrs = [];
-      for (var i = 0; i < activePts.length - 1; i++) {
-        var len = Math.hypot(activePts[i + 1].x - activePts[i].x, activePts[i + 1].y - activePts[i].y);
-        var dObj = DIRS.find(function(d) { return d.key === f.edges[i].dir; }) || DIRS[0];
-        var sTag = numSections > 1 ? (CIRCLED_NUMS[f.edges[i].secIdx || 0] || '') : '';
-        edgeStrs.push(sTag + '#' + (i + 1) + dObj.label + len.toFixed(3) + 'm');
-      }
-      lines.push('辺長: ' + edgeStrs.join(', '));
-
-      var exts = computeExtensions(f, activePts, isCenter, halfWallM);
-      if (exts.length > 0) {
-        var extStrs = exts.map(function(ex) {
-          return '辺#' + ex.edgeNum + '延長 ' + ex.dist.toFixed(3) + 'm（表示:' + formatSetbackFloor1(ex.dist) + '）';
-        });
-        lines.push('境界離れ: ' + extStrs.join(', '));
-      }
-      lines.push('');
+      var extLines = computeExtensions(f, activePts, isCenter, halfWallM);
+      return {
+        floorIdx: idx,
+        outer: outer,
+        centerPts: centerPts,
+        activePts: activePts,
+        rawArea: rawArea,
+        area: flooredArea,
+        secAreas: secRes.areas,
+        bridges: secRes.bridges,
+        isBridgeOutside: secRes.isBridgeOutside,
+        extLines: extLines,
+        name: f.name,
+        edges: f.edges,
+        offsetX: offX,
+        offsetY: offY
+      };
     });
 
-    lines.push('■ 建物合計 床面積: ' + totalFloored.toFixed(2) + ' ㎡（' + (totalFloored * 0.3025).toFixed(2) + '坪）');
+    var firstFloorData = allFloorsData[0];
 
+    // オフスクリーンCanvasで全階の高精細PNG画像を生成
+    var offCanvas = document.createElement('canvas');
+    var floorImages = allFloorsData.map(function(fData) {
+      renderFloorToCanvas(
+        offCanvas,
+        curBldg,
+        fData,
+        firstFloorData,
+        fData.floorIdx,
+        isCenter,
+        680,
+        300,
+        1.0,
+        0,
+        0
+      );
+      return offCanvas.toDataURL('image/png');
+    });
+
+    var html = [];
+    html.push('<div class="pr-header">');
+    html.push('  <div class="pr-title">建物調査野帳・求積図レポート</div>');
+    html.push('  <div class="pr-meta">出力日時: ' + escapeHtml(dateStr) + '<br>基準: ' + escapeHtml(modeLabel) + '</div>');
+    html.push('</div>');
+
+    // 建物基本情報サマリー
+    html.push('<div class="pr-meta-box">');
+    html.push('  <div class="pr-meta-row">');
+    html.push('    <span><b>現場名:</b> ' + escapeHtml(siteName || '（未入力）') + '</span>');
+    html.push('    <span><b>対象建物:</b> ' + escapeHtml(curBldg.label) + '（全' + curBldg.floors.length + '階）</span>');
+    html.push('    <span><b>外壁厚:</b> ' + wallThickMm + ' mm（片側 ' + (wallThickMm / 2).toFixed(1) + ' mm）</span>');
+    html.push('  </div>');
+    html.push('  <div class="pr-meta-row" style="margin-top:4px; font-size:10.5pt;">');
+    html.push('    <span><b>建物合計 床面積（登記床面積）:</b> <u>' + totalFloored.toFixed(2) + ' ㎡</u>（' + (totalFloored * 0.3025).toFixed(2) + ' 坪）</span>');
+    html.push('  </div>');
+    html.push('</div>');
+
+    // 構造・屋根区分一覧（単一でも表示し、複数時は面積・割合・主たる部分判定を表示）
+    var rawSumSec = bldgSecRawAreas.reduce(function(a, b) { return a + b; }, 0);
+    var maxSecArea = 0;
+    var maxSecIdx = -1;
+    for (var s = 0; s < numSections; s++) {
+      if (bldgSecRawAreas[s] > maxSecArea + 1e-6) {
+        maxSecArea = bldgSecRawAreas[s];
+        maxSecIdx = s;
+      }
+    }
+
+    html.push('<div class="pr-sub-title">■ 建物の種類・構造・屋根の種類' + (numSections > 1 ? '（区分別面積・割合判定）' : '') + '</div>');
+    html.push('<table class="pr-table">');
+    html.push('  <thead><tr>');
+    html.push('    <th style="width:45px;">区分</th>');
+    html.push('    <th>種類</th>');
+    html.push('    <th>構造</th>');
+    html.push('    <th>屋根の種類</th>');
+    html.push('    <th>場所メモ</th>');
     if (numSections > 1) {
-      var sumRaw = bldgSecRaw.reduce(function(a, b) { return a + b; }, 0);
-      lines.push('■ 構造・屋根区分別内訳:');
-      curBldg.sections.forEach(function(sec, sIdx) {
-        var pct = sumRaw > 0.0001 ? (bldgSecRaw[sIdx] / sumRaw * 100) : 0;
-        var sFl = floorArea2(bldgSecRaw[sIdx]);
-        lines.push((CIRCLED_NUMS[sIdx] || (sIdx + 1)) + ' ' + (sec.structure || '') + '/' + (sec.roof || '') +
-          (sec.note ? '(' + sec.note + ')' : '') + ': ' + sFl.toFixed(2) + ' ㎡ (' + pct.toFixed(1) + '%)');
-      });
+      html.push('    <th style="width:85px;">床面積</th>');
+      html.push('    <th style="width:65px;">割合</th>');
+      html.push('    <th style="width:75px;">判定</th>');
     }
+    html.push('  </tr></thead><tbody>');
 
-    var textOut = lines.join('\n');
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(textOut).then(function() {
-        var btn = document.getElementById('btnCopySummary');
-        var orig = btn.textContent;
-        btn.textContent = '✔ コピーしました！';
-        setTimeout(function() { btn.textContent = orig; }, 1800);
-      }).catch(function() {
-        prompt('以下をコピーしてください:', textOut);
-      });
-    } else {
-      prompt('以下をコピーしてください:', textOut);
-    }
+    curBldg.sections.forEach(function(sec, sIdx) {
+      var badge = CIRCLED_NUMS[sIdx] || (sIdx + 1);
+      var pct = (rawSumSec > 0.0001) ? (bldgSecRawAreas[sIdx] / rawSumSec * 100) : 0;
+      var sFl = bldgSecFlooredAreas[sIdx] || 0;
+      var isMain = (sIdx === maxSecIdx && maxSecArea > 0.001);
+
+      html.push('  <tr>');
+      html.push('    <td class="center"><b>' + badge + '</b></td>');
+      html.push('    <td>' + escapeHtml(sec.kind || '-') + '</td>');
+      html.push('    <td>' + escapeHtml(sec.structure || '-') + '</td>');
+      html.push('    <td>' + escapeHtml(sec.roof || '-') + '</td>');
+      html.push('    <td>' + escapeHtml(sec.note || '-') + '</td>');
+      if (numSections > 1) {
+        html.push('    <td class="num"><b>' + sFl.toFixed(2) + ' ㎡</b></td>');
+        html.push('    <td class="num">' + pct.toFixed(1) + '%</td>');
+        html.push('    <td class="center">' + (isMain ? '<b>主たる部分</b>' : '-') + '</td>');
+      }
+      html.push('  </tr>');
+    });
+    html.push('  </tbody></table>');
+
+    // 各階ごとの図面＋辺長・離れ明細
+    allFloorsData.forEach(function(fData, idx) {
+      var closureTxt = fData.outer.isClosed
+        ? ('閉合OK（誤差 ' + fData.outer.closureErr.toFixed(3) + ' m）')
+        : ('未閉合（残 X:' + (-fData.outer.dx).toFixed(3) + ' / Y:' + (-fData.outer.dy).toFixed(3) + ' m）');
+
+      html.push('<div class="pr-floor-block">');
+      html.push('  <div class="pr-floor-head">');
+      html.push('    <span>' + escapeHtml(curBldg.label + ' ' + fData.name) +
+        (idx > 0 && (fData.offsetX !== 0 || fData.offsetY !== 0)
+          ? ' <small style="font-weight:normal; color:#475569;">（1階始点ずれ X:' + fData.offsetX.toFixed(3) + 'm, Y:' + fData.offsetY.toFixed(3) + 'm）</small>'
+          : '') +
+        '</span>');
+      html.push('    <span>床面積: ' + fData.area.toFixed(2) + ' ㎡（' + (fData.area * 0.3025).toFixed(2) + '坪 / 切捨前: ' + fData.rawArea.toFixed(4) + '㎡）｜ ' + closureTxt + '</span>');
+      html.push('  </div>');
+
+      html.push('  <div class="pr-drawing-box">');
+      html.push('    <img src="' + floorImages[idx] + '" alt="' + escapeHtml(fData.name) + '図面">');
+      html.push('  </div>');
+
+      html.push('  <div class="pr-two-col">');
+      // 左列：辺長一覧
+      html.push('    <div class="pr-col-left">');
+      html.push('      <div class="pr-sub-title">辺長・方向一覧（' + (isCenter ? '壁芯' : '実測') + '）</div>');
+      html.push('      <table class="pr-table" style="margin-bottom:0;">');
+      html.push('        <thead><tr><th style="width:42px;">辺</th><th style="width:42px;">区分</th><th style="width:42px;">方向</th><th>寸法 (m)</th></tr></thead><tbody>');
+
+      for (var i = 0; i < fData.activePts.length - 1; i++) {
+        var len = Math.hypot(fData.activePts[i + 1].x - fData.activePts[i].x, fData.activePts[i + 1].y - fData.activePts[i].y);
+        var ed = fData.edges[i];
+        var dObj = DIRS.find(function(d) { return d.key === ed.dir; }) || DIRS[0];
+        var sBadge = CIRCLED_NUMS[ed.secIdx || 0] || '①';
+        html.push('        <tr>');
+        html.push('          <td class="center">#' + (i + 1) + '</td>');
+        html.push('          <td class="center">' + sBadge + '</td>');
+        html.push('          <td class="center">' + dObj.label + '</td>');
+        html.push('          <td class="num">' + len.toFixed(3) + ' m</td>');
+        html.push('        </tr>');
+      }
+      html.push('        </tbody></table>');
+      html.push('    </div>');
+
+      // 右列：境界線までの離れ
+      html.push('    <div class="pr-col-right">');
+      html.push('      <div class="pr-sub-title">境界線までの離れ</div>');
+      if (fData.extLines.length > 0) {
+        html.push('      <table class="pr-table" style="margin-bottom:0;">');
+        html.push('        <thead><tr><th>対象辺</th><th>距離 (m)</th><th>図面表記</th></tr></thead><tbody>');
+        fData.extLines.forEach(function(ex) {
+          html.push('        <tr>');
+          html.push('          <td class="center">辺#' + ex.edgeNum + '延長</td>');
+          html.push('          <td class="num">' + ex.dist.toFixed(3) + ' m</td>');
+          html.push('          <td class="center"><b>' + formatSetbackFloor1(ex.dist) + '</b></td>');
+          html.push('        </tr>');
+        });
+        html.push('        </tbody></table>');
+      } else {
+        html.push('      <div style="font-size:8.5pt; color:#64748b; padding:6px; border:1px solid #cbd5e1; border-radius:4px;">離れ入力なし</div>');
+      }
+      html.push('    </div>');
+      html.push('  </div>');
+      html.push('</div>');
+    });
+
+    var printArea = document.getElementById('printReportArea');
+    printArea.innerHTML = html.join('\n');
+
+    var origTitle = document.title;
+    var safeFileTitle = (siteName ? (siteName + '_') : '') + curBldg.label + '_野帳図面';
+    document.title = safeFileTitle;
+
+    setTimeout(function() {
+      window.print();
+      setTimeout(function() {
+        document.title = origTitle;
+      }, 1000);
+    }, 120);
   }
 
   document.getElementById('siteName').addEventListener('input', function(e) {
@@ -1659,13 +1910,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
   document.getElementById('btnNewSite').addEventListener('click', resetToNewSite);
-  document.getElementById('btnCopySummary').addEventListener('click', copySummaryText);
+  document.getElementById('btnExportPdf').addEventListener('click', exportPdfReport);
 
-  document.getElementById('btnJumpSummary').addEventListener('click', function() {
-    var target = document.getElementById('summaryCard');
-    if (target) {
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+  document.getElementById('btnJumpInputs').addEventListener('click', function() {
+    var target = document.getElementById('edgeInputCard');
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  document.getElementById('btnJumpPreview').addEventListener('click', function() {
+    var target = document.getElementById('previewCard');
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
   document.getElementById('btnToggle1FGuide').addEventListener('click', function() {
@@ -2599,16 +2852,14 @@ document.addEventListener('DOMContentLoaded', function() {
       banner.innerHTML = '<span>⚠ ' + reason + '</span><span>要修正</span>';
     } else if (currentFloorData.outer.isClosed) {
       banner.className = 'closure-banner closure-ok';
-      banner.innerHTML =
-        '<span>✔ 閉合 OK（誤差:' + err.toFixed(3) + 'm）</span>' +
-        '<span>床面積: ' + currentFloorData.area.toFixed(2) + ' ㎡</span>';
+      banner.innerHTML = '<span>✔ 閉合 OK</span><span>誤差: ' + err.toFixed(3) + ' m</span>';
     } else {
       banner.className = 'closure-banner closure-ng';
       var remX = (-currentFloorData.outer.dx).toFixed(3);
       var remY = (-currentFloorData.outer.dy).toFixed(3);
       banner.innerHTML =
-        '<span>⚠ 未閉合（残 X:' + remX + ' / Y:' + remY + 'm ｜ ' + currentFloorData.area.toFixed(2) + '㎡）</span>' +
-        '<button type="button" id="btnAutoCloseNow" class="btn-auto-close">自動閉合</button>';
+        '<span>⚠ 未閉合（残 X:' + remX + ' / Y:' + remY + 'm）</span>' +
+        '<button type="button" id="btnAutoCloseNow" class="btn-auto-close">不足分を自動閉合</button>';
       var autoBtn = document.getElementById('btnAutoCloseNow');
       if (autoBtn) {
         autoBtn.addEventListener('click', autoCloseCurrentFloor);
@@ -2727,21 +2978,23 @@ document.addEventListener('DOMContentLoaded', function() {
       bdEl.innerHTML = '';
     }
 
-    drawCanvas(curBldg, currentFloorData, firstFloorData, isCenter);
-  }
-
-  function drawCanvas(curBldg, curData, firstData, isCenter) {
     var canvas = document.getElementById('viewCanvas');
-    var ctx = canvas.getContext('2d');
-    var dpr = window.devicePixelRatio || 1;
     var rect = canvas.getBoundingClientRect();
     var W = rect.width || canvas.clientWidth || 320;
-    var H = rect.height || canvas.clientHeight || 185;
+    var H = rect.height || canvas.clientHeight || 270;
+    renderFloorToCanvas(canvas, curBldg, currentFloorData, firstFloorData, currentFloorIdx, isCenter, W, H, camZoom, camPanX, camPanY);
+  }
+
+  // 画面プレビュー＆PDF用オフスクリーンCanvas共通描画エンジン
+  function renderFloorToCanvas(canvas, curBldg, curData, firstData, floorIdx, isCenter, W, H, zoomVal, panXVal, panYVal) {
+    var ctx = canvas.getContext('2d');
+    var dpr = window.devicePixelRatio || 2;
     canvas.width = W * dpr;
     canvas.height = H * dpr;
     ctx.scale(dpr, dpr);
 
-    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
 
     var pts = curData.activePts;
     if (pts.length < 2) return;
@@ -2757,7 +3010,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (isCenter && curData.outer && curData.outer.pts) {
       curData.outer.pts.forEach(expandBldgBounds);
     }
-    var show1F = (currentFloorIdx > 0 && show1FGuide);
+    var show1F = (floorIdx > 0 && show1FGuide && firstData);
     if (show1F) firstData.activePts.forEach(expandBldgBounds);
 
     var bldgSpan = Math.max(bMaxX - bMinX, bMaxY - bMinY, 2.0);
@@ -2805,19 +3058,19 @@ document.addEventListener('DOMContentLoaded', function() {
       };
     });
 
-    var pad = 36;
+    var pad = 46;
     var rangeX = (maxX - minX) || 1;
     var rangeY = (maxY - minY) || 1;
     var baseScale = Math.min((W - pad * 2) / rangeX, (H - pad * 2) / rangeY);
-    var scale = baseScale * camZoom;
+    var scale = baseScale * zoomVal;
 
     var centerX = (minX + maxX) / 2;
     var centerY = (minY + maxY) / 2;
 
     var toScreen = function(x, y) {
       return {
-        x: (W / 2) + (x - centerX) * scale + camPanX,
-        y: (H / 2) + (y - centerY) * scale + camPanY
+        x: (W / 2) + (x - centerX) * scale + panXVal,
+        y: (H / 2) + (y - centerY) * scale + panYVal
       };
     };
 
@@ -2826,10 +3079,10 @@ document.addEventListener('DOMContentLoaded', function() {
       ctx.save();
       ctx.strokeStyle = '#f1f5f9';
       ctx.lineWidth = 1;
-      var worldLeft = centerX - ((W / 2) + camPanX) / scale;
-      var worldRight = centerX + ((W / 2) - camPanX) / scale;
-      var worldTop = centerY - ((H / 2) + camPanY) / scale;
-      var worldBottom = centerY + ((H / 2) - camPanY) / scale;
+      var worldLeft = centerX - ((W / 2) + panXVal) / scale;
+      var worldRight = centerX + ((W / 2) - panXVal) / scale;
+      var worldTop = centerY - ((H / 2) + panYVal) / scale;
+      var worldBottom = centerY + ((H / 2) - panYVal) / scale;
 
       for (var gx = Math.floor(worldLeft); gx <= Math.ceil(worldRight); gx++) {
         var sx = toScreen(gx, 0).x;
