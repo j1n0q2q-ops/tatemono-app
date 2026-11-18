@@ -755,23 +755,42 @@
     color: var(--muted);
   }
 
-  /* PDF出力ボタン */
-  .pdf-export-btn {
-    width: 100%;
+  /* PDF出力ボタン群 */
+  .pdf-btn-row {
+    display: flex;
+    gap: 6px;
     margin-top: 9px;
-    padding: 10px 12px;
+  }
+  .pdf-export-btn {
+    flex: 1.45;
+    padding: 10px 8px;
     border: none;
     background: #1e293b;
     color: #ffffff;
     border-radius: 8px;
     font-weight: bold;
-    font-size: 0.86rem;
+    font-size: 0.84rem;
     cursor: pointer;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.2);
     touch-action: manipulation;
   }
   .pdf-export-btn:active {
     background: #0f172a;
+  }
+  .pdf-export-sub-btn {
+    flex: 1;
+    padding: 10px 6px;
+    border: 1px solid #94a3b8;
+    background: #f8fafc;
+    color: #1e293b;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 0.78rem;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .pdf-export-sub-btn:active {
+    background: #e2e8f0;
   }
 
   /* =========================================================
@@ -815,6 +834,25 @@
       font-size: 14.5pt;
       font-weight: bold;
       letter-spacing: 0.04em;
+    }
+    .pr-mode-pill {
+      display: inline-block;
+      font-size: 9pt;
+      font-weight: bold;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    .pr-mode-outer {
+      background: #dbeafe;
+      color: #1e40af;
+      border: 1px solid #93c5fd;
+    }
+    .pr-mode-center {
+      background: #ffedd5;
+      color: #9a3412;
+      border: 1px solid #fdba74;
     }
     .pr-meta {
       font-size: 8.5pt;
@@ -1033,7 +1071,10 @@
     <div id="sectionBreakdown" class="sec-breakdown" style="display:none;"></div>
 
     <!-- PDF出力ボタン -->
-    <button type="button" id="btnExportPdf" class="pdf-export-btn">📄 野帳レポート・図面をPDF出力</button>
+    <div class="pdf-btn-row">
+      <button type="button" id="btnExportPdfBoth" class="pdf-export-btn">📄 PDF出力（実測・壁芯 両方）</button>
+      <button type="button" id="btnExportPdfSingle" class="pdf-export-sub-btn">実測のみPDF</button>
+    </div>
   </div>
 
   <!-- 1. 辺長・方向入力 -->
@@ -1369,6 +1410,7 @@ document.addEventListener('DOMContentLoaded', function() {
     viewMode = mode;
     document.getElementById('btnModeOuter').classList.toggle('active', mode === 'outer');
     document.getElementById('btnModeCenter').classList.toggle('active', mode === 'center');
+    document.getElementById('btnExportPdfSingle').textContent = (mode === 'center') ? '壁芯のみPDF' : '実測のみPDF';
     renderAll();
   }
 
@@ -1633,11 +1675,26 @@ document.addEventListener('DOMContentLoaded', function() {
     renderAll();
   }
 
+  // 離れ追加：まだ離れが設定されていない最初の辺を自動選択
   function addExtension() {
     var curFloor = getCurFloor();
     if (curFloor.edges.length === 0) return;
+
+    var usedEdgeIndices = {};
+    curFloor.extensions.forEach(function(ext) {
+      usedEdgeIndices[ext.edgeIdx] = true;
+    });
+
+    var chosenEdgeIdx = 0;
+    for (var i = 0; i < curFloor.edges.length; i++) {
+      if (!usedEdgeIndices[i]) {
+        chosenEdgeIdx = i;
+        break;
+      }
+    }
+
     curFloor.extensions.push({
-      edgeIdx: 0,
+      edgeIdx: chosenEdgeIdx,
       side: 'end',
       dist: ''
     });
@@ -1708,17 +1765,220 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // =========================================================
-  // PDFレポート（A4印刷用DOM＋全棟・全階高精細図面画像）生成＆出力
+  // PDFレポート（A4印刷用DOM＋実測/壁芯モード別・全棟・全階高精細図面）生成＆出力
   // =========================================================
-  function exportPdfReport() {
-    var isCenter = (viewMode === 'center');
+  function buildBuildingReportHtml(bldg, modeKey, dateStr, isFirstSection, offCanvas) {
+    var isCenter = (modeKey === 'center');
     var modeLabel = isCenter ? '壁芯寸法（変換値）' : '実測寸法（外法）';
+    var modePillClass = isCenter ? 'pr-mode-center' : 'pr-mode-outer';
+    var modePillText = isCenter ? '壁芯基準（登記求積用）' : '実測基準（外法野帳）';
 
+    var wallThickMm = Math.max(0, parseFloat(bldg.wallThickness) || 0);
+    var halfWallM = (wallThickMm / 2) / 1000.0;
+    var numSections = bldg.sections.length;
+    var splitMode = bldg.splitMode || 'straight';
+
+    var totalFloored = 0;
+    var bldgSecFlooredAreas = [];
+    var bldgSecRawAreas = [];
+    for (var s = 0; s < numSections; s++) {
+      bldgSecFlooredAreas.push(0);
+      bldgSecRawAreas.push(0);
+    }
+
+    var allFloorsData = bldg.floors.map(function(f, idx) {
+      var offX = (idx === 0) ? 0 : (f.offsetX || 0);
+      var offY = (idx === 0) ? 0 : (f.offsetY || 0);
+      var outer = computeOuterPoints(f.edges, offX, offY);
+      var centerPts = computeOffsetPolygon(outer.pts, halfWallM, f.edges, outer.isClosed);
+      var activePts = isCenter ? centerPts : outer.pts;
+      var rawArea = calcArea(activePts);
+      var flooredArea = floorArea2(rawArea);
+      totalFloored = Math.round((totalFloored + flooredArea) * 100) / 100;
+
+      var secRes = computeSectionAreasAndBridges(activePts, f.edges, numSections, splitMode);
+      for (var s = 0; s < numSections; s++) {
+        bldgSecRawAreas[s] += secRes.areas[s];
+        bldgSecFlooredAreas[s] = Math.round((bldgSecFlooredAreas[s] + floorArea2(secRes.areas[s])) * 100) / 100;
+      }
+
+      var extLines = computeExtensions(f, activePts, isCenter, halfWallM);
+      return {
+        floorIdx: idx,
+        outer: outer,
+        centerPts: centerPts,
+        activePts: activePts,
+        rawArea: rawArea,
+        area: flooredArea,
+        secAreas: secRes.areas,
+        bridges: secRes.bridges,
+        isBridgeOutside: secRes.isBridgeOutside,
+        extLines: extLines,
+        name: f.name,
+        edges: f.edges,
+        offsetX: offX,
+        offsetY: offY
+      };
+    });
+
+    var firstFloorData = allFloorsData[0];
+
+    var floorImages = allFloorsData.map(function(fData) {
+      renderFloorToCanvas(
+        offCanvas,
+        bldg,
+        fData,
+        firstFloorData,
+        fData.floorIdx,
+        isCenter,
+        700,
+        295,
+        1.0,
+        0,
+        0
+      );
+      return offCanvas.toDataURL('image/png');
+    });
+
+    var html = [];
+    html.push('<div class="pr-bldg-section' + (!isFirstSection ? ' pr-bldg-pagebreak' : '') + '">');
+    html.push('<div class="pr-header">');
+    html.push('  <div class="pr-title">建物調査野帳・求積図レポート<span class="pr-mode-pill ' + modePillClass + '">' + modePillText + '</span></div>');
+    html.push('  <div class="pr-meta">出力日時: ' + escapeHtml(dateStr) + '<br>計測基準: <b>' + escapeHtml(modeLabel) + '</b></div>');
+    html.push('</div>');
+
+    // 建物基本情報グリッドテーブル
+    html.push('<table class="pr-summary-table">');
+    html.push('  <tr>');
+    html.push('    <th>現場名</th><td><b>' + escapeHtml(siteName || '（未入力）') + '</b></td>');
+    html.push('    <th>対象建物</th><td><b>' + escapeHtml(bldg.label) + '</b>（全' + bldg.floors.length + '階）</td>');
+    html.push('  </tr>');
+    html.push('  <tr>');
+    html.push('    <th>外壁厚</th><td>' + wallThickMm + ' mm（片側 ' + (wallThickMm / 2).toFixed(1) + ' mm）</td>');
+    html.push('    <th>床面積合計</th><td><b style="font-size:10.5pt;">' + totalFloored.toFixed(2) + ' ㎡</b>（' + (totalFloored * 0.3025).toFixed(2) + ' 坪）</td>');
+    html.push('  </tr>');
+    html.push('</table>');
+
+    // 構造・屋根区分一覧
+    var rawSumSec = bldgSecRawAreas.reduce(function(a, b) { return a + b; }, 0);
+    var maxSecArea = 0;
+    var maxSecIdx = -1;
+    for (var s = 0; s < numSections; s++) {
+      if (bldgSecRawAreas[s] > maxSecArea + 1e-6) {
+        maxSecArea = bldgSecRawAreas[s];
+        maxSecIdx = s;
+      }
+    }
+
+    html.push('<div class="pr-sub-title">■ 建物の種類・構造・屋根の種類' + (numSections > 1 ? '（区分別面積・割合判定）' : '') + '</div>');
+    html.push('<table class="pr-table">');
+    html.push('  <thead><tr>');
+    html.push('    <th style="width:42px;">区分</th>');
+    html.push('    <th>種類</th>');
+    html.push('    <th>構造</th>');
+    html.push('    <th>屋根の種類</th>');
+    html.push('    <th>場所メモ</th>');
+    if (numSections > 1) {
+      html.push('    <th style="width:80px;">床面積</th>');
+      html.push('    <th style="width:60px;">割合</th>');
+      html.push('    <th style="width:76px;">判定</th>');
+    }
+    html.push('  </tr></thead><tbody>');
+
+    bldg.sections.forEach(function(sec, sIdx) {
+      var badge = CIRCLED_NUMS[sIdx] || (sIdx + 1);
+      var pct = (rawSumSec > 0.0001) ? (bldgSecRawAreas[sIdx] / rawSumSec * 100) : 0;
+      var sFl = bldgSecFlooredAreas[sIdx] || 0;
+      var isMain = (sIdx === maxSecIdx && maxSecArea > 0.001);
+
+      html.push('  <tr>');
+      html.push('    <td class="center"><b>' + badge + '</b></td>');
+      html.push('    <td>' + escapeHtml(sec.kind || '-') + '</td>');
+      html.push('    <td>' + escapeHtml(sec.structure || '-') + '</td>');
+      html.push('    <td>' + escapeHtml(sec.roof || '-') + '</td>');
+      html.push('    <td>' + escapeHtml(sec.note || '-') + '</td>');
+      if (numSections > 1) {
+        html.push('    <td class="num"><b>' + sFl.toFixed(2) + ' ㎡</b></td>');
+        html.push('    <td class="num">' + pct.toFixed(1) + '%</td>');
+        html.push('    <td class="center">' + (isMain ? '<b>主たる部分</b>' : '-') + '</td>');
+      }
+      html.push('  </tr>');
+    });
+    html.push('  </tbody></table>');
+
+    // 各階ごとの図面＋辺長・離れ明細
+    allFloorsData.forEach(function(fData, idx) {
+      var closureTxt = fData.outer.isClosed
+        ? ('閉合OK（誤差 ' + fData.outer.closureErr.toFixed(3) + ' m）')
+        : ('未閉合（残 X:' + (-fData.outer.dx).toFixed(3) + ' / Y:' + (-fData.outer.dy).toFixed(3) + ' m）');
+
+      var offsetBadgeHtml = (idx > 0 && (fData.offsetX !== 0 || fData.offsetY !== 0))
+        ? '<span class="pr-fh-offset">1F始点ずれ X:' + fData.offsetX.toFixed(3) + 'm, Y:' + fData.offsetY.toFixed(3) + 'm</span>'
+        : '';
+
+      html.push('<div class="pr-floor-block">');
+      html.push('  <div class="pr-floor-head">');
+      html.push('    <div class="pr-fh-left">' + escapeHtml(bldg.label + ' ' + fData.name) + offsetBadgeHtml + '</div>');
+      html.push('    <div class="pr-fh-right">床面積: ' + fData.area.toFixed(2) + ' ㎡（' + (fData.area * 0.3025).toFixed(2) + '坪 / 切捨前: ' + fData.rawArea.toFixed(4) + '㎡）｜ ' + closureTxt + '</div>');
+      html.push('  </div>');
+
+      html.push('  <div class="pr-drawing-box">');
+      html.push('    <img src="' + floorImages[idx] + '" alt="' + escapeHtml(fData.name) + '図面">');
+      html.push('  </div>');
+
+      html.push('  <div class="pr-two-col">');
+      // 左列：辺長一覧
+      html.push('    <div class="pr-col-left">');
+      html.push('      <div class="pr-sub-title">辺長・方向一覧（' + (isCenter ? '壁芯' : '実測') + '）</div>');
+      html.push('      <table class="pr-table" style="margin-bottom:0;">');
+      html.push('        <thead><tr><th style="width:40px;">辺</th><th style="width:40px;">区分</th><th style="width:40px;">方向</th><th>寸法 (m)</th></tr></thead><tbody>');
+
+      for (var i = 0; i < fData.activePts.length - 1; i++) {
+        var len = Math.hypot(fData.activePts[i + 1].x - fData.activePts[i].x, fData.activePts[i + 1].y - fData.activePts[i].y);
+        var ed = fData.edges[i];
+        var dObj = DIRS.find(function(d) { return d.key === ed.dir; }) || DIRS[0];
+        var sBadge = CIRCLED_NUMS[ed.secIdx || 0] || '①';
+        html.push('        <tr>');
+        html.push('          <td class="center">#' + (i + 1) + '</td>');
+        html.push('          <td class="center">' + sBadge + '</td>');
+        html.push('          <td class="center">' + dObj.label + '</td>');
+        html.push('          <td class="num">' + len.toFixed(3) + ' m</td>');
+        html.push('        </tr>');
+      }
+      html.push('        </tbody></table>');
+      html.push('    </div>');
+
+      // 右列：境界線までの離れ
+      html.push('    <div class="pr-col-right">');
+      html.push('      <div class="pr-sub-title">境界線までの離れ</div>');
+      if (fData.extLines.length > 0) {
+        html.push('      <table class="pr-table" style="margin-bottom:0;">');
+        html.push('        <thead><tr><th>対象辺・方向</th><th>距離 (m)</th><th>図面表記</th></tr></thead><tbody>');
+        fData.extLines.forEach(function(ex) {
+          html.push('        <tr>');
+          html.push('          <td class="center">辺#' + ex.edgeNum + ' ' + escapeHtml(ex.sideText) + '</td>');
+          html.push('          <td class="num">' + ex.dist.toFixed(3) + ' m</td>');
+          html.push('          <td class="center"><b>' + formatSetbackFloor1(ex.dist) + '</b></td>');
+          html.push('        </tr>');
+        });
+        html.push('        </tbody></table>');
+      } else {
+        html.push('      <div style="font-size:8.5pt; color:#64748b; padding:6px; border:1px solid #cbd5e1; border-radius:4px;">離れ入力なし</div>');
+      }
+      html.push('    </div>');
+      html.push('  </div>');
+      html.push('</div>');
+    });
+
+    html.push('</div>');
+    return html.join('\n');
+  }
+
+  function exportPdfReport(exportBothModes) {
     var now = new Date();
     var dateStr = now.getFullYear() + '年' + (now.getMonth() + 1) + '月' + now.getDate() + '日 ' +
       ('0' + now.getHours()).slice(-2) + ':' + ('0' + now.getMinutes()).slice(-2);
 
-    // 入力が1辺でもある建物を抽出（すべて空なら現在の建物を対象）
     var targetBldgs = buildings.filter(function(b) {
       return b.floors.some(function(f) {
         return f.edges.some(function(e) { return (parseFloat(e.len) || 0) > 0; });
@@ -1728,214 +1988,24 @@ document.addEventListener('DOMContentLoaded', function() {
       targetBldgs = [getCurBldg()];
     }
 
+    var modesToExport = exportBothModes ? ['outer', 'center'] : [viewMode];
     var offCanvas = document.createElement('canvas');
-    var html = [];
+    var sectionsHtml = [];
+    var isFirst = true;
 
-    targetBldgs.forEach(function(bldg, bIdx) {
-      var wallThickMm = Math.max(0, parseFloat(bldg.wallThickness) || 0);
-      var halfWallM = (wallThickMm / 2) / 1000.0;
-      var numSections = bldg.sections.length;
-      var splitMode = bldg.splitMode || 'straight';
-
-      var totalFloored = 0;
-      var bldgSecFlooredAreas = [];
-      var bldgSecRawAreas = [];
-      for (var s = 0; s < numSections; s++) {
-        bldgSecFlooredAreas.push(0);
-        bldgSecRawAreas.push(0);
-      }
-
-      var allFloorsData = bldg.floors.map(function(f, idx) {
-        var offX = (idx === 0) ? 0 : (f.offsetX || 0);
-        var offY = (idx === 0) ? 0 : (f.offsetY || 0);
-        var outer = computeOuterPoints(f.edges, offX, offY);
-        var centerPts = computeOffsetPolygon(outer.pts, halfWallM, f.edges, outer.isClosed);
-        var activePts = isCenter ? centerPts : outer.pts;
-        var rawArea = calcArea(activePts);
-        var flooredArea = floorArea2(rawArea);
-        totalFloored = Math.round((totalFloored + flooredArea) * 100) / 100;
-
-        var secRes = computeSectionAreasAndBridges(activePts, f.edges, numSections, splitMode);
-        for (var s = 0; s < numSections; s++) {
-          bldgSecRawAreas[s] += secRes.areas[s];
-          bldgSecFlooredAreas[s] = Math.round((bldgSecFlooredAreas[s] + floorArea2(secRes.areas[s])) * 100) / 100;
-        }
-
-        var extLines = computeExtensions(f, activePts, isCenter, halfWallM);
-        return {
-          floorIdx: idx,
-          outer: outer,
-          centerPts: centerPts,
-          activePts: activePts,
-          rawArea: rawArea,
-          area: flooredArea,
-          secAreas: secRes.areas,
-          bridges: secRes.bridges,
-          isBridgeOutside: secRes.isBridgeOutside,
-          extLines: extLines,
-          name: f.name,
-          edges: f.edges,
-          offsetX: offX,
-          offsetY: offY
-        };
+    targetBldgs.forEach(function(bldg) {
+      modesToExport.forEach(function(modeKey) {
+        sectionsHtml.push(buildBuildingReportHtml(bldg, modeKey, dateStr, isFirst, offCanvas));
+        isFirst = false;
       });
-
-      var firstFloorData = allFloorsData[0];
-
-      var floorImages = allFloorsData.map(function(fData) {
-        renderFloorToCanvas(
-          offCanvas,
-          bldg,
-          fData,
-          firstFloorData,
-          fData.floorIdx,
-          isCenter,
-          700,
-          295,
-          1.0,
-          0,
-          0
-        );
-        return offCanvas.toDataURL('image/png');
-      });
-
-      html.push('<div class="pr-bldg-section' + (bIdx > 0 ? ' pr-bldg-pagebreak' : '') + '">');
-      html.push('<div class="pr-header">');
-      html.push('  <div class="pr-title">建物調査野帳・求積図レポート</div>');
-      html.push('  <div class="pr-meta">出力日時: ' + escapeHtml(dateStr) + '<br>計測基準: <b>' + escapeHtml(modeLabel) + '</b></div>');
-      html.push('</div>');
-
-      // 建物基本情報グリッドテーブル
-      html.push('<table class="pr-summary-table">');
-      html.push('  <tr>');
-      html.push('    <th>現場名</th><td><b>' + escapeHtml(siteName || '（未入力）') + '</b></td>');
-      html.push('    <th>対象建物</th><td><b>' + escapeHtml(bldg.label) + '</b>（全' + bldg.floors.length + '階）</td>');
-      html.push('  </tr>');
-      html.push('  <tr>');
-      html.push('    <th>外壁厚</th><td>' + wallThickMm + ' mm（片側 ' + (wallThickMm / 2).toFixed(1) + ' mm）</td>');
-      html.push('    <th>登記床面積合計</th><td><b style="font-size:10.5pt;">' + totalFloored.toFixed(2) + ' ㎡</b>（' + (totalFloored * 0.3025).toFixed(2) + ' 坪）</td>');
-      html.push('  </tr>');
-      html.push('</table>');
-
-      // 構造・屋根区分一覧
-      var rawSumSec = bldgSecRawAreas.reduce(function(a, b) { return a + b; }, 0);
-      var maxSecArea = 0;
-      var maxSecIdx = -1;
-      for (var s = 0; s < numSections; s++) {
-        if (bldgSecRawAreas[s] > maxSecArea + 1e-6) {
-          maxSecArea = bldgSecRawAreas[s];
-          maxSecIdx = s;
-        }
-      }
-
-      html.push('<div class="pr-sub-title">■ 建物の種類・構造・屋根の種類' + (numSections > 1 ? '（区分別面積・割合判定）' : '') + '</div>');
-      html.push('<table class="pr-table">');
-      html.push('  <thead><tr>');
-      html.push('    <th style="width:42px;">区分</th>');
-      html.push('    <th>種類</th>');
-      html.push('    <th>構造</th>');
-      html.push('    <th>屋根の種類</th>');
-      html.push('    <th>場所メモ</th>');
-      if (numSections > 1) {
-        html.push('    <th style="width:80px;">床面積</th>');
-        html.push('    <th style="width:60px;">割合</th>');
-        html.push('    <th style="width:76px;">判定</th>');
-      }
-      html.push('  </tr></thead><tbody>');
-
-      bldg.sections.forEach(function(sec, sIdx) {
-        var badge = CIRCLED_NUMS[sIdx] || (sIdx + 1);
-        var pct = (rawSumSec > 0.0001) ? (bldgSecRawAreas[sIdx] / rawSumSec * 100) : 0;
-        var sFl = bldgSecFlooredAreas[sIdx] || 0;
-        var isMain = (sIdx === maxSecIdx && maxSecArea > 0.001);
-
-        html.push('  <tr>');
-        html.push('    <td class="center"><b>' + badge + '</b></td>');
-        html.push('    <td>' + escapeHtml(sec.kind || '-') + '</td>');
-        html.push('    <td>' + escapeHtml(sec.structure || '-') + '</td>');
-        html.push('    <td>' + escapeHtml(sec.roof || '-') + '</td>');
-        html.push('    <td>' + escapeHtml(sec.note || '-') + '</td>');
-        if (numSections > 1) {
-          html.push('    <td class="num"><b>' + sFl.toFixed(2) + ' ㎡</b></td>');
-          html.push('    <td class="num">' + pct.toFixed(1) + '%</td>');
-          html.push('    <td class="center">' + (isMain ? '<b>主たる部分</b>' : '-') + '</td>');
-        }
-        html.push('  </tr>');
-      });
-      html.push('  </tbody></table>');
-
-      // 各階ごとの図面＋辺長・離れ明細
-      allFloorsData.forEach(function(fData, idx) {
-        var closureTxt = fData.outer.isClosed
-          ? ('閉合OK（誤差 ' + fData.outer.closureErr.toFixed(3) + ' m）')
-          : ('未閉合（残 X:' + (-fData.outer.dx).toFixed(3) + ' / Y:' + (-fData.outer.dy).toFixed(3) + ' m）');
-
-        var offsetBadgeHtml = (idx > 0 && (fData.offsetX !== 0 || fData.offsetY !== 0))
-          ? '<span class="pr-fh-offset">1F始点ずれ X:' + fData.offsetX.toFixed(3) + 'm, Y:' + fData.offsetY.toFixed(3) + 'm</span>'
-          : '';
-
-        html.push('<div class="pr-floor-block">');
-        html.push('  <div class="pr-floor-head">');
-        html.push('    <div class="pr-fh-left">' + escapeHtml(bldg.label + ' ' + fData.name) + offsetBadgeHtml + '</div>');
-        html.push('    <div class="pr-fh-right">床面積: ' + fData.area.toFixed(2) + ' ㎡（' + (fData.area * 0.3025).toFixed(2) + '坪 / 切捨前: ' + fData.rawArea.toFixed(4) + '㎡）｜ ' + closureTxt + '</div>');
-        html.push('  </div>');
-
-        html.push('  <div class="pr-drawing-box">');
-        html.push('    <img src="' + floorImages[idx] + '" alt="' + escapeHtml(fData.name) + '図面">');
-        html.push('  </div>');
-
-        html.push('  <div class="pr-two-col">');
-        // 左列：辺長一覧
-        html.push('    <div class="pr-col-left">');
-        html.push('      <div class="pr-sub-title">辺長・方向一覧（' + (isCenter ? '壁芯' : '実測') + '）</div>');
-        html.push('      <table class="pr-table" style="margin-bottom:0;">');
-        html.push('        <thead><tr><th style="width:40px;">辺</th><th style="width:40px;">区分</th><th style="width:40px;">方向</th><th>寸法 (m)</th></tr></thead><tbody>');
-
-        for (var i = 0; i < fData.activePts.length - 1; i++) {
-          var len = Math.hypot(fData.activePts[i + 1].x - fData.activePts[i].x, fData.activePts[i + 1].y - fData.activePts[i].y);
-          var ed = fData.edges[i];
-          var dObj = DIRS.find(function(d) { return d.key === ed.dir; }) || DIRS[0];
-          var sBadge = CIRCLED_NUMS[ed.secIdx || 0] || '①';
-          html.push('        <tr>');
-          html.push('          <td class="center">#' + (i + 1) + '</td>');
-          html.push('          <td class="center">' + sBadge + '</td>');
-          html.push('          <td class="center">' + dObj.label + '</td>');
-          html.push('          <td class="num">' + len.toFixed(3) + ' m</td>');
-          html.push('        </tr>');
-        }
-        html.push('        </tbody></table>');
-        html.push('    </div>');
-
-        // 右列：境界線までの離れ
-        html.push('    <div class="pr-col-right">');
-        html.push('      <div class="pr-sub-title">境界線までの離れ</div>');
-        if (fData.extLines.length > 0) {
-          html.push('      <table class="pr-table" style="margin-bottom:0;">');
-          html.push('        <thead><tr><th>対象辺・方向</th><th>距離 (m)</th><th>図面表記</th></tr></thead><tbody>');
-          fData.extLines.forEach(function(ex) {
-            html.push('        <tr>');
-            html.push('          <td class="center">辺#' + ex.edgeNum + ' ' + escapeHtml(ex.sideText) + '</td>');
-            html.push('          <td class="num">' + ex.dist.toFixed(3) + ' m</td>');
-            html.push('          <td class="center"><b>' + formatSetbackFloor1(ex.dist) + '</b></td>');
-            html.push('        </tr>');
-          });
-          html.push('        </tbody></table>');
-        } else {
-          html.push('      <div style="font-size:8.5pt; color:#64748b; padding:6px; border:1px solid #cbd5e1; border-radius:4px;">離れ入力なし</div>');
-        }
-        html.push('    </div>');
-        html.push('  </div>');
-        html.push('</div>');
-      });
-
-      html.push('</div>');
     });
 
     var printArea = document.getElementById('printReportArea');
-    printArea.innerHTML = html.join('\n');
+    printArea.innerHTML = sectionsHtml.join('\n');
 
     var origTitle = document.title;
-    var safeFileTitle = (siteName ? (siteName + '_') : '') + '建物調査野帳';
+    var suffix = exportBothModes ? '_実測壁芯野帳' : (viewMode === 'center' ? '_壁芯求積図' : '_実測野帳');
+    var safeFileTitle = (siteName ? siteName : '建物調査野帳') + suffix;
     document.title = safeFileTitle;
 
     setTimeout(function() {
@@ -1962,7 +2032,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
   document.getElementById('btnNewSite').addEventListener('click', resetToNewSite);
-  document.getElementById('btnExportPdf').addEventListener('click', exportPdfReport);
+  document.getElementById('btnExportPdfBoth').addEventListener('click', function() { exportPdfReport(true); });
+  document.getElementById('btnExportPdfSingle').addEventListener('click', function() { exportPdfReport(false); });
 
   document.getElementById('btnJumpInputs').addEventListener('click', function() {
     var target = document.getElementById('edgeInputCard');
@@ -2243,6 +2314,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
   }
 
+  // 壁芯オフセット計算（直線途中の区分切替時は法線方向オフセットのみを維持）
   function computeOffsetPolygon(pts, offsetDist, edges, isStrictlyClosed) {
     if (pts.length < 4 || offsetDist === 0) {
       return pts.map(function(p) { return { x: p.x, y: p.y }; });
@@ -2335,19 +2407,7 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
 
-        if (edges && edges[prevIdx] && edges[i] && L2.len > 1e-6) {
-          var sPrev = edges[prevIdx].secIdx || 0;
-          var sCurr = edges[i].secIdx || 0;
-          if (sPrev !== sCurr) {
-            var shift = (sPrev < sCurr) ? -offsetDist : offsetDist;
-            offsetPts.push({
-              x: L2.p1.x + L2.ux * shift,
-              y: L2.p1.y + L2.uy * shift
-            });
-            continue;
-          }
-        }
-
+        // 直線途中の区分切替（180度接続）時は進行方向への不要なシフトを行わず法線オフセット点のみ使用
         offsetPts.push({ x: L2.p1.x, y: L2.p1.y });
       }
     }
@@ -2391,6 +2451,19 @@ document.addEventListener('DOMContentLoaded', function() {
     return true;
   }
 
+  function isSameBridgeLine(lineA, lineB) {
+    if (lineA.length !== lineB.length) return false;
+    var sameFwd = true;
+    var sameRev = true;
+    var len = lineA.length;
+    for (var i = 0; i < len; i++) {
+      if (Math.hypot(lineA[i].x - lineB[i].x, lineA[i].y - lineB[i].y) > 0.005) sameFwd = false;
+      if (Math.hypot(lineA[i].x - lineB[len - 1 - i].x, lineA[i].y - lineB[len - 1 - i].y) > 0.005) sameRev = false;
+    }
+    return sameFwd || sameRev;
+  }
+
+  // 3区分以上でもすべての区分境界線を算出し面積・分割ラインを補完
   function computeSectionAreasAndBridges(pts, edges, numSections, splitMode) {
     var areas = [];
     var bridges = [];
@@ -2444,6 +2517,16 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
+    function pushUniqueBridge(bLine) {
+      for (var k = 0; k < bridges.length; k++) {
+        if (isSameBridgeLine(bridges[k], bLine)) return;
+      }
+      if (!isBridgeLineInsidePolygon(bLine, pts)) {
+        isBridgeOutside = true;
+      }
+      bridges.push(bLine);
+    }
+
     var sharedCorner = null;
     if (arcs.length === 2) {
       var a0 = arcs[0].pts;
@@ -2451,13 +2534,10 @@ document.addEventListener('DOMContentLoaded', function() {
       var bLine = [a0[a0.length - 1]];
       if (sharedCorner) bLine.push(sharedCorner);
       bLine.push(a0[0]);
-      if (!isBridgeLineInsidePolygon(bLine, pts)) {
-        isBridgeOutside = true;
-      }
-      bridges.push(bLine);
+      pushUniqueBridge(bLine);
     }
 
-    arcs.forEach(function(arc, aIdx) {
+    arcs.forEach(function(arc) {
       var aPts = arc.pts.slice();
       if (aPts.length < 2) return;
 
@@ -2469,13 +2549,10 @@ document.addEventListener('DOMContentLoaded', function() {
       } else {
         var corner = getBridgeCorner(pEnd, pStart, splitMode);
         if (corner) aPts.push(corner);
-        if (aIdx === 0) {
-          var bLine = [pEnd];
-          if (corner) bLine.push(corner);
-          bLine.push(pStart);
-          if (!isBridgeLineInsidePolygon(bLine, pts)) isBridgeOutside = true;
-          bridges.push(bLine);
-        }
+        var bLine = [pEnd];
+        if (corner) bLine.push(corner);
+        bLine.push(pStart);
+        pushUniqueBridge(bLine);
       }
 
       var signed2 = 0;
@@ -2613,7 +2690,15 @@ document.addEventListener('DOMContentLoaded', function() {
           if (idx + 1 < allInputs.length) {
             allInputs[idx + 1].focus();
           } else {
-            inp.blur();
+            // 最終行でEnter時：未閉合かつ値入力済みなら自動で次の辺を追加してフォーカス移動
+            var curF = getCurFloor();
+            var outerCheck = computeOuterPoints(curF.edges, curF.offsetX, curF.offsetY);
+            var curVal = parseFloat(inp.value) || 0;
+            if (!outerCheck.isClosed && curVal > 0 && !outerCheck.geomCheck.hasError) {
+              addEdge();
+            } else {
+              inp.blur();
+            }
           }
         }
       });
@@ -2889,6 +2974,13 @@ document.addEventListener('DOMContentLoaded', function() {
         rowEl.classList.toggle('edge-error', !!errMap[idx]);
       }
     });
+
+    // 最終入力欄のEnterKeyHintを閉合状態に応じて更新
+    var allInputs = document.querySelectorAll('.len-input');
+    if (allInputs.length > 0) {
+      var lastInp = allInputs[allInputs.length - 1];
+      lastInp.enterKeyHint = currentFloorData.outer.isClosed ? 'done' : 'next';
+    }
 
     var banner = document.getElementById('closureBanner');
     var err = currentFloorData.outer.closureErr;
@@ -3167,7 +3259,7 @@ document.addEventListener('DOMContentLoaded', function() {
       return false;
     }
 
-    // 1. 1階ガイド線（視認性を高めた破線＆基準ずれ時は1F-S表示）
+    // 1. 1階ガイド線（下屋・張り出しの視認性を高めた破線＆角ドット＆基準ずれ線表示）
     if (show1F && firstData.activePts.length > 1) {
       ctx.save();
       ctx.beginPath();
@@ -3176,22 +3268,46 @@ document.addEventListener('DOMContentLoaded', function() {
         if (i === 0) ctx.moveTo(sp.x, sp.y);
         else ctx.lineTo(sp.x, sp.y);
       });
-      ctx.setLineDash([5, 4]);
-      ctx.strokeStyle = '#64748b';
-      ctx.lineWidth = 1.25;
+      ctx.setLineDash([5, 3.5]);
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 1.35;
       ctx.stroke();
 
-      if ((curData.offsetX !== 0 || curData.offsetY !== 0) && firstData.activePts[0]) {
-        var fStartSp = toScreen(firstData.activePts[0].x, firstData.activePts[0].y);
-        if (fStartSp.x >= -15 && fStartSp.x <= W + 15 && fStartSp.y >= -15 && fStartSp.y <= H + 15) {
-          ctx.setLineDash([]);
-          ctx.fillStyle = '#64748b';
+      // 1階角ドットを描画して下屋幅の把握を容易にする
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#64748b';
+      for (var k = 0; k < firstData.activePts.length - 1; k++) {
+        var cp = toScreen(firstData.activePts[k].x, firstData.activePts[k].y);
+        if (cp.x >= -10 && cp.x <= W + 10 && cp.y >= -10 && cp.y <= H + 10) {
           ctx.beginPath();
-          ctx.arc(fStartSp.x, fStartSp.y, 3.2, 0, Math.PI * 2);
+          ctx.arc(cp.x, cp.y, 2.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      if ((curData.offsetX !== 0 || curData.offsetY !== 0) && firstData.activePts[0] && pts[0]) {
+        var fStartSp = toScreen(firstData.activePts[0].x, firstData.activePts[0].y);
+        var curStartSp = toScreen(pts[0].x, pts[0].y);
+
+        // 1F始点から2F始点までの基準ずれ補助線
+        ctx.save();
+        ctx.setLineDash([2, 2]);
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1.0;
+        ctx.beginPath();
+        ctx.moveTo(fStartSp.x, fStartSp.y);
+        ctx.lineTo(curStartSp.x, curStartSp.y);
+        ctx.stroke();
+        ctx.restore();
+
+        if (fStartSp.x >= -15 && fStartSp.x <= W + 15 && fStartSp.y >= -15 && fStartSp.y <= H + 15) {
+          ctx.fillStyle = '#475569';
+          ctx.beginPath();
+          ctx.arc(fStartSp.x, fStartSp.y, 3.4, 0, Math.PI * 2);
           ctx.fill();
           ctx.font = 'bold 9.5px sans-serif';
-          ctx.fillText('1F-S', fStartSp.x - 16, fStartSp.y - 5);
-          obstacleBoxes.push({ x1: fStartSp.x - 18, x2: fStartSp.x + 8, y1: fStartSp.y - 14, y2: fStartSp.y + 5 });
+          ctx.fillText('1F-S', fStartSp.x - 18, fStartSp.y - 5);
+          obstacleBoxes.push({ x1: fStartSp.x - 20, x2: fStartSp.x + 8, y1: fStartSp.y - 15, y2: fStartSp.y + 6 });
         }
       }
       ctx.restore();
@@ -3229,7 +3345,7 @@ document.addEventListener('DOMContentLoaded', function() {
       ctx.restore();
     }
 
-    // 3.5 構造・屋根の区分境界線（紫破線で面積分割ラインを明示）
+    // 3.5 構造・屋根の区分境界線（すべての境界線を紫破線で描画）
     var hasMultipleSecs = curBldg.sections.length > 1;
     if (hasMultipleSecs && curData.bridges && curData.bridges.length > 0) {
       ctx.save();
@@ -3481,7 +3597,6 @@ document.addEventListener('DOMContentLoaded', function() {
         var halfProj = (tw / 2) * Math.abs(outNx) + (th / 2) * Math.abs(outNy);
         var baseN = Math.ceil(halfProj + 6);
 
-        // 凹部（狭い溝）でも開口部側へ引出線付きで退避できるよう接線方向(t)の広域候補を含む
         var candidates = [
           { n: baseN, t: 0 },
           { n: baseN + 14, t: 0 },
