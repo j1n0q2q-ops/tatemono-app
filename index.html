@@ -1,0 +1,1991 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>建物図面・現場野帳アプリ</title>
+<style>
+  :root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --accent: #ea580c;
+    --bg: #f1f5f9;
+    --card: #ffffff;
+    --text: #0f172a;
+    --muted: #64748b;
+    --border: #cbd5e1;
+    --ok: #16a34a;
+    --ng: #dc2626;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 8px;
+    font-size: 14px;
+    padding-bottom: 50px;
+  }
+  .container { max-width: 760px; margin: 0 auto; }
+
+  #jsAlert {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 2px solid #ef4444;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    font-size: 0.88rem;
+    line-height: 1.4;
+  }
+
+  /* 実測 / 壁芯 トグル */
+  .top-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg);
+    padding: 4px 0 8px 0;
+  }
+  .toggle-switch {
+    display: flex;
+    background: #e2e8f0;
+    border-radius: 10px;
+    padding: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  }
+  .toggle-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 10px 8px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    border-radius: 7px;
+    color: var(--muted);
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .toggle-btn.active.outer {
+    background: var(--primary);
+    color: #fff;
+  }
+  .toggle-btn.active.center {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  /* 現場名・ファイル保存バー */
+  .site-bar {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    background: var(--card);
+    padding: 8px 10px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+  .site-input {
+    flex: 1;
+    min-width: 110px;
+    height: 36px;
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.92rem;
+    font-weight: bold;
+    color: var(--text);
+  }
+  .site-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: #eff6ff;
+  }
+  .site-btn {
+    height: 36px;
+    padding: 0 10px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 0.82rem;
+    cursor: pointer;
+    white-space: nowrap;
+    touch-action: manipulation;
+  }
+  .btn-save { background: #0f766e; color: #fff; }
+  .btn-load { background: #e2e8f0; color: #1e293b; }
+  .btn-new  { background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; }
+
+  /* 建物タブ ＆ 階タブ */
+  .tab-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+  .bldg-tab {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #93c5fd;
+    background: #eff6ff;
+    font-weight: bold;
+    font-size: 0.88rem;
+    color: #1e40af;
+    cursor: pointer;
+    white-space: nowrap;
+    touch-action: manipulation;
+  }
+  .bldg-tab.active {
+    background: #1d4ed8;
+    color: #fff;
+    border-color: #1e3a8a;
+  }
+  .floor-tab {
+    padding: 7px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    font-weight: bold;
+    font-size: 0.88rem;
+    color: var(--text);
+    cursor: pointer;
+    white-space: nowrap;
+    touch-action: manipulation;
+  }
+  .floor-tab.active {
+    background: #1e293b;
+    color: #fff;
+    border-color: #1e293b;
+  }
+  .tab-add {
+    background: #e2e8f0;
+    color: #334155;
+    border: 1px dashed #94a3b8;
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: #334155;
+    gap: 6px;
+  }
+
+  /* 辺長入力行 */
+  .edge-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .edge-num {
+    width: 24px;
+    font-weight: bold;
+    color: var(--muted);
+    text-align: center;
+    font-size: 0.82rem;
+  }
+  .dir-group {
+    display: flex;
+    gap: 2px;
+  }
+  .dir-btn {
+    width: 36px;
+    height: 40px;
+    border: 1px solid var(--border);
+    background: #f8fafc;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #334155;
+    cursor: pointer;
+    padding: 0;
+    touch-action: manipulation;
+  }
+  .dir-btn.selected {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary-dark);
+  }
+  .sec-badge-btn {
+    height: 40px;
+    min-width: 34px;
+    padding: 0 6px;
+    border-radius: 6px;
+    border: none;
+    color: #fff;
+    font-weight: bold;
+    font-size: 0.85rem;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .len-input-wrap {
+    flex: 1;
+    min-width: 75px;
+  }
+  .len-input {
+    width: 100%;
+    height: 40px;
+    padding: 4px 8px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    text-align: right;
+  }
+  .len-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: #eff6ff;
+  }
+  .del-btn {
+    width: 32px;
+    height: 40px;
+    border: none;
+    background: #fee2e2;
+    color: var(--ng);
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  /* 延長線（離れ）入力行 */
+  .ext-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .ext-select {
+    height: 38px;
+    padding: 4px 6px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #f8fafc;
+    font-size: 0.84rem;
+    font-weight: bold;
+    color: var(--text);
+  }
+  .ext-edge-sel { width: 76px; }
+  .ext-side-sel { width: 108px; }
+  .ext-dist-inp {
+    flex: 1;
+    min-width: 70px;
+    height: 38px;
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    text-align: right;
+  }
+  .ext-dist-inp:focus {
+    outline: none;
+    border-color: #ef4444;
+    background: #fef2f2;
+  }
+
+  /* 建物メモ（種類・構造・屋根）区分カード */
+  .sec-box {
+    border: 1px solid #e2e8f0;
+    border-left-width: 5px;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 8px;
+    background: #f8fafc;
+  }
+  .sec-top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .sec-pill {
+    padding: 2px 8px;
+    border-radius: 12px;
+    color: #fff;
+    font-weight: bold;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+  .sec-note-inp {
+    flex: 1;
+    height: 32px;
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    background: #fff;
+  }
+  .sec-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .sec-field label {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-weight: bold;
+    margin-bottom: 2px;
+  }
+  .sec-field input {
+    width: 100%;
+    height: 34px;
+    padding: 4px 6px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.88rem;
+    background: #fff;
+  }
+
+  .action-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .btn {
+    flex: 1;
+    padding: 11px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 0.92rem;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .btn-add { background: var(--primary); color: #fff; }
+  .btn-add:active { background: var(--primary-dark); }
+  .btn-ext { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+  .btn-sec { background: #e0e7ff; color: #1e40af; border: 1px solid #a5b4fc; }
+  .btn-copy { background: #e2e8f0; color: #1e293b; font-size: 0.84rem; }
+
+  .sub-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .field-item label {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 3px;
+    font-weight: bold;
+  }
+  .field-item input {
+    width: 100%;
+    height: 36px;
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.95rem;
+    text-align: right;
+  }
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  canvas {
+    width: 100%;
+    height: 340px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    display: block;
+  }
+  .status-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .stat-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 8px;
+  }
+  .stat-label { font-size: 0.75rem; color: var(--muted); }
+  .stat-val { font-size: 1.02rem; font-weight: bold; margin-top: 2px; }
+  .closure-banner {
+    margin-top: 8px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 0.88rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .closure-ok { background: #dcfce7; color: var(--ok); border: 1px solid #86efac; }
+  .closure-ng { background: #fee2e2; color: var(--ng); border: 1px solid #fca5a5; }
+  .closure-empty { background: #f1f5f9; color: var(--muted); border: 1px solid #cbd5e1; }
+
+  /* 構造・屋根区分別の面積・割合パネル（不動産登記判定用） */
+  .sec-breakdown {
+    margin-top: 8px;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 8px 10px;
+  }
+  .sec-bd-title {
+    font-size: 0.76rem;
+    font-weight: bold;
+    color: #334155;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .sec-bd-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-top: 1px solid #e2e8f0;
+    gap: 8px;
+  }
+  .sec-bd-row:first-of-type {
+    border-top: none;
+    padding-top: 2px;
+  }
+  .sec-bd-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+  }
+  .sec-bd-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 10px;
+    color: #fff;
+    font-weight: bold;
+    font-size: 0.74rem;
+    white-space: nowrap;
+    margin-top: 1px;
+  }
+  .sec-bd-name {
+    font-size: 0.82rem;
+    font-weight: bold;
+    color: #1e293b;
+    line-height: 1.3;
+    word-break: break-all;
+  }
+  .sec-bd-main-tag {
+    display: inline-block;
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #93c5fd;
+    font-size: 0.68rem;
+    font-weight: bold;
+    padding: 0 5px;
+    border-radius: 4px;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+  .sec-bd-sub {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 1px;
+  }
+  .sec-bd-right {
+    text-align: right;
+    white-space: nowrap;
+  }
+  .sec-bd-area {
+    font-size: 0.92rem;
+    font-weight: bold;
+    color: #0f172a;
+  }
+  .sec-bd-ratio {
+    font-size: 0.88rem;
+    font-weight: bold;
+    color: var(--primary);
+    margin-left: 4px;
+  }
+  .sec-bd-floor-sub {
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div id="jsAlert">
+    ⚠ プログラムが停止しています。Chromeで開いてください。
+  </div>
+
+  <!-- 実測 / 壁芯 切替トグル -->
+  <div class="top-bar">
+    <div class="toggle-switch">
+      <button type="button" id="btnModeOuter" class="toggle-btn active outer">
+        実測寸法（外法）
+      </button>
+      <button type="button" id="btnModeCenter" class="toggle-btn center">
+        壁芯寸法（変換）
+      </button>
+    </div>
+  </div>
+
+  <!-- 現場名 ＆ ファイル保存・読込バー -->
+  <div class="site-bar">
+    <input type="text" id="siteName" class="site-input" placeholder="現場名（例：姶良市〇〇邸）">
+    <button type="button" id="btnSaveFile" class="site-btn btn-save">💾 保存</button>
+    <button type="button" id="btnLoadFile" class="site-btn btn-load">📂 読込</button>
+    <button type="button" id="btnNewSite" class="site-btn btn-new">新規</button>
+    <input type="file" id="fileInput" accept=".json,application/json" style="display:none;">
+  </div>
+
+  <!-- 建物タブ（主たる建物 / 附属建物） -->
+  <div class="tab-row" id="bldgTabs"></div>
+
+  <!-- 階層タブ（1階 / 2階...） -->
+  <div class="tab-row" id="floorTabs"></div>
+
+  <!-- 1. 辺長・方向入力（最上部） -->
+  <div class="card">
+    <div class="card-header">
+      <span id="inputTitle">主たる建物 1階 辺長・方向</span>
+      <div style="display:flex; gap:4px;">
+        <button type="button" id="btnDeleteFloor" class="del-btn" style="width:auto; height:28px; padding:0 8px; font-size:0.75rem; display:none;">階削除</button>
+        <button type="button" id="btnDeleteBldg" class="del-btn" style="width:auto; height:28px; padding:0 8px; font-size:0.75rem; display:none;">附属削除</button>
+      </div>
+    </div>
+    <div id="secHint" style="font-size:0.78rem; color:#475569; margin-bottom:6px; display:none;">
+      ※ 屋根・構造が異なる場合は、各辺の <b>① / ②</b> ボタンをタップして該当区分を切り替えてください。
+    </div>
+    <div id="edgeList"></div>
+    <div class="action-row">
+      <button type="button" id="btnAddEdge" class="btn btn-add">＋ 辺を追加</button>
+      <button type="button" id="btnCopyFloor" class="btn btn-copy" style="display:none;">1階の形状をコピー</button>
+    </div>
+  </div>
+
+  <!-- 2. 境界線までの離れ（デフォルト3か所） -->
+  <div class="card">
+    <div class="card-header">
+      <span>境界線までの離れ（辺の延長距離 m）</span>
+    </div>
+    <div id="extList"></div>
+    <button type="button" id="btnAddExt" class="btn btn-ext" style="width:100%;">＋ 離れ（延長線）を追加</button>
+  </div>
+
+  <!-- 3. 建物メモ（種類・構造・屋根の種類）・壁厚 -->
+  <div class="card">
+    <div class="card-header">
+      <span id="memoTitle">主たる建物：種類・構造・屋根のメモ</span>
+    </div>
+    <div id="secList"></div>
+    <button type="button" id="btnAddSec" class="btn btn-sec" style="width:100%; margin-bottom:12px;">＋ 屋根・構造の異なる部分を追加</button>
+
+    <div class="sub-grid" style="border-top: 1px solid #e2e8f0; padding-top: 10px;">
+      <div class="field-item">
+        <label>外壁厚 (mm)</label>
+        <input type="number" inputmode="decimal" id="wallThickness" value="150">
+      </div>
+      <div class="field-item">
+        <label>壁芯オフセット片側</label>
+        <input type="text" id="halfWallDisplay" value="75.0 mm" disabled style="background:#f1f5f9; color:#64748b;">
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 図面プレビュー & 計算結果（1番下） -->
+  <div class="card">
+    <div class="card-header">
+      <span id="previewTitle">主たる建物 1階 平面プレビュー</span>
+      <span id="modeBadge" style="color: var(--primary); font-size: 0.78rem;">● 実測（外法）表示中</span>
+    </div>
+    <canvas id="viewCanvas"></canvas>
+
+    <div id="overlayOption" class="checkbox-row" style="display:none;">
+      <input type="checkbox" id="showFirstFloor" checked>
+      <label for="showFirstFloor">1階の外周線をガイド表示する</label>
+    </div>
+
+    <div id="closureBanner" class="closure-banner closure-empty">
+      <span>辺長未入力</span>
+      <span>-</span>
+    </div>
+
+    <div class="status-grid">
+      <div class="stat-box">
+        <div class="stat-label" id="floorAreaLabel">1階 床面積（実測）</div>
+        <div class="stat-val" id="floorAreaVal">0.00 ㎡</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label" id="totalAreaLabel">建物合計 床面積</div>
+        <div class="stat-val" id="totalAreaVal">0.00 ㎡</div>
+      </div>
+    </div>
+
+    <!-- 構造・屋根区分別の面積・割合（2区分以上のときに自動表示） -->
+    <div id="sectionBreakdown" class="sec-breakdown" style="display:none;"></div>
+  </div>
+
+</div>
+
+<!-- 入力サジェスト用データリスト -->
+<datalist id="listKind">
+  <option value="居宅"></option>
+  <option value="店舗"></option>
+  <option value="事務所"></option>
+  <option value="倉庫"></option>
+  <option value="車庫"></option>
+  <option value="物置"></option>
+  <option value="居宅・店舗"></option>
+</datalist>
+<datalist id="listStruct">
+  <option value="木造"></option>
+  <option value="軽量鉄骨造"></option>
+  <option value="鉄骨造"></option>
+  <option value="鉄筋コンクリート造"></option>
+</datalist>
+<datalist id="listRoof">
+  <option value="かわらぶき"></option>
+  <option value="セメントかわらぶき"></option>
+  <option value="合金メッキ鋼板ぶき"></option>
+  <option value="亜鉛メッキ鋼板ぶき"></option>
+  <option value="スレートぶき"></option>
+  <option value="ビニール板ぶき"></option>
+</datalist>
+
+<script>
+window.onerror = function(msg, url, line) {
+  var alertBox = document.getElementById('jsAlert');
+  if (alertBox) {
+    alertBox.style.display = 'block';
+    alertBox.textContent = '⚠ エラーが発生しました (' + line + '行目): ' + msg;
+  }
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+  var alertBox = document.getElementById('jsAlert');
+  if (alertBox) alertBox.style.display = 'none';
+
+  var STORAGE_KEY = 'survey_field_note_autosave_v1';
+
+  var DIRS = [
+    { key: 'R', label: '→', opp: '←', dx: 1,  dy: 0 },
+    { key: 'D', label: '↓', opp: '↑', dx: 0,  dy: 1 },
+    { key: 'L', label: '←', opp: '→', dx: -1, dy: 0 },
+    { key: 'U', label: '↑', opp: '↓', dx: 0,  dy: -1 }
+  ];
+
+  var SEC_COLORS = ['#2563eb', '#059669', '#9333ea', '#d97706', '#0891b2', '#be185d'];
+  var CIRCLED_NUMS = ['①', '②', '③', '④', '⑤', '⑥'];
+
+  var viewMode = 'outer';
+  var siteName = '';
+  var currentBldgIdx = 0;
+  var currentFloorIdx = 0;
+
+  function createDefaultExtensions() {
+    return [
+      { edgeIdx: 0, side: 'end', dist: '' },
+      { edgeIdx: 1, side: 'end', dist: '' },
+      { edgeIdx: 2, side: 'end', dist: '' }
+    ];
+  }
+
+  function createBuildingData(label, defaultKind) {
+    return {
+      label: label,
+      wallThickness: 150,
+      sections: [
+        { kind: defaultKind, structure: '木造', roof: 'かわらぶき', note: '' }
+      ],
+      floors: [
+        {
+          name: '1階',
+          edges: [
+            { dir: 'R', len: '', secIdx: 0 },
+            { dir: 'D', len: '', secIdx: 0 },
+            { dir: 'L', len: '', secIdx: 0 },
+            { dir: 'U', len: '', secIdx: 0 }
+          ],
+          extensions: createDefaultExtensions()
+        }
+      ]
+    };
+  }
+
+  var buildings = [
+    createBuildingData('主たる建物', '居宅')
+  ];
+
+  function saveToLocalStorage() {
+    try {
+      var payload = {
+        siteName: siteName,
+        buildings: buildings,
+        currentBldgIdx: currentBldgIdx,
+        currentFloorIdx: currentFloorIdx
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch (e) {}
+  }
+
+  function loadFromLocalStorage() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      var data = JSON.parse(raw);
+      if (data && Array.isArray(data.buildings) && data.buildings.length > 0) {
+        siteName = data.siteName || '';
+        buildings = data.buildings;
+        currentBldgIdx = Math.min(data.currentBldgIdx || 0, buildings.length - 1);
+        currentFloorIdx = Math.min(data.currentFloorIdx || 0, buildings[currentBldgIdx].floors.length - 1);
+      }
+    } catch (e) {}
+  }
+
+  loadFromLocalStorage();
+
+  function exportSiteFile() {
+    var payload = {
+      app: '建物図面・現場野帳アプリ',
+      savedAt: new Date().toISOString(),
+      siteName: siteName,
+      buildings: buildings
+    };
+    var jsonStr = JSON.stringify(payload, null, 2);
+    var blob = new Blob([jsonStr], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+
+    var safeName = (siteName || '').trim().replace(/[\\/:*?"<>|]/g, '_');
+    if (!safeName) {
+      var d = new Date();
+      var y = d.getFullYear();
+      var m = ('0' + (d.getMonth() + 1)).slice(-2);
+      var day = ('0' + d.getDate()).slice(-2);
+      safeName = '現場野帳_' + y + m + day;
+    }
+
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = safeName + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function importSiteFile(file) {
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var data = JSON.parse(e.target.result);
+        if (!data || !Array.isArray(data.buildings) || data.buildings.length === 0) {
+          alert('対応していないファイル形式です。');
+          return;
+        }
+        siteName = data.siteName || file.name.replace(/\.json$/i, '');
+        buildings = data.buildings;
+        currentBldgIdx = 0;
+        currentFloorIdx = 0;
+        saveToLocalStorage();
+        renderAll();
+      } catch (err) {
+        alert('ファイルの読み込みに失敗しました: ' + err.message);
+      }
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
+
+  function resetToNewSite() {
+    if (!confirm('現在の入力内容をクリアして新しい現場を開始しますか？\n（必要に応じて先に「保存」してください）')) {
+      return;
+    }
+    siteName = '';
+    buildings = [createBuildingData('主たる建物', '居宅')];
+    currentBldgIdx = 0;
+    currentFloorIdx = 0;
+    saveToLocalStorage();
+    renderAll();
+  }
+
+  function getCurBldg() {
+    return buildings[currentBldgIdx];
+  }
+  function getCurFloor() {
+    return buildings[currentBldgIdx].floors[currentFloorIdx];
+  }
+
+  function formatSetbackFloor1(val) {
+    var floored = Math.floor((val + 1e-9) * 10) / 10;
+    return floored.toFixed(1) + 'm';
+  }
+
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function setMode(mode) {
+    viewMode = mode;
+    document.getElementById('btnModeOuter').classList.toggle('active', mode === 'outer');
+    document.getElementById('btnModeCenter').classList.toggle('active', mode === 'center');
+    renderAll();
+  }
+
+  function selectBuilding(idx) {
+    currentBldgIdx = idx;
+    currentFloorIdx = 0;
+    saveToLocalStorage();
+    renderAll();
+  }
+
+  function addBuilding() {
+    var subNum = buildings.length;
+    buildings.push(createBuildingData('附属建物 符号' + subNum, '物置'));
+    currentBldgIdx = buildings.length - 1;
+    currentFloorIdx = 0;
+    saveToLocalStorage();
+    renderAll();
+  }
+
+  function deleteCurrentBuilding() {
+    if (currentBldgIdx === 0 || buildings.length <= 1) return;
+    buildings.splice(currentBldgIdx, 1);
+    buildings.forEach(function(b, i) {
+      b.label = (i === 0) ? '主たる建物' : ('附属建物 符号' + i);
+    });
+    currentBldgIdx = Math.max(0, currentBldgIdx - 1);
+    currentFloorIdx = 0;
+    saveToLocalStorage();
+    renderAll();
+  }
+
+  function selectFloor(idx) {
+    currentFloorIdx = idx;
+    saveToLocalStorage();
+    renderAll();
+  }
+
+  function addFloor() {
+    var bldg = getCurBldg();
+    var nextNum = bldg.floors.length + 1;
+    bldg.floors.push({
+      name: nextNum + '階',
+      edges: [
+        { dir: 'R', len: '', secIdx: 0 },
+        { dir: 'D', len: '', secIdx: 0 },
+        { dir: 'L', len: '', secIdx: 0 },
+        { dir: 'U', len: '', secIdx: 0 }
+      ],
+      extensions: createDefaultExtensions()
+    });
+    currentFloorIdx = bldg.floors.length - 1;
+    saveToLocalStorage();
+    renderAll();
+  }
+
+  function deleteCurrentFloor() {
+    var bldg = getCurBldg();
+    if (bldg.floors.length <= 1) return;
+    bldg.floors.splice(currentFloorIdx, 1);
+    bldg.floors.forEach(function(f, i) { f.name = (i + 1) + '階'; });
+    currentFloorIdx = Math.max(0, currentFloorIdx - 1);
+    saveToLocalStorage();
+    renderAll();
+  }
+
+  function copyFromFirstFloor() {
+    var bldg = getCurBldg();
+    if (currentFloorIdx === 0) return;
+    var src = bldg.floors[0];
+    bldg.floors[currentFloorIdx].edges = src.edges.map(function(e) {
+      return { dir: e.dir, len: e.len, secIdx: e.secIdx || 0 };
+    });
+    bldg.floors[currentFloorIdx].extensions = src.extensions.map(function(ext) {
+      return { edgeIdx: ext.edgeIdx, side: ext.side, dist: ext.dist };
+    });
+    saveToLocalStorage();
+    renderAll();
+  }
+
+  function addEdge() {
+    var edges = getCurFloor().edges;
+    var order = ['R', 'D', 'L', 'U'];
+    var nextDir = 'R';
+    var nextSec = 0;
+    if (edges.length > 0) {
+      var last = edges[edges.length - 1];
+      var idx = order.indexOf(last.dir);
+      nextDir = order[(idx + 1) % 4];
+      nextSec = last.secIdx || 0;
+    }
+    edges.push({ dir: nextDir, len: '', secIdx: nextSec });
+    saveToLocalStorage();
+    renderAll();
+    var inputs = document.querySelectorAll('.len-input');
+    if (inputs.length > 0) inputs[inputs.length - 1].focus();
+  }
+
+  function removeEdge(idx) {
+    var curFloor = getCurFloor();
+    curFloor.edges.splice(idx, 1);
+    curFloor.extensions = curFloor.extensions
+      .filter(function(ext) { return ext.edgeIdx !== idx; })
+      .map(function(ext) {
+        return {
+          edgeIdx: ext.edgeIdx > idx ? ext.edgeIdx - 1 : ext.edgeIdx,
+          side: ext.side,
+          dist: ext.dist
+        };
+      });
+    saveToLocalStorage();
+    renderAll();
+  }
+
+  function setEdgeDir(idx, dirKey) {
+    getCurFloor().edges[idx].dir = dirKey;
+    saveToLocalStorage();
+    renderAll();
+  }
+
+  function cycleEdgeSec(idx) {
+    var bldg = getCurBldg();
+    var edge = getCurFloor().edges[idx];
+    edge.secIdx = ((edge.secIdx || 0) + 1) % bldg.sections.length;
+    saveToLocalStorage();
+    renderAll();
+  }
+
+  function setEdgeLen(idx, val) {
+    getCurFloor().edges[idx].len = val;
+    saveToLocalStorage();
+    calculateAndDraw();
+  }
+
+  function addExtension() {
+    var curFloor = getCurFloor();
+    if (curFloor.edges.length === 0) return;
+    curFloor.extensions.push({
+      edgeIdx: 0,
+      side: 'end',
+      dist: ''
+    });
+    saveToLocalStorage();
+    renderAll();
+    var extInputs = document.querySelectorAll('.ext-dist-inp');
+    if (extInputs.length > 0) extInputs[extInputs.length - 1].focus();
+  }
+
+  function removeExtension(extIdx) {
+    getCurFloor().extensions.splice(extIdx, 1);
+    saveToLocalStorage();
+    renderAll();
+  }
+
+  function updateExtension(extIdx, key, val) {
+    var ext = getCurFloor().extensions[extIdx];
+    if (!ext) return;
+    ext[key] = (key === 'edgeIdx') ? parseInt(val, 10) : val;
+    saveToLocalStorage();
+    if (key === 'edgeIdx') {
+      renderAll();
+    } else {
+      calculateAndDraw();
+    }
+  }
+
+  function addSection() {
+    var bldg = getCurBldg();
+    if (bldg.sections.length >= 6) return;
+    var baseSec = bldg.sections[0];
+    bldg.sections.push({
+      kind: baseSec ? baseSec.kind : '居宅',
+      structure: baseSec ? baseSec.structure : '木造',
+      roof: '亜鉛メッキ鋼板ぶき',
+      note: '増築部分'
+    });
+    saveToLocalStorage();
+    renderAll();
+  }
+
+  function removeSection(secIdx) {
+    var bldg = getCurBldg();
+    if (bldg.sections.length <= 1) return;
+    bldg.sections.splice(secIdx, 1);
+    bldg.floors.forEach(function(f) {
+      f.edges.forEach(function(e) {
+        if (e.secIdx === secIdx) e.secIdx = 0;
+        else if (e.secIdx > secIdx) e.secIdx -= 1;
+      });
+    });
+    saveToLocalStorage();
+    renderAll();
+  }
+
+  function updateSection(secIdx, key, val) {
+    var sec = getCurBldg().sections[secIdx];
+    if (!sec) return;
+    sec[key] = val;
+    saveToLocalStorage();
+    calculateAndDraw();
+  }
+
+  document.getElementById('siteName').addEventListener('input', function(e) {
+    siteName = e.target.value;
+    saveToLocalStorage();
+  });
+  document.getElementById('btnSaveFile').addEventListener('click', exportSiteFile);
+  document.getElementById('btnLoadFile').addEventListener('click', function() {
+    var fi = document.getElementById('fileInput');
+    fi.value = '';
+    fi.click();
+  });
+  document.getElementById('fileInput').addEventListener('change', function(e) {
+    if (e.target.files && e.target.files[0]) {
+      importSiteFile(e.target.files[0]);
+    }
+  });
+  document.getElementById('btnNewSite').addEventListener('click', resetToNewSite);
+
+  document.getElementById('btnModeOuter').addEventListener('click', function() { setMode('outer'); });
+  document.getElementById('btnModeCenter').addEventListener('click', function() { setMode('center'); });
+  document.getElementById('btnDeleteFloor').addEventListener('click', deleteCurrentFloor);
+  document.getElementById('btnDeleteBldg').addEventListener('click', deleteCurrentBuilding);
+  document.getElementById('btnAddEdge').addEventListener('click', addEdge);
+  document.getElementById('btnCopyFloor').addEventListener('click', copyFromFirstFloor);
+  document.getElementById('btnAddExt').addEventListener('click', addExtension);
+  document.getElementById('btnAddSec').addEventListener('click', addSection);
+  document.getElementById('wallThickness').addEventListener('input', function(e) {
+    getCurBldg().wallThickness = parseFloat(e.target.value) || 0;
+    saveToLocalStorage();
+    calculateAndDraw();
+  });
+  document.getElementById('showFirstFloor').addEventListener('change', renderAll);
+
+  function computeOuterPoints(edges) {
+    var x = 0, y = 0;
+    var pts = [{ x: x, y: y }];
+    var totalLen = 0;
+
+    edges.forEach(function(e) {
+      var len = parseFloat(e.len) || 0;
+      var d = DIRS.find(function(item) { return item.key === e.dir; }) || DIRS[0];
+      x += d.dx * len;
+      y += d.dy * len;
+      pts.push({ x: x, y: y });
+      totalLen += len;
+    });
+
+    var last = pts[pts.length - 1];
+    var dx = last.x - pts[0].x;
+    var dy = last.y - pts[0].y;
+    var closureErr = Math.hypot(dx, dy);
+
+    return { pts: pts, totalLen: totalLen, dx: dx, dy: dy, closureErr: closureErr };
+  }
+
+  function intersectLines(L1, L2) {
+    var x1 = L1.p1.x, y1 = L1.p1.y, x2 = L1.p2.x, y2 = L1.p2.y;
+    var x3 = L2.p1.x, y3 = L2.p1.y, x4 = L2.p2.x, y4 = L2.p2.y;
+    var denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+    if (Math.abs(denom) < 1e-6) return null;
+    var t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denom;
+    return {
+      x: x1 + t * (x2 - x1),
+      y: y1 + t * (y2 - y1)
+    };
+  }
+
+  function computeOffsetPolygon(pts, offsetDist, edges) {
+    if (pts.length < 4 || offsetDist === 0) {
+      return pts.map(function(p) { return { x: p.x, y: p.y }; });
+    }
+
+    var isClosed = Math.hypot(pts[pts.length - 1].x - pts[0].x, pts[pts.length - 1].y - pts[0].y) < 0.2;
+    var poly = isClosed ? pts.slice(0, -1) : pts.slice();
+    var n = poly.length;
+    if (n < 3) {
+      return pts.map(function(p) { return { x: p.x, y: p.y }; });
+    }
+
+    var signedArea = 0;
+    for (var i = 0; i < n; i++) {
+      var p1 = poly[i];
+      var p2 = poly[(i + 1) % n];
+      signedArea += (p1.x * p2.y - p2.x * p1.y);
+    }
+    var sign = signedArea >= 0 ? 1 : -1;
+
+    var lines = [];
+    for (var i = 0; i < n; i++) {
+      var p1 = poly[i];
+      var p2 = poly[(i + 1) % n];
+      var vx = p2.x - p1.x;
+      var vy = p2.y - p1.y;
+      var len = Math.hypot(vx, vy);
+      if (len < 1e-6) {
+        lines.push({ p1: p1, p2: p2, origP1: p1, origP2: p2, ux: 0, uy: 0, nx: 0, ny: 0, len: 0 });
+        continue;
+      }
+      var ux = vx / len;
+      var uy = vy / len;
+      var nx = -uy * sign;
+      var ny = ux * sign;
+      lines.push({
+        p1: { x: p1.x + nx * offsetDist, y: p1.y + ny * offsetDist },
+        p2: { x: p2.x + nx * offsetDist, y: p2.y + ny * offsetDist },
+        origP1: p1,
+        origP2: p2,
+        ux: ux,
+        uy: uy,
+        nx: nx,
+        ny: ny,
+        len: len
+      });
+    }
+
+    var offsetPts = [];
+    for (var i = 0; i < n; i++) {
+      if (!isClosed && i === 0) {
+        offsetPts.push({ x: lines[0].p1.x, y: lines[0].p1.y });
+        continue;
+      }
+      var prevIdx = (i - 1 + n) % n;
+      var L1 = lines[prevIdx];
+      var L2 = lines[i];
+
+      var pt = intersectLines(L1, L2);
+      if (pt) {
+        offsetPts.push(pt);
+      } else {
+        var origP = poly[i];
+        var alignedPerpLine = null;
+
+        if (L2.len > 1e-6) {
+          for (var k = 0; k < n; k++) {
+            if (k === prevIdx || k === i) continue;
+            var Lk = lines[k];
+            if (Lk.len < 1e-6) continue;
+            var dot = Math.abs(Lk.ux * L2.ux + Lk.uy * L2.uy);
+            if (dot < 0.01) {
+              var perpDist = Math.abs((Lk.origP1.x - origP.x) * L2.ux + (Lk.origP1.y - origP.y) * L2.uy);
+              if (perpDist < 0.01) {
+                alignedPerpLine = Lk;
+                break;
+              }
+            }
+          }
+        }
+
+        if (alignedPerpLine) {
+          var crossPt = intersectLines(L2, alignedPerpLine);
+          if (crossPt) {
+            offsetPts.push(crossPt);
+            continue;
+          }
+        }
+
+        if (edges && edges[prevIdx] && edges[i] && L2.len > 1e-6) {
+          var sPrev = edges[prevIdx].secIdx || 0;
+          var sCurr = edges[i].secIdx || 0;
+          if (sPrev !== sCurr) {
+            var shift = (sPrev < sCurr) ? -offsetDist : offsetDist;
+            offsetPts.push({
+              x: L2.p1.x + L2.ux * shift,
+              y: L2.p1.y + L2.uy * shift
+            });
+            continue;
+          }
+        }
+
+        offsetPts.push({ x: L2.p1.x, y: L2.p1.y });
+      }
+    }
+
+    if (isClosed) {
+      offsetPts.push({ x: offsetPts[0].x, y: offsetPts[0].y });
+    } else {
+      offsetPts.push({ x: lines[n - 1].p2.x, y: lines[n - 1].p2.y });
+    }
+    return offsetPts;
+  }
+
+  function calcArea(pts) {
+    if (pts.length < 3) return 0;
+    var area = 0;
+    for (var i = 0; i < pts.length - 1; i++) {
+      area += (pts[i].x * pts[i + 1].y - pts[i + 1].x * pts[i].y);
+    }
+    return Math.abs(area) / 2.0;
+  }
+
+  // 外周辺の区分（secIdx）ごとに閉ポリゴン分割して各区分の床面積を算出
+  function computeSectionAreas(pts, edges, numSections) {
+    var areas = [];
+    for (var s = 0; s < numSections; s++) areas.push(0);
+
+    if (!pts || pts.length < 4 || !edges || edges.length === 0) {
+      return areas;
+    }
+
+    var totalSigned2 = 0;
+    for (var i = 0; i < pts.length - 1; i++) {
+      totalSigned2 += (pts[i].x * pts[i + 1].y - pts[i + 1].x * pts[i].y);
+    }
+    var sign = totalSigned2 >= 0 ? 1 : -1;
+
+    // 連続する同一区分の辺をランにまとめる
+    var runs = [];
+    for (var i = 0; i < edges.length; i++) {
+      var sIdx = Math.min(edges[i].secIdx || 0, numSections - 1);
+      if (runs.length === 0 || runs[runs.length - 1].secIdx !== sIdx) {
+        runs.push({ secIdx: sIdx, startPtIdx: i, endPtIdx: i + 1 });
+      } else {
+        runs[runs.length - 1].endPtIdx = i + 1;
+      }
+    }
+
+    if (runs.length === 1) {
+      areas[runs[0].secIdx] = Math.abs(totalSigned2) / 2.0;
+      return areas;
+    }
+
+    var arcs = [];
+    var wrapFirstLast = (runs.length > 1 && runs[0].secIdx === runs[runs.length - 1].secIdx);
+    if (wrapFirstLast) {
+      var firstRun = runs[0];
+      var lastRun = runs[runs.length - 1];
+      var wrappedPts = pts.slice(lastRun.startPtIdx).concat(pts.slice(1, firstRun.endPtIdx + 1));
+      arcs.push({ secIdx: firstRun.secIdx, pts: wrappedPts });
+      for (var r = 1; r < runs.length - 1; r++) {
+        arcs.push({
+          secIdx: runs[r].secIdx,
+          pts: pts.slice(runs[r].startPtIdx, runs[r].endPtIdx + 1)
+        });
+      }
+    } else {
+      for (var r = 0; r < runs.length; r++) {
+        arcs.push({
+          secIdx: runs[r].secIdx,
+          pts: pts.slice(runs[r].startPtIdx, runs[r].endPtIdx + 1)
+        });
+      }
+    }
+
+    arcs.forEach(function(arc) {
+      var aPts = arc.pts;
+      if (aPts.length < 2) return;
+      var signed2 = 0;
+      for (var k = 0; k < aPts.length; k++) {
+        var p1 = aPts[k];
+        var p2 = aPts[(k + 1) % aPts.length]; // 終点から始点への境界線分で閉ループ化
+        signed2 += (p1.x * p2.y - p2.x * p1.y);
+      }
+      var partArea = (sign * signed2) / 2.0;
+      if (partArea > 0) {
+        areas[arc.secIdx] += partArea;
+      }
+    });
+
+    return areas;
+  }
+
+  function renderAll() {
+    var curBldg = getCurBldg();
+    var curFloor = getCurFloor();
+
+    document.getElementById('siteName').value = siteName;
+
+    // 1. 建物タブ
+    var bldgTabsEl = document.getElementById('bldgTabs');
+    bldgTabsEl.innerHTML = '';
+    buildings.forEach(function(b, idx) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'bldg-tab' + (idx === currentBldgIdx ? ' active' : '');
+      btn.textContent = b.label;
+      btn.addEventListener('click', function() { selectBuilding(idx); });
+      bldgTabsEl.appendChild(btn);
+    });
+    var addBldgBtn = document.createElement('button');
+    addBldgBtn.type = 'button';
+    addBldgBtn.className = 'bldg-tab tab-add';
+    addBldgBtn.textContent = '＋ 附属建物を追加';
+    addBldgBtn.addEventListener('click', addBuilding);
+    bldgTabsEl.appendChild(addBldgBtn);
+
+    // 2. 階タブ
+    var floorTabsEl = document.getElementById('floorTabs');
+    floorTabsEl.innerHTML = '';
+    curBldg.floors.forEach(function(f, idx) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'floor-tab' + (idx === currentFloorIdx ? ' active' : '');
+      btn.textContent = f.name;
+      btn.addEventListener('click', function() { selectFloor(idx); });
+      floorTabsEl.appendChild(btn);
+    });
+    var addFloorBtn = document.createElement('button');
+    addFloorBtn.type = 'button';
+    addFloorBtn.className = 'floor-tab tab-add';
+    addFloorBtn.textContent = '＋ 階を追加';
+    addFloorBtn.addEventListener('click', addFloor);
+    floorTabsEl.appendChild(addFloorBtn);
+
+    document.getElementById('inputTitle').textContent = curBldg.label + ' ' + curFloor.name + ' 辺長・方向';
+    document.getElementById('memoTitle').textContent = curBldg.label + '：種類・構造・屋根のメモ';
+    document.getElementById('previewTitle').textContent = curBldg.label + ' ' + curFloor.name + ' プレビュー';
+    document.getElementById('btnDeleteFloor').style.display = curBldg.floors.length > 1 ? 'inline-block' : 'none';
+    document.getElementById('btnDeleteBldg').style.display = currentBldgIdx > 0 ? 'inline-block' : 'none';
+    document.getElementById('btnCopyFloor').style.display = currentFloorIdx > 0 ? 'inline-block' : 'none';
+    document.getElementById('overlayOption').style.display = currentFloorIdx > 0 ? 'flex' : 'none';
+    document.getElementById('wallThickness').value = curBldg.wallThickness;
+
+    var hasMultipleSecs = curBldg.sections.length > 1;
+    document.getElementById('secHint').style.display = hasMultipleSecs ? 'block' : 'none';
+
+    // 3. 辺リスト
+    var listEl = document.getElementById('edgeList');
+    listEl.innerHTML = '';
+    curFloor.edges.forEach(function(edge, idx) {
+      var row = document.createElement('div');
+      row.className = 'edge-row';
+
+      var num = document.createElement('div');
+      num.className = 'edge-num';
+      num.textContent = '#' + (idx + 1);
+      row.appendChild(num);
+
+      var dirGroup = document.createElement('div');
+      dirGroup.className = 'dir-group';
+      DIRS.forEach(function(d) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'dir-btn' + (edge.dir === d.key ? ' selected' : '');
+        b.textContent = d.label;
+        b.addEventListener('click', function() { setEdgeDir(idx, d.key); });
+        dirGroup.appendChild(b);
+      });
+      row.appendChild(dirGroup);
+
+      if (hasMultipleSecs) {
+        var sIdx = Math.min(edge.secIdx || 0, curBldg.sections.length - 1);
+        var secBtn = document.createElement('button');
+        secBtn.type = 'button';
+        secBtn.className = 'sec-badge-btn';
+        secBtn.style.background = SEC_COLORS[sIdx % SEC_COLORS.length];
+        secBtn.textContent = CIRCLED_NUMS[sIdx] || (sIdx + 1);
+        secBtn.addEventListener('click', function() { cycleEdgeSec(idx); });
+        row.appendChild(secBtn);
+      }
+
+      var inputWrap = document.createElement('div');
+      inputWrap.className = 'len-input-wrap';
+      var inp = document.createElement('input');
+      inp.type = 'number';
+      inp.inputMode = 'decimal';
+      inp.step = '0.001';
+      inp.placeholder = '0.000';
+      inp.className = 'len-input';
+      inp.value = edge.len;
+      inp.addEventListener('input', function(e) { setEdgeLen(idx, e.target.value); });
+      inputWrap.appendChild(inp);
+      row.appendChild(inputWrap);
+
+      var del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'del-btn';
+      del.textContent = '×';
+      del.addEventListener('click', function() { removeEdge(idx); });
+      row.appendChild(del);
+
+      listEl.appendChild(row);
+    });
+
+    // 4. 離れ（延長線）リスト
+    var extListEl = document.getElementById('extList');
+    extListEl.innerHTML = '';
+    curFloor.extensions.forEach(function(ext, extIdx) {
+      var row = document.createElement('div');
+      row.className = 'ext-row';
+
+      var edgeSel = document.createElement('select');
+      edgeSel.className = 'ext-select ext-edge-sel';
+      curFloor.edges.forEach(function(ed, eIdx) {
+        var dObj = DIRS.find(function(d) { return d.key === ed.dir; }) || DIRS[0];
+        var opt = document.createElement('option');
+        opt.value = eIdx;
+        opt.textContent = '辺#' + (eIdx + 1) + '(' + dObj.label + ')';
+        if (ext.edgeIdx === eIdx) opt.selected = true;
+        edgeSel.appendChild(opt);
+      });
+      edgeSel.addEventListener('change', function(e) { updateExtension(extIdx, 'edgeIdx', e.target.value); });
+      row.appendChild(edgeSel);
+
+      var safeEdgeIdx = Math.min(ext.edgeIdx, Math.max(0, curFloor.edges.length - 1));
+      var targetEdge = curFloor.edges[safeEdgeIdx];
+      var dObj = targetEdge ? (DIRS.find(function(d) { return d.key === targetEdge.dir; }) || DIRS[0]) : DIRS[0];
+
+      var sideSel = document.createElement('select');
+      sideSel.className = 'ext-select ext-side-sel';
+
+      var optEnd = document.createElement('option');
+      optEnd.value = 'end';
+      optEnd.textContent = '終点側 (' + dObj.label + '先)';
+      if (ext.side === 'end') optEnd.selected = true;
+      sideSel.appendChild(optEnd);
+
+      var optStart = document.createElement('option');
+      optStart.value = 'start';
+      optStart.textContent = '始点側 (' + dObj.opp + '先)';
+      if (ext.side === 'start') optStart.selected = true;
+      sideSel.appendChild(optStart);
+
+      sideSel.addEventListener('change', function(e) { updateExtension(extIdx, 'side', e.target.value); });
+      row.appendChild(sideSel);
+
+      var distInp = document.createElement('input');
+      distInp.type = 'number';
+      distInp.inputMode = 'decimal';
+      distInp.step = '0.001';
+      distInp.placeholder = '離れ(m)';
+      distInp.className = 'ext-dist-inp';
+      distInp.value = ext.dist;
+      distInp.addEventListener('input', function(e) { updateExtension(extIdx, 'dist', e.target.value); });
+      row.appendChild(distInp);
+
+      var delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'del-btn';
+      delBtn.style.height = '38px';
+      delBtn.textContent = '×';
+      delBtn.addEventListener('click', function() { removeExtension(extIdx); });
+      row.appendChild(delBtn);
+
+      extListEl.appendChild(row);
+    });
+
+    // 5. 種類・構造・屋根の区分リスト
+    var secListEl = document.getElementById('secList');
+    secListEl.innerHTML = '';
+    curBldg.sections.forEach(function(sec, sIdx) {
+      var color = SEC_COLORS[sIdx % SEC_COLORS.length];
+      var box = document.createElement('div');
+      box.className = 'sec-box';
+      box.style.borderLeftColor = color;
+
+      var topRow = document.createElement('div');
+      topRow.className = 'sec-top';
+
+      var pill = document.createElement('span');
+      pill.className = 'sec-pill';
+      pill.style.background = color;
+      pill.textContent = (CIRCLED_NUMS[sIdx] || (sIdx + 1)) + ' 部分';
+      topRow.appendChild(pill);
+
+      var noteInp = document.createElement('input');
+      noteInp.type = 'text';
+      noteInp.className = 'sec-note-inp';
+      noteInp.placeholder = sIdx === 0 ? '場所メモ（例：既存主屋）' : '場所メモ（例：北側増築部・下屋）';
+      noteInp.value = sec.note;
+      noteInp.addEventListener('input', function(e) { updateSection(sIdx, 'note', e.target.value); });
+      topRow.appendChild(noteInp);
+
+      if (curBldg.sections.length > 1) {
+        var delSec = document.createElement('button');
+        delSec.type = 'button';
+        delSec.className = 'del-btn';
+        delSec.style.height = '32px';
+        delSec.style.width = '30px';
+        delSec.textContent = '×';
+        delSec.addEventListener('click', function() { removeSection(sIdx); });
+        topRow.appendChild(delSec);
+      }
+      box.appendChild(topRow);
+
+      var grid = document.createElement('div');
+      grid.className = 'sec-grid';
+
+      var fields = [
+        { key: 'kind', label: '種類', list: 'listKind', ph: '居宅' },
+        { key: 'structure', label: '構造', list: 'listStruct', ph: '木造' },
+        { key: 'roof', label: '屋根の種類', list: 'listRoof', ph: 'かわらぶき' }
+      ];
+      fields.forEach(function(f) {
+        var fDiv = document.createElement('div');
+        fDiv.className = 'sec-field';
+        var lbl = document.createElement('label');
+        lbl.textContent = f.label;
+        var inp = document.createElement('input');
+        inp.type = 'text';
+        inp.setAttribute('list', f.list);
+        inp.placeholder = f.ph;
+        inp.value = sec[f.key];
+        inp.addEventListener('input', function(e) { updateSection(sIdx, f.key, e.target.value); });
+        fDiv.appendChild(lbl);
+        fDiv.appendChild(inp);
+        grid.appendChild(fDiv);
+      });
+
+      box.appendChild(grid);
+      secListEl.appendChild(box);
+    });
+
+    calculateAndDraw();
+  }
+
+  function computeExtensions(curFloor, activePts, isCenter, halfWallM) {
+    var results = [];
+    var addOffset = isCenter ? halfWallM : 0;
+
+    curFloor.extensions.forEach(function(ext) {
+      var rawDist = parseFloat(ext.dist);
+      if (isNaN(rawDist) || rawDist < 0) return;
+
+      var eIdx = ext.edgeIdx;
+      var edge = curFloor.edges[eIdx];
+      if (!edge || !activePts[eIdx] || !activePts[eIdx + 1]) return;
+
+      var pStart = activePts[eIdx];
+      var pEnd = activePts[eIdx + 1];
+
+      var vx = pEnd.x - pStart.x;
+      var vy = pEnd.y - pStart.y;
+      var len = Math.hypot(vx, vy);
+      var ux, uy;
+      if (len > 1e-6) {
+        ux = vx / len;
+        uy = vy / len;
+      } else {
+        var dObj = DIRS.find(function(d) { return d.key === edge.dir; }) || DIRS[0];
+        ux = dObj.dx;
+        uy = dObj.dy;
+      }
+
+      var displayDist = rawDist + addOffset;
+      var basePt, endPt;
+      if (ext.side === 'end') {
+        basePt = pEnd;
+        endPt = {
+          x: basePt.x + ux * displayDist,
+          y: basePt.y + uy * displayDist
+        };
+      } else {
+        basePt = pStart;
+        endPt = {
+          x: basePt.x - ux * displayDist,
+          y: basePt.y - uy * displayDist
+        };
+      }
+
+      results.push({
+        edgeNum: eIdx + 1,
+        basePt: basePt,
+        endPt: endPt,
+        dist: displayDist
+      });
+    });
+
+    return results;
+  }
+
+  function calculateAndDraw() {
+    var curBldg = getCurBldg();
+    var wallThickMm = parseFloat(curBldg.wallThickness) || 0;
+    var halfWallM = (wallThickMm / 2) / 1000.0;
+    document.getElementById('halfWallDisplay').value = (wallThickMm / 2).toFixed(1) + ' mm (' + halfWallM.toFixed(4) + ' m)';
+
+    var isCenter = (viewMode === 'center');
+    var badge = document.getElementById('modeBadge');
+    badge.textContent = isCenter ? '● 壁芯表示中（青破線：実測）' : '● 実測（外法）表示中';
+    badge.style.color = isCenter ? 'var(--accent)' : 'var(--primary)';
+
+    var bldgTotalArea = 0;
+    var numSections = curBldg.sections.length;
+    var bldgSecAreas = [];
+    for (var s = 0; s < numSections; s++) bldgSecAreas.push(0);
+
+    var currentFloorData = null;
+    var firstFloorData = null;
+
+    curBldg.floors.forEach(function(f, idx) {
+      var outer = computeOuterPoints(f.edges);
+      var centerPts = computeOffsetPolygon(outer.pts, halfWallM, f.edges);
+      var activePts = isCenter ? centerPts : outer.pts;
+      var area = calcArea(activePts);
+      bldgTotalArea += area;
+
+      var floorSecAreas = computeSectionAreas(activePts, f.edges, numSections);
+      for (var s = 0; s < numSections; s++) {
+        bldgSecAreas[s] += floorSecAreas[s];
+      }
+
+      var extLines = computeExtensions(f, activePts, isCenter, halfWallM);
+      var data = {
+        outer: outer,
+        centerPts: centerPts,
+        activePts: activePts,
+        area: area,
+        secAreas: floorSecAreas,
+        extLines: extLines,
+        name: f.name,
+        edges: f.edges
+      };
+      if (idx === 0) firstFloorData = data;
+      if (idx === currentFloorIdx) currentFloorData = data;
+    });
+
+    var banner = document.getElementById('closureBanner');
+    var err = currentFloorData.outer.closureErr;
+    var hasInput = currentFloorData.outer.totalLen > 0.001;
+
+    if (!hasInput) {
+      banner.className = 'closure-banner closure-empty';
+      banner.innerHTML = '<span>辺長未入力</span><span>-</span>';
+    } else if (err < 0.005) {
+      banner.className = 'closure-banner closure-ok';
+      banner.innerHTML = '<span>✔ 閉合 OK</span><span>誤差: ' + err.toFixed(3) + ' m</span>';
+    } else {
+      banner.className = 'closure-banner closure-ng';
+      banner.innerHTML = '<span>⚠ 未閉合（ズレあり）</span><span>ΔX:' + currentFloorData.outer.dx.toFixed(3) + ' / ΔY:' + currentFloorData.outer.dy.toFixed(3) + ' (計 ' + err.toFixed(3) + 'm)</span>';
+    }
+
+    var modeText = isCenter ? '壁芯' : '実測';
+    document.getElementById('floorAreaLabel').textContent = currentFloorData.name + ' 床面積（' + modeText + '）';
+    document.getElementById('floorAreaVal').textContent = currentFloorData.area.toFixed(2) + ' ㎡ (' + (currentFloorData.area * 0.3025).toFixed(2) + '坪)';
+    document.getElementById('totalAreaLabel').textContent = curBldg.label + ' 総面積（全' + curBldg.floors.length + '階）';
+    document.getElementById('totalAreaVal').textContent = bldgTotalArea.toFixed(2) + ' ㎡ (' + (bldgTotalArea * 0.3025).toFixed(2) + '坪)';
+
+    // 区分別の面積・総面積割合の表示（2区分以上登録されている場合）
+    var bdEl = document.getElementById('sectionBreakdown');
+    if (numSections > 1) {
+      bdEl.style.display = 'block';
+
+      var maxSecArea = 0;
+      var maxSecIdx = -1;
+      for (var s = 0; s < numSections; s++) {
+        if (bldgSecAreas[s] > maxSecArea + 1e-6) {
+          maxSecArea = bldgSecAreas[s];
+          maxSecIdx = s;
+        }
+      }
+
+      var isMultiFloor = curBldg.floors.length > 1;
+      var html = '<div class="sec-bd-title">' +
+        '<span>構造・屋根区分別の面積・総面積割合（' + modeText + '）</span>' +
+        '<span>不動産登記判定用</span>' +
+        '</div>';
+
+      curBldg.sections.forEach(function(sec, sIdx) {
+        var color = SEC_COLORS[sIdx % SEC_COLORS.length];
+        var numBadge = CIRCLED_NUMS[sIdx] || (sIdx + 1);
+        var sTotalArea = bldgSecAreas[sIdx] || 0;
+        var totalPct = (bldgTotalArea > 0.0001) ? (sTotalArea / bldgTotalArea * 100) : 0;
+
+        var sFloorArea = currentFloorData.secAreas[sIdx] || 0;
+        var floorPct = (currentFloorData.area > 0.0001) ? (sFloorArea / currentFloorData.area * 100) : 0;
+
+        var titleParts = [];
+        if (sec.structure) titleParts.push(sec.structure);
+        if (sec.roof) titleParts.push(sec.roof);
+        var titleStr = titleParts.length > 0 ? titleParts.join(' / ') : '未設定';
+        var noteHtml = sec.note ? '<div class="sec-bd-sub">メモ: ' + escapeHtml(sec.note) + '</div>' : '';
+        var mainTagHtml = (sIdx === maxSecIdx && maxSecArea > 0.001)
+          ? '<span class="sec-bd-main-tag">主たる部分</span>'
+          : '';
+
+        var floorSubHtml = isMultiFloor
+          ? '<div class="sec-bd-floor-sub">' + escapeHtml(currentFloorData.name) + ': ' + sFloorArea.toFixed(2) + '㎡ (' + floorPct.toFixed(1) + '%)</div>'
+          : '';
+
+        html += '<div class="sec-bd-row">' +
+          '<div class="sec-bd-left">' +
+            '<span class="sec-bd-badge" style="background:' + color + ';">' + numBadge + '</span>' +
+            '<div>' +
+              '<div class="sec-bd-name">' + escapeHtml(titleStr) + mainTagHtml + '</div>' +
+              noteHtml +
+            '</div>' +
+          '</div>' +
+          '<div class="sec-bd-right">' +
+            '<div><span class="sec-bd-area">' + sTotalArea.toFixed(2) + ' ㎡</span>' +
+            '<span class="sec-bd-ratio">(' + totalPct.toFixed(1) + '%)</span></div>' +
+            floorSubHtml +
+          '</div>' +
+        '</div>';
+      });
+
+      bdEl.innerHTML = html;
+    } else {
+      bdEl.style.display = 'none';
+      bdEl.innerHTML = '';
+    }
+
+    drawCanvas(curBldg, currentFloorData, firstFloorData, isCenter);
+  }
+
+  function drawCanvas(curBldg, curData, firstData, isCenter) {
+    var canvas = document.getElementById('viewCanvas');
+    var ctx = canvas.getContext('2d');
+    var dpr = window.devicePixelRatio || 1;
+    var rect = canvas.getBoundingClientRect();
+    var W = rect.width || canvas.clientWidth || 320;
+    var H = rect.height || canvas.clientHeight || 340;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.scale(dpr, dpr);
+
+    ctx.clearRect(0, 0, W, H);
+
+    var pts = curData.activePts;
+    if (pts.length < 2) return;
+
+    var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    var expandBounds = function(p) {
+      if (p.x < minX) minX = p.x;
+      if (p.x > maxX) maxX = p.x;
+      if (p.y < minY) minY = p.y;
+      if (p.y > maxY) maxY = p.y;
+    };
+    pts.forEach(expandBounds);
+
+    if (isCenter && curData.outer && curData.outer.pts) {
+      curData.outer.pts.forEach(expandBounds);
+    }
+
+    var show1F = (currentFloorIdx > 0 && document.getElementById('showFirstFloor').checked);
+    if (show1F) firstData.activePts.forEach(expandBounds);
+
+    curData.extLines.forEach(function(ext) {
+      expandBounds(ext.basePt);
+      expandBounds(ext.endPt);
+    });
+
+    var pad = 48;
+    var rangeX = (maxX - minX) || 1;
+    var rangeY = (maxY - minY) || 1;
+    var scale = Math.min((W - pad * 2) / rangeX, (H - pad * 2) / rangeY);
+
+    var offsetX = pad + ((W - pad * 2) - rangeX * scale) / 2;
+    var offsetY = pad + ((H - pad * 2) - rangeY * scale) / 2;
+
+    var toScreen = function(x, y) {
+      return {
+        x: offsetX + (x - minX) * scale,
+        y: offsetY + (y - minY) * scale
+      };
+    };
+
+    // 1. 1階ガイド線
+    if (show1F && firstData.activePts.length > 1) {
+      ctx.save();
+      ctx.beginPath();
+      firstData.activePts.forEach(function(p, i) {
+        var sp = toScreen(p.x, p.y);
+        if (i === 0) ctx.moveTo(sp.x, sp.y);
+        else ctx.lineTo(sp.x, sp.y);
+      });
+      ctx.setLineDash([2, 3]);
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 1.0;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 2. 壁芯表示時の実測寸法（外法）破線
+    if (isCenter && curData.outer && curData.outer.pts.length > 1) {
+      ctx.save();
+      ctx.beginPath();
+      curData.outer.pts.forEach(function(p, i) {
+        var sp = toScreen(p.x, p.y);
+        if (i === 0) ctx.moveTo(sp.x, sp.y);
+        else ctx.lineTo(sp.x, sp.y);
+      });
+      ctx.setLineDash([4, 3]);
+      ctx.strokeStyle = '#60a5fa';
+      ctx.lineWidth = 1.0;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 3. 建物ポリゴン塗りつぶし
+    var defaultColor = isCenter ? '#ea580c' : '#2563eb';
+    var fillColor = isCenter ? 'rgba(234, 88, 12, 0.08)' : 'rgba(37, 99, 235, 0.08)';
+    if (curData.outer.totalLen > 0.001 && curData.outer.closureErr < 0.05) {
+      ctx.save();
+      ctx.beginPath();
+      pts.forEach(function(p, i) {
+        var sp = toScreen(p.x, p.y);
+        if (i === 0) ctx.moveTo(sp.x, sp.y);
+        else ctx.lineTo(sp.x, sp.y);
+      });
+      ctx.fillStyle = fillColor;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // 4. 各辺を区分ごとの色で描画（細線）
+    var hasMultipleSecs = curBldg.sections.length > 1;
+    var secMidPoints = curBldg.sections.map(function() { return []; });
+
+    for (var i = 0; i < pts.length - 1; i++) {
+      var p1 = pts[i];
+      var p2 = pts[i + 1];
+      var sp1 = toScreen(p1.x, p1.y);
+      var sp2 = toScreen(p2.x, p2.y);
+
+      var edge = curData.edges[i];
+      var sIdx = edge ? Math.min(edge.secIdx || 0, curBldg.sections.length - 1) : 0;
+      var strokeColor = hasMultipleSecs ? SEC_COLORS[sIdx % SEC_COLORS.length] : defaultColor;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(sp1.x, sp1.y);
+      ctx.lineTo(sp2.x, sp2.y);
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+      ctx.restore();
+
+      var segLen = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+      if (segLen >= 0.01) {
+        var mx = (sp1.x + sp2.x) / 2;
+        var my = (sp1.y + sp2.y) / 2;
+        secMidPoints[sIdx].push({ x: mx, y: my });
+
+        ctx.save();
+        ctx.font = 'bold 11px sans-serif';
+        var prefix = hasMultipleSecs ? ((CIRCLED_NUMS[sIdx] || '') + '#' + (i + 1) + ': ') : ('#' + (i + 1) + ': ');
+        var text = prefix + segLen.toFixed(3);
+        var tw = ctx.measureText(text).width;
+        ctx.fillStyle = 'rgba(255,255,255,0.88)';
+        ctx.fillRect(mx - tw / 2 - 2, my - 8, tw + 4, 14);
+        ctx.fillStyle = strokeColor;
+        ctx.fillText(text, mx - tw / 2, my + 3);
+        ctx.restore();
+      }
+    }
+
+    // 5. 屋根・構造区分ラベル
+    if (hasMultipleSecs) {
+      ctx.save();
+      ctx.font = 'bold 11px sans-serif';
+      curBldg.sections.forEach(function(sec, sIdx) {
+        var mPts = secMidPoints[sIdx];
+        if (mPts.length === 0) return;
+        var avgX = mPts.reduce(function(acc, p) { return acc + p.x; }, 0) / mPts.length;
+        var avgY = mPts.reduce(function(acc, p) { return acc + p.y; }, 0) / mPts.length;
+
+        var badgeText = (CIRCLED_NUMS[sIdx] || (sIdx + 1)) + ' ' + (sec.roof || sec.structure) + (sec.note ? '(' + sec.note + ')' : '');
+        var tw = ctx.measureText(badgeText).width;
+        var bgCol = SEC_COLORS[sIdx % SEC_COLORS.length];
+
+        ctx.fillStyle = bgCol;
+        ctx.fillRect(avgX - tw / 2 - 5, avgY - 10, tw + 10, 18);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(badgeText, avgX - tw / 2, avgY + 3);
+      });
+      ctx.restore();
+    }
+
+    // 6. 辺の延長線（離れ）と交点マーカー
+    if (curData.extLines.length > 0) {
+      ctx.save();
+      curData.extLines.forEach(function(ext) {
+        var bp = toScreen(ext.basePt.x, ext.basePt.y);
+        var ep = toScreen(ext.endPt.x, ext.endPt.y);
+
+        ctx.beginPath();
+        ctx.moveTo(bp.x, bp.y);
+        ctx.lineTo(ep.x, ep.y);
+        ctx.setLineDash([3, 3]);
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#dc2626';
+        ctx.beginPath();
+        ctx.arc(ep.x, ep.y, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        var mx = (bp.x + ep.x) / 2;
+        var my = (bp.y + ep.y) / 2;
+        var label = formatSetbackFloor1(ext.dist);
+
+        ctx.font = 'bold 12px sans-serif';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = 3.5;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+        ctx.fillStyle = '#dc2626';
+
+        var isHorizontal = Math.abs(ep.x - bp.x) >= Math.abs(ep.y - bp.y);
+        if (isHorizontal) {
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          var drawX = Math.max(22, Math.min(W - 22, mx));
+          var drawY = my - 5;
+          ctx.strokeText(label, drawX, drawY);
+          ctx.fillText(label, drawX, drawY);
+        } else {
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+          var drawX = Math.min(W - 36, mx + 6);
+          var drawY = my;
+          ctx.strokeText(label, drawX, drawY);
+          ctx.fillText(label, drawX, drawY);
+        }
+      });
+      ctx.restore();
+    }
+
+    // 7. 始点・終点マーカー
+    var startSp = toScreen(pts[0].x, pts[0].y);
+    ctx.fillStyle = '#16a34a';
+    ctx.beginPath();
+    ctx.arc(startSp.x, startSp.y, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    var endSp = toScreen(pts[pts.length - 1].x, pts[pts.length - 1].y);
+    if (curData.outer.totalLen > 0.001 && curData.outer.closureErr >= 0.005) {
+      ctx.fillStyle = '#dc2626';
+      ctx.beginPath();
+      ctx.arc(endSp.x, endSp.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  renderAll();
+});
+</script>
+</body>
+</html>
