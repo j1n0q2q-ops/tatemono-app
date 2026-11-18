@@ -174,32 +174,28 @@
     margin-bottom: 10px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.06);
   }
-  /* プレビュー上部固定（ピン留め）状態：下部入力欄の視認スペースを最大確保 */
-  .card.pinned-preview {
+
+  /* 常時上部固定プレビューカード */
+  .card.sticky-preview {
     position: sticky;
     top: 48px;
     z-index: 100;
     border: 2px solid #93c5fd;
-    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.16);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.14);
     padding: 6px 8px;
   }
-  .card.pinned-preview canvas {
-    height: 175px;
+  .card.sticky-preview canvas {
+    height: 185px;
   }
-  .card.pinned-preview .status-grid,
-  .card.pinned-preview .sec-breakdown,
-  .card.pinned-preview .copy-note-btn {
-    display: none !important;
-  }
-  .card.pinned-preview .closure-banner {
-    margin-top: 4px;
-    padding: 4px 7px;
-    font-size: 0.74rem;
+  .card.sticky-preview .closure-banner {
+    margin-top: 5px;
+    padding: 5px 8px;
+    font-size: 0.76rem;
     flex-wrap: nowrap;
   }
-  .card.pinned-preview .btn-auto-close {
+  .card.sticky-preview .btn-auto-close {
     padding: 3px 7px;
-    font-size: 0.71rem;
+    font-size: 0.72rem;
   }
 
   .card-header {
@@ -235,7 +231,7 @@
     margin-bottom: 7px;
   }
 
-  .pin-btn {
+  .mini-hdr-btn {
     padding: 3px 6px;
     border-radius: 6px;
     border: 1px solid #cbd5e1;
@@ -247,7 +243,7 @@
     white-space: nowrap;
     touch-action: manipulation;
   }
-  .pin-btn.active {
+  .mini-hdr-btn.active {
     background: #dbeafe;
     color: #1d4ed8;
     border-color: #60a5fa;
@@ -413,15 +409,15 @@
     border: 1px solid var(--border);
     border-radius: 6px;
     background: #f8fafc;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: bold;
     color: var(--text);
   }
-  .ext-edge-sel { width: 74px; flex-shrink: 0; }
-  .ext-side-sel { width: 88px; flex-shrink: 0; }
+  .ext-edge-sel { width: 92px; flex-shrink: 0; }
+  .ext-side-sel { width: 84px; flex-shrink: 0; }
   .ext-dist-inp {
     flex: 1;
-    min-width: 68px;
+    min-width: 62px;
     height: 38px;
     padding: 4px 6px;
     border: 1px solid var(--border);
@@ -560,8 +556,8 @@
   .canvas-legend {
     display: flex;
     flex-wrap: wrap;
-    gap: 5px;
-    margin-bottom: 5px;
+    gap: 4px;
+    margin-bottom: 4px;
   }
   .legend-chip {
     display: inline-flex;
@@ -570,31 +566,31 @@
     padding: 2px 7px;
     border-radius: 12px;
     color: #fff;
-    font-size: 0.72rem;
+    font-size: 0.71rem;
     font-weight: bold;
   }
 
-  /* 区分境界線切替バー（ピン留め中も常時操作可能） */
+  /* 区分境界線切替バー（常時操作可能） */
   .split-bar-top {
     display: flex;
     align-items: center;
     gap: 4px;
-    margin-bottom: 6px;
-    padding: 4px 7px;
+    margin-bottom: 5px;
+    padding: 3px 7px;
     background: #f5f3ff;
     border: 1px solid #ddd6fe;
     border-radius: 6px;
-    font-size: 0.73rem;
+    font-size: 0.72rem;
     color: #4c1d95;
     flex-wrap: wrap;
   }
   .split-btn {
-    padding: 2px 8px;
+    padding: 2px 7px;
     border-radius: 5px;
     border: 1px solid #c4b5fd;
     background: #ffffff;
     color: #4c1d95;
-    font-size: 0.72rem;
+    font-size: 0.71rem;
     font-weight: bold;
     cursor: pointer;
     touch-action: manipulation;
@@ -607,7 +603,7 @@
   .split-warn-tag {
     color: #dc2626;
     font-weight: bold;
-    font-size: 0.71rem;
+    font-size: 0.7rem;
     width: 100%;
     margin-top: 2px;
   }
@@ -619,7 +615,7 @@
   }
   canvas {
     width: 100%;
-    height: 365px;
+    height: 185px;
     background: #ffffff;
     border: 1px solid var(--border);
     border-radius: 6px;
@@ -628,21 +624,21 @@
   }
   .zoom-controls {
     position: absolute;
-    right: 8px;
-    bottom: 8px;
+    right: 6px;
+    bottom: 6px;
     display: flex;
     gap: 4px;
     z-index: 10;
   }
   .zoom-btn {
-    height: 30px;
-    min-width: 30px;
-    padding: 0 8px;
+    height: 28px;
+    min-width: 28px;
+    padding: 0 7px;
     border: 1px solid #cbd5e1;
     background: rgba(255, 255, 255, 0.92);
     color: #1e293b;
     font-weight: bold;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     border-radius: 6px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.12);
     cursor: pointer;
@@ -653,7 +649,6 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
-    margin-top: 8px;
   }
   .stat-box {
     background: #f8fafc;
@@ -666,16 +661,15 @@
   .stat-sub { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
 
   .closure-banner {
-    margin-top: 8px;
-    padding: 8px 10px;
+    margin-top: 5px;
+    padding: 5px 8px;
     border-radius: 6px;
     font-weight: bold;
-    font-size: 0.83rem;
+    font-size: 0.76rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 6px;
-    flex-wrap: wrap;
   }
   .closure-ok { background: #dcfce7; color: var(--ok); border: 1px solid #86efac; }
   .closure-ng { background: #fee2e2; color: var(--ng); border: 1px solid #fca5a5; }
@@ -685,8 +679,8 @@
     color: #fff;
     border: none;
     border-radius: 5px;
-    padding: 5px 9px;
-    font-size: 0.76rem;
+    padding: 3px 8px;
+    font-size: 0.72rem;
     font-weight: bold;
     cursor: pointer;
     white-space: nowrap;
@@ -837,8 +831,37 @@
   <!-- 階層タブ（1階 / 2階...） -->
   <div class="tab-row" id="floorTabs"></div>
 
-  <!-- プレビューカードをここに移動可能（ピン留め用アンカー） -->
-  <div id="topPreviewAnchor"></div>
+  <!-- 常時上部固定 図面プレビュー ＆ 閉合・床面積バー -->
+  <div class="card sticky-preview" id="previewCard">
+    <div class="card-header">
+      <span id="previewTitle" class="header-title-text">主たる建物 1階</span>
+      <div class="header-right-group">
+        <span id="modeBadge" class="mode-badge-txt" style="color: var(--primary);">● 実測</span>
+        <button type="button" id="btnToggle1FGuide" class="mini-hdr-btn active" style="display:none;">1F重ね</button>
+        <button type="button" id="btnJumpSummary" class="mini-hdr-btn">集計▼</button>
+      </div>
+    </div>
+
+    <!-- 区分凡例バー（複数区分時のみ表示） -->
+    <div id="canvasLegend" class="canvas-legend" style="display:none;"></div>
+
+    <!-- 区分境界線切替バー（複数区分時のみ表示） -->
+    <div id="splitModeBarTop" class="split-bar-top" style="display:none;"></div>
+
+    <div class="canvas-wrap">
+      <canvas id="viewCanvas"></canvas>
+      <div class="zoom-controls">
+        <button type="button" id="btnZoomOut" class="zoom-btn">－</button>
+        <button type="button" id="btnZoomReset" class="zoom-btn">全体</button>
+        <button type="button" id="btnZoomIn" class="zoom-btn">＋</button>
+      </div>
+    </div>
+
+    <div id="closureBanner" class="closure-banner closure-empty">
+      <span>辺長未入力</span>
+      <span>-</span>
+    </div>
+  </div>
 
   <!-- 1. 辺長・方向入力 -->
   <div class="card">
@@ -906,57 +929,30 @@
     </div>
   </div>
 
-  <!-- 4. 図面プレビュー & 計算結果（ピン留め時は上部へ移動） -->
-  <div id="bottomPreviewAnchor">
-    <div class="card" id="previewCard">
-      <div class="card-header">
-        <span id="previewTitle" class="header-title-text">主たる建物 1階</span>
-        <div class="header-right-group">
-          <span id="modeBadge" class="mode-badge-txt" style="color: var(--primary);">● 実測</span>
-          <button type="button" id="btnToggle1FGuide" class="pin-btn active" style="display:none;">1F重ね</button>
-          <button type="button" id="btnPinPreview" class="pin-btn">📌 上部固定</button>
-        </div>
-      </div>
-
-      <!-- 区分凡例バー（複数区分時のみ表示） -->
-      <div id="canvasLegend" class="canvas-legend" style="display:none;"></div>
-
-      <!-- 区分境界線切替バー（複数区分時のみ表示・ピン留め中も操作可能） -->
-      <div id="splitModeBarTop" class="split-bar-top" style="display:none;"></div>
-
-      <div class="canvas-wrap">
-        <canvas id="viewCanvas"></canvas>
-        <div class="zoom-controls">
-          <button type="button" id="btnZoomOut" class="zoom-btn">－</button>
-          <button type="button" id="btnZoomReset" class="zoom-btn">全体</button>
-          <button type="button" id="btnZoomIn" class="zoom-btn">＋</button>
-        </div>
-      </div>
-
-      <div id="closureBanner" class="closure-banner closure-empty">
-        <span>辺長未入力</span>
-        <span>-</span>
-      </div>
-
-      <div class="status-grid">
-        <div class="stat-box">
-          <div class="stat-label" id="floorAreaLabel">1階 床面積（実測）</div>
-          <div class="stat-val" id="floorAreaVal">0.00 ㎡</div>
-          <div class="stat-sub" id="floorAreaSub">登記床面積（小数第2位切捨）</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-label" id="totalAreaLabel">建物合計 床面積</div>
-          <div class="stat-val" id="totalAreaVal">0.00 ㎡</div>
-          <div class="stat-sub" id="totalAreaSub">各階床面積の合計</div>
-        </div>
-      </div>
-
-      <!-- 構造・屋根区分別の面積・割合パネル -->
-      <div id="sectionBreakdown" class="sec-breakdown" style="display:none;"></div>
-
-      <!-- 野帳テキストコピーボタン -->
-      <button type="button" id="btnCopySummary" class="copy-note-btn">📋 野帳集計データをテキストコピー</button>
+  <!-- 4. 詳細床面積・登記判定・野帳出力 -->
+  <div class="card" id="summaryCard">
+    <div class="card-header">
+      <span class="header-title-text">集計結果・登記判定・野帳出力</span>
     </div>
+
+    <div class="status-grid">
+      <div class="stat-box">
+        <div class="stat-label" id="floorAreaLabel">1階 床面積（実測）</div>
+        <div class="stat-val" id="floorAreaVal">0.00 ㎡</div>
+        <div class="stat-sub" id="floorAreaSub">登記床面積（小数第2位切捨）</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label" id="totalAreaLabel">建物合計 床面積</div>
+        <div class="stat-val" id="totalAreaVal">0.00 ㎡</div>
+        <div class="stat-sub" id="totalAreaSub">各階床面積の合計</div>
+      </div>
+    </div>
+
+    <!-- 構造・屋根区分別の面積・割合パネル -->
+    <div id="sectionBreakdown" class="sec-breakdown" style="display:none;"></div>
+
+    <!-- 野帳テキストコピーボタン -->
+    <button type="button" id="btnCopySummary" class="copy-note-btn">📋 野帳集計データをテキストコピー</button>
   </div>
 
 </div>
@@ -1015,7 +1011,6 @@ document.addEventListener('DOMContentLoaded', function() {
   var siteName = '';
   var currentBldgIdx = 0;
   var currentFloorIdx = 0;
-  var isPreviewPinned = false;
   var show1FGuide = true;
 
   // キャンバス用ズーム・パン状態
@@ -1219,27 +1214,6 @@ document.addEventListener('DOMContentLoaded', function() {
       .replace(/"/g, '&quot;');
   }
 
-  function togglePinPreview() {
-    isPreviewPinned = !isPreviewPinned;
-    var card = document.getElementById('previewCard');
-    var topAnchor = document.getElementById('topPreviewAnchor');
-    var bottomAnchor = document.getElementById('bottomPreviewAnchor');
-    var btn = document.getElementById('btnPinPreview');
-
-    if (isPreviewPinned) {
-      topAnchor.appendChild(card);
-      card.classList.add('pinned-preview');
-      btn.classList.add('active');
-      btn.textContent = '📌 解除';
-    } else {
-      bottomAnchor.appendChild(card);
-      card.classList.remove('pinned-preview');
-      btn.classList.remove('active');
-      btn.textContent = '📌 上部固定';
-    }
-    calculateAndDraw();
-  }
-
   function setMode(mode) {
     viewMode = mode;
     document.getElementById('btnModeOuter').classList.toggle('active', mode === 'outer');
@@ -1437,9 +1411,27 @@ document.addEventListener('DOMContentLoaded', function() {
     renderAll();
   }
 
+  function updateExtEdgeOptionLabels() {
+    var curFloor = getCurFloor();
+    var selects = document.querySelectorAll('.ext-edge-sel');
+    selects.forEach(function(sel) {
+      Array.prototype.forEach.call(sel.options, function(opt) {
+        var eIdx = parseInt(opt.value, 10);
+        var ed = curFloor.edges[eIdx];
+        if (ed) {
+          var dObj = DIRS.find(function(d) { return d.key === ed.dir; }) || DIRS[0];
+          var lenVal = parseFloat(ed.len);
+          var lenTag = (!isNaN(lenVal) && lenVal > 0) ? (' ' + lenVal + 'm') : '';
+          opt.textContent = '#' + (eIdx + 1) + dObj.label + lenTag;
+        }
+      });
+    });
+  }
+
   function setEdgeLen(idx, val) {
     var cleanVal = String(val).replace(/-/g, '');
     getCurFloor().edges[idx].len = cleanVal;
+    updateExtEdgeOptionLabels();
     saveToLocalStorage();
     calculateAndDraw();
   }
@@ -1667,8 +1659,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
   document.getElementById('btnNewSite').addEventListener('click', resetToNewSite);
-  document.getElementById('btnPinPreview').addEventListener('click', togglePinPreview);
   document.getElementById('btnCopySummary').addEventListener('click', copySummaryText);
+
+  document.getElementById('btnJumpSummary').addEventListener('click', function() {
+    var target = document.getElementById('summaryCard');
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
 
   document.getElementById('btnToggle1FGuide').addEventListener('click', function() {
     show1FGuide = !show1FGuide;
@@ -1797,6 +1795,18 @@ document.addEventListener('DOMContentLoaded', function() {
     return inside;
   }
 
+  // 線分全体がポリゴン内部または辺上にあるか厳密判定
+  function isSegmentInsideOrOnPolygon(p1, p2, polyPts) {
+    if (!polyPts || polyPts.length < 4) return true;
+    var steps = 16;
+    for (var s = 0; s <= steps; s++) {
+      var t = s / steps;
+      var mp = { x: p1.x + (p2.x - p1.x) * t, y: p1.y + (p2.y - p1.y) * t };
+      if (!isPointInsideOrOnPolygon(mp, polyPts)) return false;
+    }
+    return true;
+  }
+
   // 180度折り返し・ポリゴン自己交差・頂点重複（T字/P字接触）の検証
   function detectGeometryErrors(pts) {
     var errorEdgeIndices = {};
@@ -1856,7 +1866,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // 3. 頂点重複チェック（途中の頂点に終点や別頂点が接触するT字/P字ループ）
     for (var i = 0; i < segs.length; i++) {
       for (var j = i + 1; j < segs.length; j++) {
-        // 最後の辺の終点が最初の辺の始点に閉じる正常閉合は除外
         if (i === 0 && j === segs.length - 1) continue;
         if (Math.hypot(segs[i].p1.x - segs[j].p2.x, segs[i].p1.y - segs[j].p2.y) < 0.005) {
           hasVertexDup = true;
@@ -2068,6 +2077,15 @@ document.addEventListener('DOMContentLoaded', function() {
     return null;
   }
 
+  function isBridgeLineInsidePolygon(bLine, polyPts) {
+    for (var i = 0; i < bLine.length - 1; i++) {
+      if (!isSegmentInsideOrOnPolygon(bLine[i], bLine[i + 1], polyPts)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   function computeSectionAreasAndBridges(pts, edges, numSections, splitMode) {
     var areas = [];
     var bridges = [];
@@ -2125,12 +2143,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (arcs.length === 2) {
       var a0 = arcs[0].pts;
       sharedCorner = getBridgeCorner(a0[a0.length - 1], a0[0], splitMode);
-      if (sharedCorner && !isPointInsideOrOnPolygon(sharedCorner, pts)) {
-        isBridgeOutside = true;
-      }
       var bLine = [a0[a0.length - 1]];
       if (sharedCorner) bLine.push(sharedCorner);
       bLine.push(a0[0]);
+      if (!isBridgeLineInsidePolygon(bLine, pts)) {
+        isBridgeOutside = true;
+      }
       bridges.push(bLine);
     }
 
@@ -2145,14 +2163,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (sharedCorner) aPts.push(sharedCorner);
       } else {
         var corner = getBridgeCorner(pEnd, pStart, splitMode);
-        if (corner) {
-          aPts.push(corner);
-          if (!isPointInsideOrOnPolygon(corner, pts)) isBridgeOutside = true;
-        }
+        if (corner) aPts.push(corner);
         if (aIdx === 0) {
           var bLine = [pEnd];
           if (corner) bLine.push(corner);
           bLine.push(pStart);
+          if (!isBridgeLineInsidePolygon(bLine, pts)) isBridgeOutside = true;
           bridges.push(bLine);
         }
       }
@@ -2328,9 +2344,11 @@ document.addEventListener('DOMContentLoaded', function() {
       edgeSel.className = 'ext-select ext-edge-sel';
       curFloor.edges.forEach(function(ed, eIdx) {
         var dObj = DIRS.find(function(d) { return d.key === ed.dir; }) || DIRS[0];
+        var lenVal = parseFloat(ed.len);
+        var lenTag = (!isNaN(lenVal) && lenVal > 0) ? (' ' + lenVal + 'm') : '';
         var opt = document.createElement('option');
         opt.value = eIdx;
-        opt.textContent = '辺#' + (eIdx + 1) + dObj.label;
+        opt.textContent = '#' + (eIdx + 1) + dObj.label + lenTag;
         if (ext.edgeIdx === eIdx) opt.selected = true;
         edgeSel.appendChild(opt);
       });
@@ -2577,18 +2595,20 @@ document.addEventListener('DOMContentLoaded', function() {
       banner.className = 'closure-banner closure-ng';
       var reason = '辺同士が交差（ねじれ）しています';
       if (geomCheck.hasFoldBack) reason = '辺が180度折り返し重複しています';
-      else if (geomCheck.hasVertexDup) reason = '頂点が重複（移動辺の混入は「1階始点からのずれ」へ）';
+      else if (geomCheck.hasVertexDup) reason = '頂点が重複（移動辺は「1階始点からのずれ」へ）';
       banner.innerHTML = '<span>⚠ ' + reason + '</span><span>要修正</span>';
     } else if (currentFloorData.outer.isClosed) {
       banner.className = 'closure-banner closure-ok';
-      banner.innerHTML = '<span>✔ 閉合 OK</span><span>誤差: ' + err.toFixed(3) + ' m</span>';
+      banner.innerHTML =
+        '<span>✔ 閉合 OK（誤差:' + err.toFixed(3) + 'm）</span>' +
+        '<span>床面積: ' + currentFloorData.area.toFixed(2) + ' ㎡</span>';
     } else {
       banner.className = 'closure-banner closure-ng';
       var remX = (-currentFloorData.outer.dx).toFixed(3);
       var remY = (-currentFloorData.outer.dy).toFixed(3);
       banner.innerHTML =
-        '<span>⚠ 未閉合（残 X:' + remX + ' / Y:' + remY + 'm）</span>' +
-        '<button type="button" id="btnAutoCloseNow" class="btn-auto-close">不足分を自動閉合</button>';
+        '<span>⚠ 未閉合（残 X:' + remX + ' / Y:' + remY + 'm ｜ ' + currentFloorData.area.toFixed(2) + '㎡）</span>' +
+        '<button type="button" id="btnAutoCloseNow" class="btn-auto-close">自動閉合</button>';
       var autoBtn = document.getElementById('btnAutoCloseNow');
       if (autoBtn) {
         autoBtn.addEventListener('click', autoCloseCurrentFloor);
@@ -2716,7 +2736,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var dpr = window.devicePixelRatio || 1;
     var rect = canvas.getBoundingClientRect();
     var W = rect.width || canvas.clientWidth || 320;
-    var H = rect.height || canvas.clientHeight || 365;
+    var H = rect.height || canvas.clientHeight || 185;
     canvas.width = W * dpr;
     canvas.height = H * dpr;
     ctx.scale(dpr, dpr);
@@ -2751,17 +2771,32 @@ document.addEventListener('DOMContentLoaded', function() {
       if (p.y > maxY) maxY = p.y;
     };
 
+    // 凹部（入隅）からの延長線でも必ず建物最外郭から外へ突き出すよう短縮長さを補正
     var visualExts = curData.extLines.map(function(ext) {
-      var isTruncated = ext.dist > maxVisualExt && ext.dist > 1.5;
-      var drawDist = isTruncated ? maxVisualExt : ext.dist;
+      var distToBldgEdge = 0;
+      if (ext.ux > 0.5) distToBldgEdge = Math.max(0, bMaxX - ext.basePt.x);
+      else if (ext.ux < -0.5) distToBldgEdge = Math.max(0, ext.basePt.x - bMinX);
+      else if (ext.uy > 0.5) distToBldgEdge = Math.max(0, bMaxY - ext.basePt.y);
+      else if (ext.uy < -0.5) distToBldgEdge = Math.max(0, ext.basePt.y - bMinY);
+
+      var minProtrude = distToBldgEdge + bldgSpan * 0.28;
+      var capDist = Math.max(maxVisualExt, minProtrude);
+      var isTruncated = (ext.dist > capDist && ext.dist > 1.5);
+      var drawDist = isTruncated ? capDist : ext.dist;
+
       var endPt = {
         x: ext.basePt.x + ext.ux * drawDist,
         y: ext.basePt.y + ext.uy * drawDist
+      };
+      var outerStartPt = {
+        x: ext.basePt.x + ext.ux * Math.min(distToBldgEdge, drawDist),
+        y: ext.basePt.y + ext.uy * Math.min(distToBldgEdge, drawDist)
       };
       expandAllBounds(ext.basePt);
       expandAllBounds(endPt);
       return {
         basePt: ext.basePt,
+        outerStartPt: outerStartPt,
         endPt: endPt,
         ux: ext.ux,
         uy: ext.uy,
@@ -2770,7 +2805,7 @@ document.addEventListener('DOMContentLoaded', function() {
       };
     });
 
-    var pad = isPreviewPinned ? 38 : 58;
+    var pad = 36;
     var rangeX = (maxX - minX) || 1;
     var rangeY = (maxY - minY) || 1;
     var baseScale = Math.min((W - pad * 2) / rangeX, (H - pad * 2) / rangeY);
@@ -2839,7 +2874,6 @@ document.addEventListener('DOMContentLoaded', function() {
       ctx.lineWidth = 1.25;
       ctx.stroke();
 
-      // 2階始点が1階始点と異なる場合、1階始点に 1F-S を描画
       if ((curData.offsetX !== 0 || curData.offsetY !== 0) && firstData.activePts[0]) {
         var fStartSp = toScreen(firstData.activePts[0].x, firstData.activePts[0].y);
         if (fStartSp.x >= -15 && fStartSp.x <= W + 15 && fStartSp.y >= -15 && fStartSp.y <= H + 15) {
@@ -2894,7 +2928,7 @@ document.addEventListener('DOMContentLoaded', function() {
       ctx.save();
       ctx.setLineDash([4, 3]);
       ctx.strokeStyle = '#7c3aed';
-      ctx.lineWidth = 1.4;
+      ctx.lineWidth = 1.7;
       curData.bridges.forEach(function(bLine) {
         if (bLine.length < 2) return;
         ctx.beginPath();
@@ -2926,11 +2960,35 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    // 4. 辺の延長線（離れ）を先に描画し、そのテキスト・記号・線を障害物登録
+    // 4. 始点・終点マーカーを離れラベルより先に描画して障害物登録
+    var startSp = toScreen(pts[0].x, pts[0].y);
+    if (startSp.x >= -15 && startSp.x <= W + 15 && startSp.y >= -15 && startSp.y <= H + 15) {
+      ctx.save();
+      ctx.fillStyle = '#16a34a';
+      ctx.beginPath();
+      ctx.arc(startSp.x, startSp.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.font = 'bold 10px sans-serif';
+      ctx.fillStyle = '#15803d';
+      ctx.fillText('S', startSp.x - 11, startSp.y - 5);
+      ctx.restore();
+      obstacleBoxes.push({ x1: startSp.x - 14, x2: startSp.x + 7, y1: startSp.y - 16, y2: startSp.y + 7 });
+    }
+
+    var endSp = toScreen(pts[pts.length - 1].x, pts[pts.length - 1].y);
+    if (curData.outer.totalLen > 0.001 && !curData.outer.isClosed) {
+      ctx.fillStyle = '#dc2626';
+      ctx.beginPath();
+      ctx.arc(endSp.x, endSp.y, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 5. 辺の延長線（離れ）の描画 ＋ 衝突完全回避ラベル配置
     if (visualExts.length > 0) {
       ctx.save();
       visualExts.forEach(function(ext) {
         var bp = toScreen(ext.basePt.x, ext.basePt.y);
+        var osp = toScreen(ext.outerStartPt.x, ext.outerStartPt.y);
         var ep = toScreen(ext.endPt.x, ext.endPt.y);
 
         ctx.beginPath();
@@ -2949,9 +3007,14 @@ document.addEventListener('DOMContentLoaded', function() {
           obstacleBoxes.push({ x1: px - 5, x2: px + 5, y1: py - 5, y2: py + 5 });
         }
 
+        var extSpanPx = Math.hypot(ep.x - osp.x, ep.y - osp.y);
+        var anchorBase = (extSpanPx >= 14) ? osp : bp;
+        var mx = (anchorBase.x + ep.x) / 2;
+        var my = (anchorBase.y + ep.y) / 2;
+
         if (ext.isTruncated) {
-          var sx = (bp.x + ep.x) * 0.45;
-          var sy = (bp.y + ep.y) * 0.45;
+          var sx = anchorBase.x + (ep.x - anchorBase.x) * 0.38;
+          var sy = anchorBase.y + (ep.y - anchorBase.y) * 0.38;
           var vx = ep.x - bp.x;
           var vy = ep.y - bp.y;
           var sl = Math.hypot(vx, vy) || 1;
@@ -2984,73 +3047,74 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.beginPath();
         ctx.arc(ep.x, ep.y, 3.5, 0, Math.PI * 2);
         ctx.fill();
-
-        var mx = (bp.x + ep.x) / 2;
-        var my = (bp.y + ep.y) / 2;
-        if (mx < -10 || mx > W + 10 || my < -10 || my > H + 10) return;
+        obstacleBoxes.push({ x1: ep.x - 6, x2: ep.x + 6, y1: ep.y - 6, y2: ep.y + 6 });
 
         var label = formatSetbackFloor1(ext.actualDist) + (isCenter ? '(芯)' : '');
-
         ctx.font = 'bold 11.5px sans-serif';
         var tw = ctx.measureText(label).width;
+        var th = 14;
+
+        var isHorizontal = Math.abs(ep.x - bp.x) >= Math.abs(ep.y - bp.y);
+        var candList = isHorizontal
+          ? [
+              { dx: 0, dy: -12 },
+              { dx: 0, dy: 14 },
+              { dx: 12, dy: -12 },
+              { dx: -12, dy: -12 },
+              { dx: 12, dy: 14 },
+              { dx: -12, dy: 14 }
+            ]
+          : [
+              { dx: tw / 2 + 8, dy: 0 },
+              { dx: -(tw / 2 + 8), dy: 0 },
+              { dx: tw / 2 + 8, dy: -12 },
+              { dx: tw / 2 + 8, dy: 12 },
+              { dx: -(tw / 2 + 8), dy: -12 },
+              { dx: -(tw / 2 + 8), dy: 12 }
+            ];
+
+        var chosenLx = null;
+        var chosenLy = null;
+
+        for (var cIdx = 0; cIdx < candList.length; cIdx++) {
+          var cand = candList[cIdx];
+          var lx = Math.max(tw / 2 + 4, Math.min(W - tw / 2 - 4, mx + cand.dx));
+          var ly = Math.max(10, Math.min(H - 10, my + cand.dy));
+          var box = {
+            x1: lx - tw / 2 - 3,
+            x2: lx + tw / 2 + 3,
+            y1: ly - th / 2 - 1,
+            y2: ly + th / 2 + 1
+          };
+          if (!isBoxOverlapping(box)) {
+            chosenLx = lx;
+            chosenLy = ly;
+            obstacleBoxes.push(box);
+            break;
+          }
+        }
+
+        if (chosenLx === null) {
+          chosenLx = Math.max(tw / 2 + 4, Math.min(W - tw / 2 - 4, mx + candList[0].dx));
+          chosenLy = Math.max(10, Math.min(H - 10, my + candList[0].dy));
+          obstacleBoxes.push({
+            x1: chosenLx - tw / 2 - 3,
+            x2: chosenLx + tw / 2 + 3,
+            y1: chosenLy - th / 2 - 1,
+            y2: chosenLy + th / 2 + 1
+          });
+        }
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         ctx.lineJoin = 'round';
         ctx.lineWidth = 3.5;
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.96)';
         ctx.fillStyle = '#dc2626';
-
-        var isHorizontal = Math.abs(ep.x - bp.x) >= Math.abs(ep.y - bp.y);
-        if (isHorizontal) {
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'bottom';
-          var drawX = Math.max(24, Math.min(W - 24, mx));
-          var drawY = my - 6;
-          ctx.strokeText(label, drawX, drawY);
-          ctx.fillText(label, drawX, drawY);
-          obstacleBoxes.push({
-            x1: drawX - tw / 2 - 4,
-            x2: drawX + tw / 2 + 4,
-            y1: drawY - 15,
-            y2: drawY + 2
-          });
-        } else {
-          ctx.textAlign = 'left';
-          ctx.textBaseline = 'middle';
-          var drawX = Math.min(W - 44, mx + 7);
-          var drawY = my;
-          ctx.strokeText(label, drawX, drawY);
-          ctx.fillText(label, drawX, drawY);
-          obstacleBoxes.push({
-            x1: drawX - 3,
-            x2: drawX + tw + 4,
-            y1: drawY - 8,
-            y2: drawY + 8
-          });
-        }
+        ctx.strokeText(label, chosenLx, chosenLy);
+        ctx.fillText(label, chosenLx, chosenLy);
       });
       ctx.restore();
-    }
-
-    // 5. 始点・終点マーカーを先に描画して障害物登録
-    var startSp = toScreen(pts[0].x, pts[0].y);
-    if (startSp.x >= -15 && startSp.x <= W + 15 && startSp.y >= -15 && startSp.y <= H + 15) {
-      ctx.save();
-      ctx.fillStyle = '#16a34a';
-      ctx.beginPath();
-      ctx.arc(startSp.x, startSp.y, 4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.font = 'bold 10px sans-serif';
-      ctx.fillStyle = '#15803d';
-      ctx.fillText('S', startSp.x - 10, startSp.y - 5);
-      ctx.restore();
-      obstacleBoxes.push({ x1: startSp.x - 13, x2: startSp.x + 6, y1: startSp.y - 15, y2: startSp.y + 6 });
-    }
-
-    var endSp = toScreen(pts[pts.length - 1].x, pts[pts.length - 1].y);
-    if (curData.outer.totalLen > 0.001 && !curData.outer.isClosed) {
-      ctx.fillStyle = '#dc2626';
-      ctx.beginPath();
-      ctx.arc(endSp.x, endSp.y, 4.5, 0, Math.PI * 2);
-      ctx.fill();
     }
 
     // 外側法線判定用の符号付き面積計算
@@ -3060,7 +3124,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     var outSign = (signedArea2 >= 0) ? 1 : -1;
 
-    // 6. 各辺の描画 ＋ 衝突完全回避寸法ラベル
+    // 6. 各辺の描画 ＋ 線突き刺さりゼロ・衝突完全回避寸法ラベル
     var secMidPoints = curBldg.sections.map(function() { return []; });
 
     for (var i = 0; i < pts.length - 1; i++) {
@@ -3107,21 +3171,25 @@ document.addEventListener('DOMContentLoaded', function() {
         var tw = ctx.measureText(text).width;
         var th = 13;
 
+        var halfProj = (tw / 2) * Math.abs(outNx) + (th / 2) * Math.abs(outNy);
+        var baseN = Math.ceil(halfProj + 6);
+
         var candidates = [
-          { n: 13, t: 0 },
-          { n: 25, t: 0 },
-          { n: 13, t: 18 },
-          { n: 13, t: -18 },
-          { n: 37, t: 0 },
-          { n: 25, t: 22 },
-          { n: 25, t: -22 },
-          { n: 49, t: 0 },
-          { n: -14, t: 0 }
+          { n: baseN, t: 0 },
+          { n: baseN + 13, t: 0 },
+          { n: baseN, t: 18 },
+          { n: baseN, t: -18 },
+          { n: baseN + 26, t: 0 },
+          { n: baseN + 13, t: 22 },
+          { n: baseN + 13, t: -22 },
+          { n: baseN + 39, t: 0 },
+          { n: -baseN, t: 0 },
+          { n: -(baseN + 13), t: 0 }
         ];
 
         var chosenX = null;
         var chosenY = null;
-        var chosenN = 13;
+        var chosenAbsN = baseN;
 
         for (var cIdx = 0; cIdx < candidates.length; cIdx++) {
           var cand = candidates[cIdx];
@@ -3141,29 +3209,27 @@ document.addEventListener('DOMContentLoaded', function() {
           if (!isBoxOverlapping(box)) {
             chosenX = tx;
             chosenY = ty;
-            chosenN = Math.abs(cand.n);
+            chosenAbsN = Math.abs(cand.n);
             obstacleBoxes.push(box);
             break;
           }
         }
 
         if (chosenX === null) {
-          var fbX = mx + outNx * 13;
-          var fbY = my + outNy * 13;
-          if (fbX >= tw / 2 + 2 && fbX <= W - tw / 2 - 2 && fbY >= 8 && fbY <= H - 8) {
-            chosenX = fbX;
-            chosenY = fbY;
-            obstacleBoxes.push({
-              x1: chosenX - tw / 2 - 2,
-              x2: chosenX + tw / 2 + 2,
-              y1: chosenY - th / 2 - 1,
-              y2: chosenY + th / 2 + 1
-            });
-          }
+          var fbX = Math.max(tw / 2 + 2, Math.min(W - tw / 2 - 2, mx + outNx * baseN));
+          var fbY = Math.max(8, Math.min(H - 8, my + outNy * baseN));
+          chosenX = fbX;
+          chosenY = fbY;
+          obstacleBoxes.push({
+            x1: chosenX - tw / 2 - 2,
+            x2: chosenX + tw / 2 + 2,
+            y1: chosenY - th / 2 - 1,
+            y2: chosenY + th / 2 + 1
+          });
         }
 
         if (chosenX !== null) {
-          if (chosenN >= 24) {
+          if (chosenAbsN >= baseN + 12) {
             ctx.beginPath();
             ctx.moveTo(mx, my);
             ctx.lineTo(chosenX, chosenY);
