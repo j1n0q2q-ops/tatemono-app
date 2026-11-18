@@ -784,7 +784,7 @@
   @media print {
     @page {
       size: A4 portrait;
-      margin: 11mm;
+      margin: 10mm;
     }
     body {
       background: #ffffff !important;
@@ -800,53 +800,66 @@
     #printReportArea {
       display: block !important;
       width: 100%;
-      font-size: 10pt;
-      line-height: 1.4;
+      font-size: 9.5pt;
+      line-height: 1.38;
     }
     .pr-header {
       border-bottom: 2px solid #0f172a;
-      padding-bottom: 6px;
-      margin-bottom: 10px;
+      padding-bottom: 5px;
+      margin-bottom: 8px;
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
     }
     .pr-title {
-      font-size: 15pt;
+      font-size: 14.5pt;
       font-weight: bold;
       letter-spacing: 0.04em;
     }
     .pr-meta {
       font-size: 8.5pt;
-      color: #475569;
+      color: #334155;
       text-align: right;
+      white-space: nowrap;
     }
-    .pr-meta-box {
+    .pr-bldg-section {
+      margin-bottom: 14px;
+    }
+    .pr-bldg-pagebreak {
+      page-break-before: always;
+      break-before: page;
+    }
+    .pr-summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 9px;
+      font-size: 9pt;
+    }
+    .pr-summary-table th, .pr-summary-table td {
       border: 1px solid #94a3b8;
-      border-radius: 4px;
-      padding: 7px 10px;
-      margin-bottom: 10px;
-      background: #f8fafc;
+      padding: 4px 8px;
     }
-    .pr-meta-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 14px;
-      margin-bottom: 3px;
+    .pr-summary-table th {
+      background: #f1f5f9;
+      font-weight: bold;
+      color: #334155;
+      width: 14%;
+      text-align: left;
+      white-space: nowrap;
     }
-    .pr-meta-row:last-child {
-      margin-bottom: 0;
+    .pr-summary-table td {
+      background: #ffffff;
     }
     .pr-table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 5px;
-      margin-bottom: 10px;
-      font-size: 9pt;
+      margin-top: 4px;
+      margin-bottom: 9px;
+      font-size: 8.8pt;
     }
     .pr-table th, .pr-table td {
       border: 1px solid #94a3b8;
-      padding: 4px 6px;
+      padding: 3.5px 6px;
       text-align: left;
     }
     .pr-table th {
@@ -864,33 +877,57 @@
     .pr-floor-block {
       border: 1px solid #94a3b8;
       border-radius: 5px;
-      padding: 8px 10px;
-      margin-bottom: 12px;
+      padding: 7px 9px;
+      margin-bottom: 10px;
       break-inside: avoid;
       page-break-inside: avoid;
     }
     .pr-floor-head {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: baseline;
+      gap: 10px;
       border-bottom: 1px solid #cbd5e1;
       padding-bottom: 4px;
-      margin-bottom: 7px;
+      margin-bottom: 6px;
+    }
+    .pr-fh-left {
       font-weight: bold;
       font-size: 10.5pt;
+      color: #0f172a;
+    }
+    .pr-fh-offset {
+      display: inline-block;
+      font-size: 8.2pt;
+      font-weight: normal;
+      color: #334155;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 3px;
+      padding: 0 5px;
+      margin-left: 6px;
+      white-space: nowrap;
+    }
+    .pr-fh-right {
+      font-weight: bold;
+      font-size: 9.2pt;
+      color: #0f172a;
+      text-align: right;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
     .pr-drawing-box {
       text-align: center;
       border: 1px solid #e2e8f0;
       border-radius: 4px;
-      padding: 4px;
-      margin-bottom: 8px;
+      padding: 3px;
+      margin-bottom: 7px;
       background: #ffffff;
     }
     .pr-drawing-box img {
       max-width: 100%;
       height: auto;
-      max-height: 235px;
+      max-height: 225px;
       display: block;
       margin: 0 auto;
     }
@@ -900,13 +937,13 @@
       align-items: flex-start;
     }
     .pr-col-left {
-      flex: 1.3;
+      flex: 1.25;
     }
     .pr-col-right {
       flex: 1;
     }
     .pr-sub-title {
-      font-size: 9pt;
+      font-size: 8.8pt;
       font-weight: bold;
       color: #1e293b;
       margin-bottom: 2px;
@@ -1671,211 +1708,226 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // =========================================================
-  // PDFレポート（A4印刷用DOM＋全階高精細図面画像）生成＆出力
+  // PDFレポート（A4印刷用DOM＋全棟・全階高精細図面画像）生成＆出力
   // =========================================================
   function exportPdfReport() {
-    var curBldg = getCurBldg();
     var isCenter = (viewMode === 'center');
     var modeLabel = isCenter ? '壁芯寸法（変換値）' : '実測寸法（外法）';
-    var wallThickMm = Math.max(0, parseFloat(curBldg.wallThickness) || 0);
-    var halfWallM = (wallThickMm / 2) / 1000.0;
-    var numSections = curBldg.sections.length;
-    var splitMode = curBldg.splitMode || 'straight';
 
     var now = new Date();
     var dateStr = now.getFullYear() + '年' + (now.getMonth() + 1) + '月' + now.getDate() + '日 ' +
       ('0' + now.getHours()).slice(-2) + ':' + ('0' + now.getMinutes()).slice(-2);
 
-    var totalFloored = 0;
-    var bldgSecFlooredAreas = [];
-    var bldgSecRawAreas = [];
-    for (var s = 0; s < numSections; s++) {
-      bldgSecFlooredAreas.push(0);
-      bldgSecRawAreas.push(0);
+    // 入力が1辺でもある建物を抽出（すべて空なら現在の建物を対象）
+    var targetBldgs = buildings.filter(function(b) {
+      return b.floors.some(function(f) {
+        return f.edges.some(function(e) { return (parseFloat(e.len) || 0) > 0; });
+      });
+    });
+    if (targetBldgs.length === 0) {
+      targetBldgs = [getCurBldg()];
     }
 
-    var allFloorsData = curBldg.floors.map(function(f, idx) {
-      var offX = (idx === 0) ? 0 : (f.offsetX || 0);
-      var offY = (idx === 0) ? 0 : (f.offsetY || 0);
-      var outer = computeOuterPoints(f.edges, offX, offY);
-      var centerPts = computeOffsetPolygon(outer.pts, halfWallM, f.edges, outer.isClosed);
-      var activePts = isCenter ? centerPts : outer.pts;
-      var rawArea = calcArea(activePts);
-      var flooredArea = floorArea2(rawArea);
-      totalFloored = Math.round((totalFloored + flooredArea) * 100) / 100;
-
-      var secRes = computeSectionAreasAndBridges(activePts, f.edges, numSections, splitMode);
-      for (var s = 0; s < numSections; s++) {
-        bldgSecRawAreas[s] += secRes.areas[s];
-        bldgSecFlooredAreas[s] = Math.round((bldgSecFlooredAreas[s] + floorArea2(secRes.areas[s])) * 100) / 100;
-      }
-
-      var extLines = computeExtensions(f, activePts, isCenter, halfWallM);
-      return {
-        floorIdx: idx,
-        outer: outer,
-        centerPts: centerPts,
-        activePts: activePts,
-        rawArea: rawArea,
-        area: flooredArea,
-        secAreas: secRes.areas,
-        bridges: secRes.bridges,
-        isBridgeOutside: secRes.isBridgeOutside,
-        extLines: extLines,
-        name: f.name,
-        edges: f.edges,
-        offsetX: offX,
-        offsetY: offY
-      };
-    });
-
-    var firstFloorData = allFloorsData[0];
-
-    // オフスクリーンCanvasで全階の高精細PNG画像を生成
     var offCanvas = document.createElement('canvas');
-    var floorImages = allFloorsData.map(function(fData) {
-      renderFloorToCanvas(
-        offCanvas,
-        curBldg,
-        fData,
-        firstFloorData,
-        fData.floorIdx,
-        isCenter,
-        680,
-        300,
-        1.0,
-        0,
-        0
-      );
-      return offCanvas.toDataURL('image/png');
-    });
-
     var html = [];
-    html.push('<div class="pr-header">');
-    html.push('  <div class="pr-title">建物調査野帳・求積図レポート</div>');
-    html.push('  <div class="pr-meta">出力日時: ' + escapeHtml(dateStr) + '<br>基準: ' + escapeHtml(modeLabel) + '</div>');
-    html.push('</div>');
 
-    // 建物基本情報サマリー
-    html.push('<div class="pr-meta-box">');
-    html.push('  <div class="pr-meta-row">');
-    html.push('    <span><b>現場名:</b> ' + escapeHtml(siteName || '（未入力）') + '</span>');
-    html.push('    <span><b>対象建物:</b> ' + escapeHtml(curBldg.label) + '（全' + curBldg.floors.length + '階）</span>');
-    html.push('    <span><b>外壁厚:</b> ' + wallThickMm + ' mm（片側 ' + (wallThickMm / 2).toFixed(1) + ' mm）</span>');
-    html.push('  </div>');
-    html.push('  <div class="pr-meta-row" style="margin-top:4px; font-size:10.5pt;">');
-    html.push('    <span><b>建物合計 床面積（登記床面積）:</b> <u>' + totalFloored.toFixed(2) + ' ㎡</u>（' + (totalFloored * 0.3025).toFixed(2) + ' 坪）</span>');
-    html.push('  </div>');
-    html.push('</div>');
+    targetBldgs.forEach(function(bldg, bIdx) {
+      var wallThickMm = Math.max(0, parseFloat(bldg.wallThickness) || 0);
+      var halfWallM = (wallThickMm / 2) / 1000.0;
+      var numSections = bldg.sections.length;
+      var splitMode = bldg.splitMode || 'straight';
 
-    // 構造・屋根区分一覧（単一でも表示し、複数時は面積・割合・主たる部分判定を表示）
-    var rawSumSec = bldgSecRawAreas.reduce(function(a, b) { return a + b; }, 0);
-    var maxSecArea = 0;
-    var maxSecIdx = -1;
-    for (var s = 0; s < numSections; s++) {
-      if (bldgSecRawAreas[s] > maxSecArea + 1e-6) {
-        maxSecArea = bldgSecRawAreas[s];
-        maxSecIdx = s;
+      var totalFloored = 0;
+      var bldgSecFlooredAreas = [];
+      var bldgSecRawAreas = [];
+      for (var s = 0; s < numSections; s++) {
+        bldgSecFlooredAreas.push(0);
+        bldgSecRawAreas.push(0);
       }
-    }
 
-    html.push('<div class="pr-sub-title">■ 建物の種類・構造・屋根の種類' + (numSections > 1 ? '（区分別面積・割合判定）' : '') + '</div>');
-    html.push('<table class="pr-table">');
-    html.push('  <thead><tr>');
-    html.push('    <th style="width:45px;">区分</th>');
-    html.push('    <th>種類</th>');
-    html.push('    <th>構造</th>');
-    html.push('    <th>屋根の種類</th>');
-    html.push('    <th>場所メモ</th>');
-    if (numSections > 1) {
-      html.push('    <th style="width:85px;">床面積</th>');
-      html.push('    <th style="width:65px;">割合</th>');
-      html.push('    <th style="width:75px;">判定</th>');
-    }
-    html.push('  </tr></thead><tbody>');
+      var allFloorsData = bldg.floors.map(function(f, idx) {
+        var offX = (idx === 0) ? 0 : (f.offsetX || 0);
+        var offY = (idx === 0) ? 0 : (f.offsetY || 0);
+        var outer = computeOuterPoints(f.edges, offX, offY);
+        var centerPts = computeOffsetPolygon(outer.pts, halfWallM, f.edges, outer.isClosed);
+        var activePts = isCenter ? centerPts : outer.pts;
+        var rawArea = calcArea(activePts);
+        var flooredArea = floorArea2(rawArea);
+        totalFloored = Math.round((totalFloored + flooredArea) * 100) / 100;
 
-    curBldg.sections.forEach(function(sec, sIdx) {
-      var badge = CIRCLED_NUMS[sIdx] || (sIdx + 1);
-      var pct = (rawSumSec > 0.0001) ? (bldgSecRawAreas[sIdx] / rawSumSec * 100) : 0;
-      var sFl = bldgSecFlooredAreas[sIdx] || 0;
-      var isMain = (sIdx === maxSecIdx && maxSecArea > 0.001);
+        var secRes = computeSectionAreasAndBridges(activePts, f.edges, numSections, splitMode);
+        for (var s = 0; s < numSections; s++) {
+          bldgSecRawAreas[s] += secRes.areas[s];
+          bldgSecFlooredAreas[s] = Math.round((bldgSecFlooredAreas[s] + floorArea2(secRes.areas[s])) * 100) / 100;
+        }
 
+        var extLines = computeExtensions(f, activePts, isCenter, halfWallM);
+        return {
+          floorIdx: idx,
+          outer: outer,
+          centerPts: centerPts,
+          activePts: activePts,
+          rawArea: rawArea,
+          area: flooredArea,
+          secAreas: secRes.areas,
+          bridges: secRes.bridges,
+          isBridgeOutside: secRes.isBridgeOutside,
+          extLines: extLines,
+          name: f.name,
+          edges: f.edges,
+          offsetX: offX,
+          offsetY: offY
+        };
+      });
+
+      var firstFloorData = allFloorsData[0];
+
+      var floorImages = allFloorsData.map(function(fData) {
+        renderFloorToCanvas(
+          offCanvas,
+          bldg,
+          fData,
+          firstFloorData,
+          fData.floorIdx,
+          isCenter,
+          700,
+          295,
+          1.0,
+          0,
+          0
+        );
+        return offCanvas.toDataURL('image/png');
+      });
+
+      html.push('<div class="pr-bldg-section' + (bIdx > 0 ? ' pr-bldg-pagebreak' : '') + '">');
+      html.push('<div class="pr-header">');
+      html.push('  <div class="pr-title">建物調査野帳・求積図レポート</div>');
+      html.push('  <div class="pr-meta">出力日時: ' + escapeHtml(dateStr) + '<br>計測基準: <b>' + escapeHtml(modeLabel) + '</b></div>');
+      html.push('</div>');
+
+      // 建物基本情報グリッドテーブル
+      html.push('<table class="pr-summary-table">');
       html.push('  <tr>');
-      html.push('    <td class="center"><b>' + badge + '</b></td>');
-      html.push('    <td>' + escapeHtml(sec.kind || '-') + '</td>');
-      html.push('    <td>' + escapeHtml(sec.structure || '-') + '</td>');
-      html.push('    <td>' + escapeHtml(sec.roof || '-') + '</td>');
-      html.push('    <td>' + escapeHtml(sec.note || '-') + '</td>');
-      if (numSections > 1) {
-        html.push('    <td class="num"><b>' + sFl.toFixed(2) + ' ㎡</b></td>');
-        html.push('    <td class="num">' + pct.toFixed(1) + '%</td>');
-        html.push('    <td class="center">' + (isMain ? '<b>主たる部分</b>' : '-') + '</td>');
-      }
+      html.push('    <th>現場名</th><td><b>' + escapeHtml(siteName || '（未入力）') + '</b></td>');
+      html.push('    <th>対象建物</th><td><b>' + escapeHtml(bldg.label) + '</b>（全' + bldg.floors.length + '階）</td>');
       html.push('  </tr>');
-    });
-    html.push('  </tbody></table>');
+      html.push('  <tr>');
+      html.push('    <th>外壁厚</th><td>' + wallThickMm + ' mm（片側 ' + (wallThickMm / 2).toFixed(1) + ' mm）</td>');
+      html.push('    <th>登記床面積合計</th><td><b style="font-size:10.5pt;">' + totalFloored.toFixed(2) + ' ㎡</b>（' + (totalFloored * 0.3025).toFixed(2) + ' 坪）</td>');
+      html.push('  </tr>');
+      html.push('</table>');
 
-    // 各階ごとの図面＋辺長・離れ明細
-    allFloorsData.forEach(function(fData, idx) {
-      var closureTxt = fData.outer.isClosed
-        ? ('閉合OK（誤差 ' + fData.outer.closureErr.toFixed(3) + ' m）')
-        : ('未閉合（残 X:' + (-fData.outer.dx).toFixed(3) + ' / Y:' + (-fData.outer.dy).toFixed(3) + ' m）');
-
-      html.push('<div class="pr-floor-block">');
-      html.push('  <div class="pr-floor-head">');
-      html.push('    <span>' + escapeHtml(curBldg.label + ' ' + fData.name) +
-        (idx > 0 && (fData.offsetX !== 0 || fData.offsetY !== 0)
-          ? ' <small style="font-weight:normal; color:#475569;">（1階始点ずれ X:' + fData.offsetX.toFixed(3) + 'm, Y:' + fData.offsetY.toFixed(3) + 'm）</small>'
-          : '') +
-        '</span>');
-      html.push('    <span>床面積: ' + fData.area.toFixed(2) + ' ㎡（' + (fData.area * 0.3025).toFixed(2) + '坪 / 切捨前: ' + fData.rawArea.toFixed(4) + '㎡）｜ ' + closureTxt + '</span>');
-      html.push('  </div>');
-
-      html.push('  <div class="pr-drawing-box">');
-      html.push('    <img src="' + floorImages[idx] + '" alt="' + escapeHtml(fData.name) + '図面">');
-      html.push('  </div>');
-
-      html.push('  <div class="pr-two-col">');
-      // 左列：辺長一覧
-      html.push('    <div class="pr-col-left">');
-      html.push('      <div class="pr-sub-title">辺長・方向一覧（' + (isCenter ? '壁芯' : '実測') + '）</div>');
-      html.push('      <table class="pr-table" style="margin-bottom:0;">');
-      html.push('        <thead><tr><th style="width:42px;">辺</th><th style="width:42px;">区分</th><th style="width:42px;">方向</th><th>寸法 (m)</th></tr></thead><tbody>');
-
-      for (var i = 0; i < fData.activePts.length - 1; i++) {
-        var len = Math.hypot(fData.activePts[i + 1].x - fData.activePts[i].x, fData.activePts[i + 1].y - fData.activePts[i].y);
-        var ed = fData.edges[i];
-        var dObj = DIRS.find(function(d) { return d.key === ed.dir; }) || DIRS[0];
-        var sBadge = CIRCLED_NUMS[ed.secIdx || 0] || '①';
-        html.push('        <tr>');
-        html.push('          <td class="center">#' + (i + 1) + '</td>');
-        html.push('          <td class="center">' + sBadge + '</td>');
-        html.push('          <td class="center">' + dObj.label + '</td>');
-        html.push('          <td class="num">' + len.toFixed(3) + ' m</td>');
-        html.push('        </tr>');
+      // 構造・屋根区分一覧
+      var rawSumSec = bldgSecRawAreas.reduce(function(a, b) { return a + b; }, 0);
+      var maxSecArea = 0;
+      var maxSecIdx = -1;
+      for (var s = 0; s < numSections; s++) {
+        if (bldgSecRawAreas[s] > maxSecArea + 1e-6) {
+          maxSecArea = bldgSecRawAreas[s];
+          maxSecIdx = s;
+        }
       }
-      html.push('        </tbody></table>');
-      html.push('    </div>');
 
-      // 右列：境界線までの離れ
-      html.push('    <div class="pr-col-right">');
-      html.push('      <div class="pr-sub-title">境界線までの離れ</div>');
-      if (fData.extLines.length > 0) {
+      html.push('<div class="pr-sub-title">■ 建物の種類・構造・屋根の種類' + (numSections > 1 ? '（区分別面積・割合判定）' : '') + '</div>');
+      html.push('<table class="pr-table">');
+      html.push('  <thead><tr>');
+      html.push('    <th style="width:42px;">区分</th>');
+      html.push('    <th>種類</th>');
+      html.push('    <th>構造</th>');
+      html.push('    <th>屋根の種類</th>');
+      html.push('    <th>場所メモ</th>');
+      if (numSections > 1) {
+        html.push('    <th style="width:80px;">床面積</th>');
+        html.push('    <th style="width:60px;">割合</th>');
+        html.push('    <th style="width:76px;">判定</th>');
+      }
+      html.push('  </tr></thead><tbody>');
+
+      bldg.sections.forEach(function(sec, sIdx) {
+        var badge = CIRCLED_NUMS[sIdx] || (sIdx + 1);
+        var pct = (rawSumSec > 0.0001) ? (bldgSecRawAreas[sIdx] / rawSumSec * 100) : 0;
+        var sFl = bldgSecFlooredAreas[sIdx] || 0;
+        var isMain = (sIdx === maxSecIdx && maxSecArea > 0.001);
+
+        html.push('  <tr>');
+        html.push('    <td class="center"><b>' + badge + '</b></td>');
+        html.push('    <td>' + escapeHtml(sec.kind || '-') + '</td>');
+        html.push('    <td>' + escapeHtml(sec.structure || '-') + '</td>');
+        html.push('    <td>' + escapeHtml(sec.roof || '-') + '</td>');
+        html.push('    <td>' + escapeHtml(sec.note || '-') + '</td>');
+        if (numSections > 1) {
+          html.push('    <td class="num"><b>' + sFl.toFixed(2) + ' ㎡</b></td>');
+          html.push('    <td class="num">' + pct.toFixed(1) + '%</td>');
+          html.push('    <td class="center">' + (isMain ? '<b>主たる部分</b>' : '-') + '</td>');
+        }
+        html.push('  </tr>');
+      });
+      html.push('  </tbody></table>');
+
+      // 各階ごとの図面＋辺長・離れ明細
+      allFloorsData.forEach(function(fData, idx) {
+        var closureTxt = fData.outer.isClosed
+          ? ('閉合OK（誤差 ' + fData.outer.closureErr.toFixed(3) + ' m）')
+          : ('未閉合（残 X:' + (-fData.outer.dx).toFixed(3) + ' / Y:' + (-fData.outer.dy).toFixed(3) + ' m）');
+
+        var offsetBadgeHtml = (idx > 0 && (fData.offsetX !== 0 || fData.offsetY !== 0))
+          ? '<span class="pr-fh-offset">1F始点ずれ X:' + fData.offsetX.toFixed(3) + 'm, Y:' + fData.offsetY.toFixed(3) + 'm</span>'
+          : '';
+
+        html.push('<div class="pr-floor-block">');
+        html.push('  <div class="pr-floor-head">');
+        html.push('    <div class="pr-fh-left">' + escapeHtml(bldg.label + ' ' + fData.name) + offsetBadgeHtml + '</div>');
+        html.push('    <div class="pr-fh-right">床面積: ' + fData.area.toFixed(2) + ' ㎡（' + (fData.area * 0.3025).toFixed(2) + '坪 / 切捨前: ' + fData.rawArea.toFixed(4) + '㎡）｜ ' + closureTxt + '</div>');
+        html.push('  </div>');
+
+        html.push('  <div class="pr-drawing-box">');
+        html.push('    <img src="' + floorImages[idx] + '" alt="' + escapeHtml(fData.name) + '図面">');
+        html.push('  </div>');
+
+        html.push('  <div class="pr-two-col">');
+        // 左列：辺長一覧
+        html.push('    <div class="pr-col-left">');
+        html.push('      <div class="pr-sub-title">辺長・方向一覧（' + (isCenter ? '壁芯' : '実測') + '）</div>');
         html.push('      <table class="pr-table" style="margin-bottom:0;">');
-        html.push('        <thead><tr><th>対象辺</th><th>距離 (m)</th><th>図面表記</th></tr></thead><tbody>');
-        fData.extLines.forEach(function(ex) {
+        html.push('        <thead><tr><th style="width:40px;">辺</th><th style="width:40px;">区分</th><th style="width:40px;">方向</th><th>寸法 (m)</th></tr></thead><tbody>');
+
+        for (var i = 0; i < fData.activePts.length - 1; i++) {
+          var len = Math.hypot(fData.activePts[i + 1].x - fData.activePts[i].x, fData.activePts[i + 1].y - fData.activePts[i].y);
+          var ed = fData.edges[i];
+          var dObj = DIRS.find(function(d) { return d.key === ed.dir; }) || DIRS[0];
+          var sBadge = CIRCLED_NUMS[ed.secIdx || 0] || '①';
           html.push('        <tr>');
-          html.push('          <td class="center">辺#' + ex.edgeNum + '延長</td>');
-          html.push('          <td class="num">' + ex.dist.toFixed(3) + ' m</td>');
-          html.push('          <td class="center"><b>' + formatSetbackFloor1(ex.dist) + '</b></td>');
+          html.push('          <td class="center">#' + (i + 1) + '</td>');
+          html.push('          <td class="center">' + sBadge + '</td>');
+          html.push('          <td class="center">' + dObj.label + '</td>');
+          html.push('          <td class="num">' + len.toFixed(3) + ' m</td>');
           html.push('        </tr>');
-        });
+        }
         html.push('        </tbody></table>');
-      } else {
-        html.push('      <div style="font-size:8.5pt; color:#64748b; padding:6px; border:1px solid #cbd5e1; border-radius:4px;">離れ入力なし</div>');
-      }
-      html.push('    </div>');
-      html.push('  </div>');
+        html.push('    </div>');
+
+        // 右列：境界線までの離れ
+        html.push('    <div class="pr-col-right">');
+        html.push('      <div class="pr-sub-title">境界線までの離れ</div>');
+        if (fData.extLines.length > 0) {
+          html.push('      <table class="pr-table" style="margin-bottom:0;">');
+          html.push('        <thead><tr><th>対象辺・方向</th><th>距離 (m)</th><th>図面表記</th></tr></thead><tbody>');
+          fData.extLines.forEach(function(ex) {
+            html.push('        <tr>');
+            html.push('          <td class="center">辺#' + ex.edgeNum + ' ' + escapeHtml(ex.sideText) + '</td>');
+            html.push('          <td class="num">' + ex.dist.toFixed(3) + ' m</td>');
+            html.push('          <td class="center"><b>' + formatSetbackFloor1(ex.dist) + '</b></td>');
+            html.push('        </tr>');
+          });
+          html.push('        </tbody></table>');
+        } else {
+          html.push('      <div style="font-size:8.5pt; color:#64748b; padding:6px; border:1px solid #cbd5e1; border-radius:4px;">離れ入力なし</div>');
+        }
+        html.push('    </div>');
+        html.push('  </div>');
+        html.push('</div>');
+      });
+
       html.push('</div>');
     });
 
@@ -1883,7 +1935,7 @@ document.addEventListener('DOMContentLoaded', function() {
     printArea.innerHTML = html.join('\n');
 
     var origTitle = document.title;
-    var safeFileTitle = (siteName ? (siteName + '_') : '') + curBldg.label + '_野帳図面';
+    var safeFileTitle = (siteName ? (siteName + '_') : '') + '建物調査野帳';
     document.title = safeFileTitle;
 
     setTimeout(function() {
@@ -2737,6 +2789,7 @@ document.addEventListener('DOMContentLoaded', function() {
       var pStart = activePts[eIdx];
       var pEnd = activePts[eIdx + 1];
 
+      var dObj = DIRS.find(function(d) { return d.key === edge.dir; }) || DIRS[0];
       var vx = pEnd.x - pStart.x;
       var vy = pEnd.y - pStart.y;
       var len = Math.hypot(vx, vy);
@@ -2745,7 +2798,6 @@ document.addEventListener('DOMContentLoaded', function() {
         ux = vx / len;
         uy = vy / len;
       } else {
-        var dObj = DIRS.find(function(d) { return d.key === edge.dir; }) || DIRS[0];
         ux = dObj.dx;
         uy = dObj.dy;
       }
@@ -2753,9 +2805,11 @@ document.addEventListener('DOMContentLoaded', function() {
       var actualDist = rawDist + addOffset;
       var basePt = (ext.side === 'end') ? pEnd : pStart;
       var dirSign = (ext.side === 'end') ? 1 : -1;
+      var sideText = (ext.side === 'end') ? ('終点(' + dObj.label + ')') : ('始点(' + dObj.opp + ')');
 
       results.push({
         edgeNum: eIdx + 1,
+        sideText: sideText,
         basePt: basePt,
         ux: ux * dirSign,
         uy: uy * dirSign,
@@ -3195,7 +3249,7 @@ document.addEventListener('DOMContentLoaded', function() {
       ctx.restore();
     }
 
-    // 建物の辺そのものを細い障害物として登録
+    // 建物の辺そのものを障害物として登録
     var screenSegs = [];
     for (var i = 0; i < pts.length - 1; i++) {
       var sp1 = toScreen(pts[i].x, pts[i].y);
@@ -3225,7 +3279,7 @@ document.addEventListener('DOMContentLoaded', function() {
       ctx.fillStyle = '#15803d';
       ctx.fillText('S', startSp.x - 11, startSp.y - 5);
       ctx.restore();
-      obstacleBoxes.push({ x1: startSp.x - 14, x2: startSp.x + 7, y1: startSp.y - 16, y2: startSp.y + 7 });
+      obstacleBoxes.push({ x1: startSp.x - 15, x2: startSp.x + 8, y1: startSp.y - 17, y2: startSp.y + 8 });
     }
 
     var endSp = toScreen(pts[pts.length - 1].x, pts[pts.length - 1].y);
@@ -3292,7 +3346,7 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.lineTo(cx + px * 5 - ux * 2, cy + py * 5 - uy * 2);
             ctx.stroke();
           });
-          obstacleBoxes.push({ x1: sx - 8, x2: sx + 8, y1: sy - 8, y2: sy + 8 });
+          obstacleBoxes.push({ x1: sx - 9, x2: sx + 9, y1: sy - 9, y2: sy + 9 });
         }
 
         ctx.setLineDash([]);
@@ -3334,10 +3388,10 @@ document.addEventListener('DOMContentLoaded', function() {
           var lx = Math.max(tw / 2 + 4, Math.min(W - tw / 2 - 4, mx + cand.dx));
           var ly = Math.max(10, Math.min(H - 10, my + cand.dy));
           var box = {
-            x1: lx - tw / 2 - 3,
-            x2: lx + tw / 2 + 3,
-            y1: ly - th / 2 - 1,
-            y2: ly + th / 2 + 1
+            x1: lx - tw / 2 - 4,
+            x2: lx + tw / 2 + 4,
+            y1: ly - th / 2 - 2,
+            y2: ly + th / 2 + 2
           };
           if (!isBoxOverlapping(box)) {
             chosenLx = lx;
@@ -3351,10 +3405,10 @@ document.addEventListener('DOMContentLoaded', function() {
           chosenLx = Math.max(tw / 2 + 4, Math.min(W - tw / 2 - 4, mx + candList[0].dx));
           chosenLy = Math.max(10, Math.min(H - 10, my + candList[0].dy));
           obstacleBoxes.push({
-            x1: chosenLx - tw / 2 - 3,
-            x2: chosenLx + tw / 2 + 3,
-            y1: chosenLy - th / 2 - 1,
-            y2: chosenLy + th / 2 + 1
+            x1: chosenLx - tw / 2 - 4,
+            x2: chosenLx + tw / 2 + 4,
+            y1: chosenLy - th / 2 - 2,
+            y2: chosenLy + th / 2 + 2
           });
         }
 
@@ -3377,7 +3431,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     var outSign = (signedArea2 >= 0) ? 1 : -1;
 
-    // 6. 各辺の描画 ＋ 線突き刺さりゼロ・衝突完全回避寸法ラベル
+    // 6. 各辺の描画 ＋ 凹部退避・白フチ非接触寸法ラベル
     var secMidPoints = curBldg.sections.map(function() { return []; });
 
     for (var i = 0; i < pts.length - 1; i++) {
@@ -3427,22 +3481,28 @@ document.addEventListener('DOMContentLoaded', function() {
         var halfProj = (tw / 2) * Math.abs(outNx) + (th / 2) * Math.abs(outNy);
         var baseN = Math.ceil(halfProj + 6);
 
+        // 凹部（狭い溝）でも開口部側へ引出線付きで退避できるよう接線方向(t)の広域候補を含む
         var candidates = [
           { n: baseN, t: 0 },
-          { n: baseN + 13, t: 0 },
-          { n: baseN, t: 18 },
-          { n: baseN, t: -18 },
-          { n: baseN + 26, t: 0 },
-          { n: baseN + 13, t: 22 },
-          { n: baseN + 13, t: -22 },
-          { n: baseN + 39, t: 0 },
+          { n: baseN + 14, t: 0 },
+          { n: baseN, t: 22 },
+          { n: baseN, t: -22 },
+          { n: baseN, t: 38 },
+          { n: baseN, t: -38 },
+          { n: baseN + 14, t: 28 },
+          { n: baseN + 14, t: -28 },
+          { n: baseN + 14, t: 44 },
+          { n: baseN + 14, t: -44 },
+          { n: baseN + 28, t: 0 },
+          { n: baseN + 28, t: 34 },
+          { n: baseN + 28, t: -34 },
           { n: -baseN, t: 0 },
-          { n: -(baseN + 13), t: 0 }
+          { n: -(baseN + 14), t: 0 }
         ];
 
         var chosenX = null;
         var chosenY = null;
-        var chosenAbsN = baseN;
+        var chosenDistFromMid = 0;
 
         for (var cIdx = 0; cIdx < candidates.length; cIdx++) {
           var cand = candidates[cIdx];
@@ -3454,15 +3514,15 @@ document.addEventListener('DOMContentLoaded', function() {
           }
 
           var box = {
-            x1: tx - tw / 2 - 2,
-            x2: tx + tw / 2 + 2,
-            y1: ty - th / 2 - 1,
-            y2: ty + th / 2 + 1
+            x1: tx - tw / 2 - 4,
+            x2: tx + tw / 2 + 4,
+            y1: ty - th / 2 - 2,
+            y2: ty + th / 2 + 2
           };
           if (!isBoxOverlapping(box)) {
             chosenX = tx;
             chosenY = ty;
-            chosenAbsN = Math.abs(cand.n);
+            chosenDistFromMid = Math.hypot(tx - mx, ty - my);
             obstacleBoxes.push(box);
             break;
           }
@@ -3473,21 +3533,22 @@ document.addEventListener('DOMContentLoaded', function() {
           var fbY = Math.max(8, Math.min(H - 8, my + outNy * baseN));
           chosenX = fbX;
           chosenY = fbY;
+          chosenDistFromMid = Math.hypot(chosenX - mx, chosenY - my);
           obstacleBoxes.push({
-            x1: chosenX - tw / 2 - 2,
-            x2: chosenX + tw / 2 + 2,
-            y1: chosenY - th / 2 - 1,
-            y2: chosenY + th / 2 + 1
+            x1: chosenX - tw / 2 - 4,
+            x2: chosenX + tw / 2 + 4,
+            y1: chosenY - th / 2 - 2,
+            y2: chosenY + th / 2 + 2
           });
         }
 
         if (chosenX !== null) {
-          if (chosenAbsN >= baseN + 12) {
+          if (chosenDistFromMid >= baseN + 13) {
             ctx.beginPath();
             ctx.moveTo(mx, my);
             ctx.lineTo(chosenX, chosenY);
-            ctx.strokeStyle = 'rgba(100, 116, 139, 0.5)';
-            ctx.lineWidth = 0.8;
+            ctx.strokeStyle = 'rgba(100, 116, 139, 0.55)';
+            ctx.lineWidth = 0.85;
             ctx.stroke();
           }
 
@@ -3495,7 +3556,7 @@ document.addEventListener('DOMContentLoaded', function() {
           ctx.textBaseline = 'middle';
           ctx.lineJoin = 'round';
           ctx.lineWidth = 3.5;
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.96)';
           ctx.strokeText(text, chosenX, chosenY);
 
           ctx.fillStyle = strokeColor;
@@ -3536,7 +3597,7 @@ document.addEventListener('DOMContentLoaded', function() {
           var bx = avgX + badgeOffsets[oIdx].dx;
           var by = avgY + badgeOffsets[oIdx].dy;
           if (bx < 14 || bx > W - 14 || by < 14 || by > H - 14) continue;
-          var bBox = { x1: bx - 12, x2: bx + 12, y1: by - 12, y2: by + 12 };
+          var bBox = { x1: bx - 13, x2: bx + 13, y1: by - 13, y2: by + 13 };
           if (!isBoxOverlapping(bBox)) {
             placedX = bx;
             placedY = by;
