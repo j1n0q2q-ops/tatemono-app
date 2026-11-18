@@ -16,6 +16,7 @@
     --border: #cbd5e1;
     --ok: #16a34a;
     --ng: #dc2626;
+    --warn: #d97706;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body {
@@ -184,6 +185,12 @@
     color: #334155;
     gap: 6px;
   }
+  .card-sub-note {
+    font-size: 0.74rem;
+    color: var(--muted);
+    margin-top: -4px;
+    margin-bottom: 8px;
+  }
 
   /* 辺長入力行 */
   .edge-row {
@@ -193,6 +200,11 @@
     margin-bottom: 8px;
     padding-bottom: 8px;
     border-bottom: 1px solid #f1f5f9;
+  }
+  .edge-row.edge-error {
+    background: #fef2f2;
+    border-radius: 6px;
+    padding: 4px 2px 6px 2px;
   }
   .edge-num {
     width: 24px;
@@ -266,7 +278,7 @@
     touch-action: manipulation;
   }
 
-  /* 延長線（離れ）入力行 - スマホ見切れ防止調整済 */
+  /* 延長線（離れ）入力行 */
   .ext-row {
     display: flex;
     align-items: center;
@@ -439,7 +451,7 @@
   }
   canvas {
     width: 100%;
-    height: 360px;
+    height: 370px;
     background: #ffffff;
     border: 1px solid var(--border);
     border-radius: 6px;
@@ -499,6 +511,7 @@
   }
   .closure-ok { background: #dcfce7; color: var(--ok); border: 1px solid #86efac; }
   .closure-ng { background: #fee2e2; color: var(--ng); border: 1px solid #fca5a5; }
+  .closure-warn { background: #fef3c7; color: #b45309; border: 1px solid #fcd34d; }
   .closure-empty { background: #f1f5f9; color: var(--muted); border: 1px solid #cbd5e1; }
   .btn-auto-close {
     background: #dc2626;
@@ -660,8 +673,9 @@
   <!-- 2. 境界線までの離れ（デフォルト3か所） -->
   <div class="card">
     <div class="card-header">
-      <span>境界線までの離れ（辺の延長距離 m）</span>
+      <span>境界線までの離れ（外壁面からの実測距離 m）</span>
     </div>
+    <div class="card-sub-note">※ 常に<b>外壁（外法）</b>からの実測値を入力してください（壁芯表示時は自動で半壁厚を加算します）。</div>
     <div id="extList"></div>
     <button type="button" id="btnAddExt" class="btn btn-ext" style="width:100%;">＋ 離れ（延長線）を追加</button>
   </div>
@@ -807,6 +821,15 @@ document.addEventListener('DOMContentLoaded', function() {
     camZoom = 1.0;
     camPanX = 0;
     camPanY = 0;
+  }
+
+  function selectAllOnFocus(inp) {
+    inp.addEventListener('focus', function() {
+      var el = this;
+      setTimeout(function() {
+        try { el.select(); } catch (e) {}
+      }, 10);
+    });
   }
 
   function createDefaultExtensions() {
@@ -1057,17 +1080,35 @@ document.addEventListener('DOMContentLoaded', function() {
     renderAll();
   }
 
+  // 直前の辺と現在座標から、最も自然な次辺方向（原点へ戻る方向優先）を予測
+  function predictNextDirection(edges) {
+    var order = ['R', 'D', 'L', 'U'];
+    if (edges.length === 0) return 'R';
+
+    var outer = computeOuterPoints(edges);
+    var lastDir = edges[edges.length - 1].dir;
+    var lastIdx = order.indexOf(lastDir);
+
+    // 最後の辺と直交する2方向を候補にする
+    var cand1 = order[(lastIdx + 1) % 4];
+    var cand2 = order[(lastIdx + 3) % 4];
+
+    if (cand1 === 'L' || cand1 === 'R') {
+      // 水平方向候補の場合、原点(x=0)へ戻る向きを優先
+      if (outer.dxMm > 5) return 'L';
+      if (outer.dxMm < -5) return 'R';
+    } else {
+      // 垂直方向候補の場合、原点(y=0)へ戻る向きを優先
+      if (outer.dyMm > 5) return 'U';
+      if (outer.dyMm < -5) return 'D';
+    }
+    return cand1;
+  }
+
   function addEdge() {
     var edges = getCurFloor().edges;
-    var order = ['R', 'D', 'L', 'U'];
-    var nextDir = 'R';
-    var nextSec = 0;
-    if (edges.length > 0) {
-      var last = edges[edges.length - 1];
-      var idx = order.indexOf(last.dir);
-      nextDir = order[(idx + 1) % 4];
-      nextSec = last.secIdx || 0;
-    }
+    var nextDir = predictNextDirection(edges);
+    var nextSec = edges.length > 0 ? (edges[edges.length - 1].secIdx || 0) : 0;
     edges.push({ dir: nextDir, len: '', secIdx: nextSec });
     saveToLocalStorage();
     renderAll();
@@ -1110,7 +1151,6 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function setEdgeLen(idx, val) {
-    // マイナス記号の混入を防止
     var cleanVal = String(val).replace(/-/g, '');
     getCurFloor().edges[idx].len = cleanVal;
     saveToLocalStorage();
@@ -1143,7 +1183,6 @@ document.addEventListener('DOMContentLoaded', function() {
     var edges = curFloor.edges;
     var lastSec = edges.length > 0 ? (edges[edges.length - 1].secIdx || 0) : 0;
 
-    // 末尾に未入力の空欄辺があれば、そこから優先的に埋める
     var emptyStartIdx = edges.length;
     while (emptyStartIdx > 0 && (parseFloat(edges[emptyStartIdx - 1].len) || 0) === 0) {
       emptyStartIdx--;
@@ -1263,7 +1302,9 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('btnAddExt').addEventListener('click', addExtension);
   document.getElementById('btnAddSec').addEventListener('click', addSection);
 
-  document.getElementById('wallThickness').addEventListener('input', function(e) {
+  var wallInp = document.getElementById('wallThickness');
+  selectAllOnFocus(wallInp);
+  wallInp.addEventListener('input', function(e) {
     var val = Math.max(0, parseFloat(e.target.value) || 0);
     getCurBldg().wallThickness = val;
     saveToLocalStorage();
@@ -1333,7 +1374,72 @@ document.addEventListener('DOMContentLoaded', function() {
     pinchStartDist = 0;
   }, { passive: true });
 
-  // 整数ミリ単位での厳密座標演算（浮動小数点誤差防止）
+  // 180度折り返し＆ポリゴン自己交差の検証
+  function detectGeometryErrors(pts) {
+    var errorEdgeIndices = {};
+    var hasFoldBack = false;
+    var hasCross = false;
+
+    var segs = [];
+    for (var i = 0; i < pts.length - 1; i++) {
+      var len = Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y);
+      if (len > 0.001) {
+        segs.push({ idx: i, p1: pts[i], p2: pts[i + 1] });
+      }
+    }
+
+    // 1. 隣接辺の180度折り返しチェック（例：→の直後に←）
+    for (var i = 0; i < segs.length; i++) {
+      var nextI = (i + 1) % segs.length;
+      if (segs.length < 3 && nextI === 0) break;
+      var s1 = segs[i];
+      var s2 = segs[nextI];
+      // 終点と始点が一致している隣接辺のみ確認
+      if (Math.hypot(s1.p2.x - s2.p1.x, s1.p2.y - s2.p1.y) < 0.005) {
+        var v1x = s1.p2.x - s1.p1.x, v1y = s1.p2.y - s1.p1.y;
+        var v2x = s2.p2.x - s2.p1.x, v2y = s2.p2.y - s2.p1.y;
+        var l1 = Math.hypot(v1x, v1y), l2 = Math.hypot(v2x, v2y);
+        var cos = (v1x * v2x + v1y * v2y) / (l1 * l2);
+        if (cos < -0.99) {
+          hasFoldBack = true;
+          errorEdgeIndices[s1.idx] = true;
+          errorEdgeIndices[s2.idx] = true;
+        }
+      }
+    }
+
+    // 2. 非隣接辺同士の交差チェック
+    function ccw(A, B, C) {
+      return (C.y - A.y) * (B.x - A.x) - (B.y - A.y) * (C.x - A.x);
+    }
+    for (var i = 0; i < segs.length; i++) {
+      for (var j = i + 2; j < segs.length; j++) {
+        // 先頭辺と末尾辺（始点で接続）は除外
+        if (i === 0 && j === segs.length - 1 && Math.hypot(segs[0].p1.x - segs[j].p2.x, segs[0].p1.y - segs[j].p2.y) < 0.005) {
+          continue;
+        }
+        var A = segs[i].p1, B = segs[i].p2;
+        var C = segs[j].p1, D = segs[j].p2;
+        var d1 = ccw(A, C, D), d2 = ccw(B, C, D);
+        var d3 = ccw(A, B, C), d4 = ccw(A, B, D);
+        if (((d1 > 1e-6 && d2 < -1e-6) || (d1 < -1e-6 && d2 > 1e-6)) &&
+            ((d3 > 1e-6 && d4 < -1e-6) || (d3 < -1e-6 && d4 > 1e-6))) {
+          hasCross = true;
+          errorEdgeIndices[segs[i].idx] = true;
+          errorEdgeIndices[segs[j].idx] = true;
+        }
+      }
+    }
+
+    return {
+      hasError: hasFoldBack || hasCross,
+      hasFoldBack: hasFoldBack,
+      hasCross: hasCross,
+      errorEdgeIndices: errorEdgeIndices
+    };
+  }
+
+  // 整数ミリ単位での厳密座標演算
   function computeOuterPoints(edges) {
     var xMm = 0, yMm = 0;
     var pts = [{ x: 0, y: 0 }];
@@ -1350,12 +1456,13 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     var closureErrMm = Math.hypot(xMm, yMm);
-    var isClosed = (totalLenMm > 0 && closureErrMm < 5); // 5mm未満を閉合OKとする
+    var isClosed = (totalLenMm > 0 && closureErrMm < 5);
 
-    // 5mm未満の微小丸め誤差は始点に厳密スナップして面積・オフセット計算の破綻を防ぐ
     if (isClosed && pts.length > 1) {
       pts[pts.length - 1] = { x: pts[0].x, y: pts[0].y };
     }
+
+    var geomCheck = detectGeometryErrors(pts);
 
     return {
       pts: pts,
@@ -1365,7 +1472,8 @@ document.addEventListener('DOMContentLoaded', function() {
       dxMm: xMm,
       dyMm: yMm,
       closureErr: closureErrMm / 1000,
-      isClosed: isClosed
+      isClosed: isClosed,
+      geomCheck: geomCheck
     };
   }
 
@@ -1636,6 +1744,7 @@ document.addEventListener('DOMContentLoaded', function() {
     curFloor.edges.forEach(function(edge, idx) {
       var row = document.createElement('div');
       row.className = 'edge-row';
+      row.id = 'edgeRow_' + idx;
 
       var num = document.createElement('div');
       num.className = 'edge-num';
@@ -1676,6 +1785,7 @@ document.addEventListener('DOMContentLoaded', function() {
       inp.placeholder = '0.000';
       inp.className = 'len-input';
       inp.value = edge.len;
+      selectAllOnFocus(inp);
       inp.addEventListener('input', function(e) { setEdgeLen(idx, e.target.value); });
       inp.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
@@ -1701,7 +1811,7 @@ document.addEventListener('DOMContentLoaded', function() {
       listEl.appendChild(row);
     });
 
-    // 4. 離れ（延長線）リスト（スマホ見切れ防止短縮ラベル）
+    // 4. 離れ（延長線）リスト
     var extListEl = document.getElementById('extList');
     extListEl.innerHTML = '';
     curFloor.extensions.forEach(function(ext, extIdx) {
@@ -1751,6 +1861,7 @@ document.addEventListener('DOMContentLoaded', function() {
       distInp.placeholder = '離れ(m)';
       distInp.className = 'ext-dist-inp';
       distInp.value = ext.dist;
+      selectAllOnFocus(distInp);
       distInp.addEventListener('input', function(e) { updateExtension(extIdx, 'dist', e.target.value); });
       row.appendChild(distInp);
 
@@ -1862,27 +1973,16 @@ document.addEventListener('DOMContentLoaded', function() {
         uy = dObj.dy;
       }
 
-      var displayDist = rawDist + addOffset;
-      var basePt, endPt;
-      if (ext.side === 'end') {
-        basePt = pEnd;
-        endPt = {
-          x: basePt.x + ux * displayDist,
-          y: basePt.y + uy * displayDist
-        };
-      } else {
-        basePt = pStart;
-        endPt = {
-          x: basePt.x - ux * displayDist,
-          y: basePt.y - uy * displayDist
-        };
-      }
+      var actualDist = rawDist + addOffset;
+      var basePt = (ext.side === 'end') ? pEnd : pStart;
+      var dirSign = (ext.side === 'end') ? 1 : -1;
 
       results.push({
         edgeNum: eIdx + 1,
         basePt: basePt,
-        endPt: endPt,
-        dist: displayDist
+        ux: ux * dirSign,
+        uy: uy * dirSign,
+        dist: actualDist
       });
     });
 
@@ -1900,10 +2000,14 @@ document.addEventListener('DOMContentLoaded', function() {
     badge.textContent = isCenter ? '● 壁芯表示中（青破線：実測）' : '● 実測（外法）表示中';
     badge.style.color = isCenter ? 'var(--accent)' : 'var(--primary)';
 
-    var bldgTotalFlooredArea = 0; // 各階切り捨て後床面積の合計
+    var bldgTotalFlooredArea = 0;
     var numSections = curBldg.sections.length;
-    var bldgSecAreas = [];
-    for (var s = 0; s < numSections; s++) bldgSecAreas.push(0);
+    var bldgSecFlooredAreas = [];
+    var bldgSecRawAreas = [];
+    for (var s = 0; s < numSections; s++) {
+      bldgSecFlooredAreas.push(0);
+      bldgSecRawAreas.push(0);
+    }
 
     var currentFloorData = null;
     var firstFloorData = null;
@@ -1918,7 +2022,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
       var floorSecAreas = computeSectionAreas(activePts, f.edges, numSections);
       for (var s = 0; s < numSections; s++) {
-        bldgSecAreas[s] += floorSecAreas[s];
+        bldgSecRawAreas[s] += floorSecAreas[s];
+        bldgSecFlooredAreas[s] = Math.round((bldgSecFlooredAreas[s] + floorArea2(floorSecAreas[s])) * 100) / 100;
       }
 
       var extLines = computeExtensions(f, activePts, isCenter, halfWallM);
@@ -1937,13 +2042,27 @@ document.addEventListener('DOMContentLoaded', function() {
       if (idx === currentFloorIdx) currentFloorData = data;
     });
 
+    // エラー行のハイライト更新
+    var errMap = currentFloorData.outer.geomCheck.errorEdgeIndices;
+    currentFloorData.edges.forEach(function(_, idx) {
+      var rowEl = document.getElementById('edgeRow_' + idx);
+      if (rowEl) {
+        rowEl.classList.toggle('edge-error', !!errMap[idx]);
+      }
+    });
+
     var banner = document.getElementById('closureBanner');
     var err = currentFloorData.outer.closureErr;
     var hasInput = currentFloorData.outer.totalLen > 0.001;
+    var geomCheck = currentFloorData.outer.geomCheck;
 
     if (!hasInput) {
       banner.className = 'closure-banner closure-empty';
       banner.innerHTML = '<span>辺長未入力</span><span>-</span>';
+    } else if (geomCheck.hasError) {
+      banner.className = 'closure-banner closure-ng';
+      var reason = geomCheck.hasFoldBack ? '辺が180度折り返し重複しています' : '辺同士が交差（ねじれ）しています';
+      banner.innerHTML = '<span>⚠ 形状エラー: ' + reason + '</span><span>方向を確認</span>';
     } else if (currentFloorData.outer.isClosed) {
       banner.className = 'closure-banner closure-ok';
       banner.innerHTML = '<span>✔ 閉合 OK</span><span>誤差: ' + err.toFixed(3) + ' m</span>';
@@ -1961,25 +2080,28 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     var modeText = isCenter ? '壁芯' : '実測';
-    var unclosedTag = (hasInput && !currentFloorData.outer.isClosed) ? ' ※未閉合参考値' : '';
+    var warnTag = '';
+    if (hasInput && geomCheck.hasError) warnTag = ' ※形状エラー要修正';
+    else if (hasInput && !currentFloorData.outer.isClosed) warnTag = ' ※未閉合参考値';
+
     document.getElementById('floorAreaLabel').textContent = currentFloorData.name + ' 床面積（' + modeText + '）';
     document.getElementById('floorAreaVal').textContent = currentFloorData.area.toFixed(2) + ' ㎡ (' + (currentFloorData.area * 0.3025).toFixed(2) + '坪)';
-    document.getElementById('floorAreaSub').textContent = '端数切捨前: ' + currentFloorData.rawArea.toFixed(4) + ' ㎡' + unclosedTag;
+    document.getElementById('floorAreaSub').textContent = '端数切捨前: ' + currentFloorData.rawArea.toFixed(4) + ' ㎡' + warnTag;
 
     document.getElementById('totalAreaLabel').textContent = curBldg.label + ' 総面積（全' + curBldg.floors.length + '階）';
     document.getElementById('totalAreaVal').textContent = bldgTotalFlooredArea.toFixed(2) + ' ㎡ (' + (bldgTotalFlooredArea * 0.3025).toFixed(2) + '坪)';
 
-    // 区分別の面積・総面積割合の表示（2区分以上登録されている場合）
+    // 区分別の面積・割合表示
     var bdEl = document.getElementById('sectionBreakdown');
     if (numSections > 1) {
       bdEl.style.display = 'block';
 
-      var rawSumSec = bldgSecAreas.reduce(function(a, b) { return a + b; }, 0);
+      var rawSumSec = bldgSecRawAreas.reduce(function(a, b) { return a + b; }, 0);
       var maxSecArea = 0;
       var maxSecIdx = -1;
       for (var s = 0; s < numSections; s++) {
-        if (bldgSecAreas[s] > maxSecArea + 1e-6) {
-          maxSecArea = bldgSecAreas[s];
+        if (bldgSecRawAreas[s] > maxSecArea + 1e-6) {
+          maxSecArea = bldgSecRawAreas[s];
           maxSecIdx = s;
         }
       }
@@ -1993,8 +2115,9 @@ document.addEventListener('DOMContentLoaded', function() {
       curBldg.sections.forEach(function(sec, sIdx) {
         var color = SEC_COLORS[sIdx % SEC_COLORS.length];
         var numBadge = CIRCLED_NUMS[sIdx] || (sIdx + 1);
-        var sTotalArea = bldgSecAreas[sIdx] || 0;
-        var totalPct = (rawSumSec > 0.0001) ? (sTotalArea / rawSumSec * 100) : 0;
+        var sTotalFloored = bldgSecFlooredAreas[sIdx] || 0;
+        var sTotalRaw = bldgSecRawAreas[sIdx] || 0;
+        var totalPct = (rawSumSec > 0.0001) ? (sTotalRaw / rawSumSec * 100) : 0;
 
         var sFloorArea = currentFloorData.secAreas[sIdx] || 0;
         var floorPct = (currentFloorData.rawArea > 0.0001) ? (sFloorArea / currentFloorData.rawArea * 100) : 0;
@@ -2021,7 +2144,7 @@ document.addEventListener('DOMContentLoaded', function() {
             '</div>' +
           '</div>' +
           '<div class="sec-bd-right">' +
-            '<div><span class="sec-bd-area">' + floorArea2(sTotalArea).toFixed(2) + ' ㎡</span>' +
+            '<div><span class="sec-bd-area">' + sTotalFloored.toFixed(2) + ' ㎡</span>' +
             '<span class="sec-bd-ratio">(' + totalPct.toFixed(1) + '%)</span></div>' +
             floorSubHtml +
           '</div>' +
@@ -2043,7 +2166,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var dpr = window.devicePixelRatio || 1;
     var rect = canvas.getBoundingClientRect();
     var W = rect.width || canvas.clientWidth || 320;
-    var H = rect.height || canvas.clientHeight || 360;
+    var H = rect.height || canvas.clientHeight || 370;
     canvas.width = W * dpr;
     canvas.height = H * dpr;
     ctx.scale(dpr, dpr);
@@ -2053,28 +2176,53 @@ document.addEventListener('DOMContentLoaded', function() {
     var pts = curData.activePts;
     if (pts.length < 2) return;
 
-    var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-    var expandBounds = function(p) {
+    // 1. まず建物本体（＋1階ガイド）のみのバウンディングボックスを計算（離れで建物が豆粒化しないよう保護）
+    var bMinX = Infinity, bMaxX = -Infinity, bMinY = Infinity, bMaxY = -Infinity;
+    var expandBldgBounds = function(p) {
+      if (p.x < bMinX) bMinX = p.x;
+      if (p.x > bMaxX) bMaxX = p.x;
+      if (p.y < bMinY) bMinY = p.y;
+      if (p.y > bMaxY) bMaxY = p.y;
+    };
+    pts.forEach(expandBldgBounds);
+    if (isCenter && curData.outer && curData.outer.pts) {
+      curData.outer.pts.forEach(expandBldgBounds);
+    }
+    var show1F = (currentFloorIdx > 0 && document.getElementById('showFirstFloor').checked);
+    if (show1F) firstData.activePts.forEach(expandBldgBounds);
+
+    var bldgSpan = Math.max(bMaxX - bMinX, bMaxY - bMinY, 2.0);
+    // 離れ線が建物サイズの45%を超える場合は省略記号(//)付きで短縮描画する
+    var maxVisualExt = bldgSpan * 0.45;
+
+    var minX = bMinX, maxX = bMaxX, minY = bMinY, maxY = bMaxY;
+    var expandAllBounds = function(p) {
       if (p.x < minX) minX = p.x;
       if (p.x > maxX) maxX = p.x;
       if (p.y < minY) minY = p.y;
       if (p.y > maxY) maxY = p.y;
     };
-    pts.forEach(expandBounds);
 
-    if (isCenter && curData.outer && curData.outer.pts) {
-      curData.outer.pts.forEach(expandBounds);
-    }
-
-    var show1F = (currentFloorIdx > 0 && document.getElementById('showFirstFloor').checked);
-    if (show1F) firstData.activePts.forEach(expandBounds);
-
-    curData.extLines.forEach(function(ext) {
-      expandBounds(ext.basePt);
-      expandBounds(ext.endPt);
+    var visualExts = curData.extLines.map(function(ext) {
+      var isTruncated = ext.dist > maxVisualExt && ext.dist > 1.5;
+      var drawDist = isTruncated ? maxVisualExt : ext.dist;
+      var endPt = {
+        x: ext.basePt.x + ext.ux * drawDist,
+        y: ext.basePt.y + ext.uy * drawDist
+      };
+      expandAllBounds(ext.basePt);
+      expandAllBounds(endPt);
+      return {
+        basePt: ext.basePt,
+        endPt: endPt,
+        ux: ext.ux,
+        uy: ext.uy,
+        actualDist: ext.dist,
+        isTruncated: isTruncated
+      };
     });
 
-    var pad = 54;
+    var pad = 56;
     var rangeX = (maxX - minX) || 1;
     var rangeY = (maxY - minY) || 1;
     var baseScale = Math.min((W - pad * 2) / rangeX, (H - pad * 2) / rangeY);
@@ -2090,7 +2238,7 @@ document.addEventListener('DOMContentLoaded', function() {
       };
     };
 
-    // 0. 1m方眼グリッド背景（視認性・スケール感向上）
+    // 0. 1m方眼グリッド背景
     if (scale >= 8) {
       ctx.save();
       ctx.strokeStyle = '#f1f5f9';
@@ -2100,18 +2248,14 @@ document.addEventListener('DOMContentLoaded', function() {
       var worldTop = centerY - ((H / 2) + camPanY) / scale;
       var worldBottom = centerY + ((H / 2) - camPanY) / scale;
 
-      var startGX = Math.floor(worldLeft);
-      var endGX = Math.ceil(worldRight);
-      for (var gx = startGX; gx <= endGX; gx++) {
+      for (var gx = Math.floor(worldLeft); gx <= Math.ceil(worldRight); gx++) {
         var sx = toScreen(gx, 0).x;
         ctx.beginPath();
         ctx.moveTo(sx, 0);
         ctx.lineTo(sx, H);
         ctx.stroke();
       }
-      var startGY = Math.floor(worldTop);
-      var endGY = Math.ceil(worldBottom);
-      for (var gy = startGY; gy <= endGY; gy++) {
+      for (var gy = Math.floor(worldTop); gy <= Math.ceil(worldBottom); gy++) {
         var sy = toScreen(0, gy).y;
         ctx.beginPath();
         ctx.moveTo(0, sy);
@@ -2156,7 +2300,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 3. 建物ポリゴン塗りつぶし
     var defaultColor = isCenter ? '#ea580c' : '#2563eb';
     var fillColor = isCenter ? 'rgba(234, 88, 12, 0.08)' : 'rgba(37, 99, 235, 0.08)';
-    if (curData.outer.totalLen > 0.001 && curData.outer.isClosed) {
+    if (curData.outer.totalLen > 0.001 && curData.outer.isClosed && !curData.outer.geomCheck.hasError) {
       ctx.save();
       ctx.beginPath();
       pts.forEach(function(p, i) {
@@ -2176,9 +2320,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     var outSign = (signedArea2 >= 0) ? 1 : -1;
 
-    // 4. 各辺を区分ごとの色で描画 ＋ 外側オフセット寸法ラベル
+    // 4. 各辺の描画 ＋ 衝突回避付き外側寸法ラベル
     var hasMultipleSecs = curBldg.sections.length > 1;
     var secMidPoints = curBldg.sections.map(function() { return []; });
+    var placedLabels = [];
+
+    function isBoxOverlapping(box) {
+      for (var k = 0; k < placedLabels.length; k++) {
+        var b = placedLabels[k];
+        if (box.x1 < b.x2 && box.x2 > b.x1 && box.y1 < b.y2 && box.y2 > b.y1) {
+          return true;
+        }
+      }
+      return false;
+    }
 
     for (var i = 0; i < pts.length - 1; i++) {
       var p1 = pts[i];
@@ -2205,7 +2360,6 @@ document.addEventListener('DOMContentLoaded', function() {
         var my = (sp1.y + sp2.y) / 2;
         secMidPoints[sIdx].push({ x: mx, y: my });
 
-        // スクリーン上の辺単位ベクトルと外側法線ベクトル
         var svx = sp2.x - sp1.x;
         var svy = sp2.y - sp1.y;
         var slen = Math.hypot(svx, svy) || 1;
@@ -2214,24 +2368,63 @@ document.addEventListener('DOMContentLoaded', function() {
         var outNx = suy * outSign;
         var outNy = -sux * outSign;
 
-        // 建物線と被らないよう外側へ13pxオフセット
-        var lblX = mx + outNx * 13;
-        var lblY = my + outNy * 13;
-
         ctx.save();
         ctx.font = 'bold 11px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
         var prefix = hasMultipleSecs ? ((CIRCLED_NUMS[sIdx] || '') + '#' + (i + 1) + ':') : ('#' + (i + 1) + ':');
         var text = prefix + segLen.toFixed(3);
+        var tw = ctx.measureText(text).width;
+        var th = 13;
 
+        // 衝突しないオフセット位置を探索
+        var offsets = [14, 27, 40, 53];
+        var chosenX = mx + outNx * 14;
+        var chosenY = my + outNy * 14;
+        var chosenDist = 14;
+
+        for (var oIdx = 0; oIdx < offsets.length; oIdx++) {
+          var dTry = offsets[oIdx];
+          var tx = mx + outNx * dTry;
+          var ty = my + outNy * dTry;
+          var box = {
+            x1: tx - tw / 2 - 2,
+            x2: tx + tw / 2 + 2,
+            y1: ty - th / 2 - 1,
+            y2: ty + th / 2 + 1
+          };
+          if (!isBoxOverlapping(box)) {
+            chosenX = tx;
+            chosenY = ty;
+            chosenDist = dTry;
+            placedLabels.push(box);
+            break;
+          }
+          if (oIdx === offsets.length - 1) {
+            chosenX = tx;
+            chosenY = ty;
+            chosenDist = dTry;
+            placedLabels.push(box);
+          }
+        }
+
+        // 遠くへ逃がした場合は細い引き出し線で辺の中点と結ぶ
+        if (chosenDist >= 25) {
+          ctx.beginPath();
+          ctx.moveTo(mx, my);
+          ctx.lineTo(chosenX, chosenY);
+          ctx.strokeStyle = 'rgba(100, 116, 139, 0.55)';
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         ctx.lineJoin = 'round';
         ctx.lineWidth = 3.5;
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.94)';
-        ctx.strokeText(text, lblX, lblY);
+        ctx.strokeText(text, chosenX, chosenY);
 
         ctx.fillStyle = strokeColor;
-        ctx.fillText(text, lblX, lblY);
+        ctx.fillText(text, chosenX, chosenY);
         ctx.restore();
       }
     }
@@ -2259,10 +2452,10 @@ document.addEventListener('DOMContentLoaded', function() {
       ctx.restore();
     }
 
-    // 6. 辺の延長線（離れ）と交点マーカー
-    if (curData.extLines.length > 0) {
+    // 6. 辺の延長線（離れ）と省略波線・交点マーカー
+    if (visualExts.length > 0) {
       ctx.save();
-      curData.extLines.forEach(function(ext) {
+      visualExts.forEach(function(ext) {
         var bp = toScreen(ext.basePt.x, ext.basePt.y);
         var ep = toScreen(ext.endPt.x, ext.endPt.y);
 
@@ -2274,6 +2467,36 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.lineWidth = 1.3;
         ctx.stroke();
 
+        // 長い離れを短縮描画した場合は二重斜線（省略記号 //）を描画
+        if (ext.isTruncated) {
+          var sx = (bp.x + ep.x) * 0.45;
+          var sy = (bp.y + ep.y) * 0.45;
+          var vx = ep.x - bp.x;
+          var vy = ep.y - bp.y;
+          var sl = Math.hypot(vx, vy) || 1;
+          var ux = vx / sl;
+          var uy = vy / sl;
+          var px = -uy;
+          var py = ux;
+
+          ctx.setLineDash([]);
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(sx, sy, 5, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 1.3;
+          [-2.2, 2.2].forEach(function(shift) {
+            var cx = sx + ux * shift;
+            var cy = sy + uy * shift;
+            ctx.beginPath();
+            ctx.moveTo(cx - px * 5 + ux * 2, cy - py * 5 + uy * 2);
+            ctx.lineTo(cx + px * 5 - ux * 2, cy + py * 5 - uy * 2);
+            ctx.stroke();
+          });
+        }
+
         ctx.setLineDash([]);
         ctx.fillStyle = '#dc2626';
         ctx.beginPath();
@@ -2282,7 +2505,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         var mx = (bp.x + ep.x) / 2;
         var my = (bp.y + ep.y) / 2;
-        var label = formatSetbackFloor1(ext.dist) + (isCenter ? '(芯)' : '');
+        var label = formatSetbackFloor1(ext.actualDist) + (isCenter ? '(芯)' : '');
 
         ctx.font = 'bold 11.5px sans-serif';
         ctx.lineJoin = 'round';
@@ -2295,13 +2518,13 @@ document.addEventListener('DOMContentLoaded', function() {
           ctx.textAlign = 'center';
           ctx.textBaseline = 'bottom';
           var drawX = Math.max(24, Math.min(W - 24, mx));
-          var drawY = my - 5;
+          var drawY = my - 6;
           ctx.strokeText(label, drawX, drawY);
           ctx.fillText(label, drawX, drawY);
         } else {
           ctx.textAlign = 'left';
           ctx.textBaseline = 'middle';
-          var drawX = Math.min(W - 42, mx + 6);
+          var drawX = Math.min(W - 44, mx + 7);
           var drawY = my;
           ctx.strokeText(label, drawX, drawY);
           ctx.fillText(label, drawX, drawY);
@@ -2312,10 +2535,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 7. 始点・終点マーカー
     var startSp = toScreen(pts[0].x, pts[0].y);
+    ctx.save();
     ctx.fillStyle = '#16a34a';
     ctx.beginPath();
     ctx.arc(startSp.x, startSp.y, 4, 0, Math.PI * 2);
     ctx.fill();
+    ctx.font = 'bold 10px sans-serif';
+    ctx.fillStyle = '#15803d';
+    ctx.fillText('S', startSp.x - 10, startSp.y - 5);
+    ctx.restore();
 
     var endSp = toScreen(pts[pts.length - 1].x, pts[pts.length - 1].y);
     if (curData.outer.totalLen > 0.001 && !curData.outer.isClosed) {
