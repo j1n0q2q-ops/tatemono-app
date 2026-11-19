@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>建物図面・現場野帳アプリ v1.19</title>
+<title>建物図面・現場野帳アプリ v1.20</title>
 <style>
   :root {
     --primary: #2563eb;
@@ -288,11 +288,10 @@
     background: #eff6ff;
   }
 
-  /* 壁厚一括入力＆列見出しバー */
+  /* 柱寸(壁厚)一括入力＆列見出しバー */
   .bulk-wall-bar {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 6px;
     background: #fff7ed;
     border: 1px solid #fed7aa;
@@ -341,18 +340,13 @@
   .bulk-wall-btn:active {
     background: #c2410c;
   }
-  .dir-sign-hint {
-    font-size: 0.71rem;
-    color: #7c2d12;
-    font-weight: bold;
-  }
 
   .edge-col-head {
     display: flex;
     align-items: center;
     gap: 3px;
     padding: 0 2px 4px 2px;
-    font-size: 0.69rem;
+    font-size: 0.67rem;
     font-weight: bold;
     color: var(--muted);
     border-bottom: 1px solid #e2e8f0;
@@ -431,7 +425,7 @@
   }
   .len-input-wrap {
     flex: 1;
-    min-width: 64px;
+    min-width: 60px;
     display: flex;
     gap: 3px;
     align-items: center;
@@ -471,10 +465,10 @@
     font-size: 0.88rem;
   }
   .wall-edge-inp {
-    width: 50px;
+    width: 56px;
     height: 38px;
-    padding: 4px 4px;
-    font-size: 0.88rem;
+    padding: 4px 5px;
+    font-size: 0.9rem;
     font-weight: bold;
     border: 1px solid #fdba74;
     background: #fffaf5;
@@ -1116,7 +1110,7 @@
       background: #f1f5f9;
       font-weight: bold;
       color: #334155;
-      width: 14%;
+      width: 15%;
       text-align: left;
       white-space: nowrap;
     }
@@ -1210,7 +1204,7 @@
       align-items: flex-start;
     }
     .pr-col-left {
-      flex: 1.3;
+      flex: 1.35;
     }
     .pr-col-right {
       flex: 1;
@@ -1234,7 +1228,7 @@
   <!-- アプリタイトル＆バージョン表示 -->
   <div class="app-ver-bar">
     <span class="app-ver-title">建物図面・現場野帳アプリ</span>
-    <span class="app-ver-badge" id="appVersionBadge">v1.19</span>
+    <span class="app-ver-badge" id="appVersionBadge">v1.20</span>
   </div>
 
   <!-- 実測 / 壁芯 切替トグル -->
@@ -1320,7 +1314,7 @@
     </div>
   </div>
 
-  <!-- 1. 辺長・方向・壁厚入力 -->
+  <!-- 1. 辺長・方向・柱寸(壁厚)入力 -->
   <div class="card" id="edgeInputCard">
     <div class="card-header">
       <span id="inputTitle" class="header-title-text">主たる建物 1階 辺長・方向</span>
@@ -1338,14 +1332,13 @@
       <span class="offset-pair">縦 <input type="number" inputmode="decimal" step="0.001" id="inpFloorOffsetY" class="offset-inp" value=""> m</span>
     </div>
 
-    <!-- 壁厚一括入力バー -->
+    <!-- 柱寸(壁厚)一括入力バー -->
     <div class="bulk-wall-bar">
       <div class="bulk-wall-left">
-        <span><b>壁厚一括(mm):</b></span>
-        <input type="number" inputmode="numeric" min="0" step="1" id="bulkWallInput" class="bulk-wall-inp" placeholder="例:150">
+        <span><b>柱寸(壁厚)一括(mm):</b></span>
+        <input type="number" inputmode="numeric" min="0" step="1" id="bulkWallInput" class="bulk-wall-inp" value="0">
         <button type="button" id="btnApplyBulkWall" class="bulk-wall-btn">全辺に適用</button>
       </div>
-      <span class="dir-sign-hint">※下・左は「−」入力</span>
     </div>
 
     <div id="secHint" style="font-size:0.75rem; color:#475569; margin-bottom:6px; display:none;">
@@ -1356,7 +1349,7 @@
       <span style="width:22px; text-align:center;">#</span>
       <span style="width:88px; text-align:center;">方向種別</span>
       <span style="flex:1; text-align:right; padding-right:4px;">辺長 (m)</span>
-      <span style="width:50px; text-align:right; padding-right:2px;">壁厚mm</span>
+      <span style="width:56px; text-align:right; padding-right:2px; white-space:nowrap;">柱寸(壁厚)</span>
       <span style="width:51px; text-align:center;">操作</span>
     </div>
 
@@ -1412,7 +1405,7 @@ window.onerror = function(msg, url, line) {
 };
 
 document.addEventListener('DOMContentLoaded', function() {
-  var APP_VERSION = 'v1.19';
+  var APP_VERSION = 'v1.20';
   var verBadge = document.getElementById('appVersionBadge');
   if (verBadge) verBadge.textContent = APP_VERSION;
 
@@ -1431,12 +1424,12 @@ document.addEventListener('DOMContentLoaded', function() {
   var CIRCLED_NUMS = ['①', '②', '③', '④', '⑤', '⑥'];
 
   // =========================================================
-  // 様々な一軒家の実際の間取りテストデータ（全6パターン：縦/横/斜・辺別壁厚対応）
+  // 様々な一軒家の実際の間取りテストデータ（全6パターン：縦/横/斜・辺別柱寸対応）
   // =========================================================
   var HOUSE_SAMPLES = [
     {
       title: '1. 標準総2階建て（尺モジュール・玄関ポーチ入隅）',
-      tag: '木造2階建 / 壁厚150mm',
+      tag: '木造2階建 / 柱寸150mm',
       desc: '1階に玄関ポーチ欠き込み(1.820m×0.910m)を持つ4LDK木造住宅。横(右+・左−)・縦(上+・下−)入力の標準サンプル。',
       siteName: '姶良市西餅田120-5（標準4LDK木造）',
       buildings: [
@@ -1482,10 +1475,10 @@ document.addEventListener('DOMContentLoaded', function() {
       ]
     },
     {
-      title: '2. 隅切り（斜め壁）＆ビルトイン車庫（辺別壁厚）',
-      tag: '斜め辺＋辺別壁厚(150/200mm)',
-      desc: '道路境界に沿った1.820m×1.820mの斜め隅切り壁（斜入力）と、RC壁厚200mm・木造壁厚150mmが混在する住宅のテスト用。',
-      siteName: '姶良市加治木町本町45（斜め隅切り・辺別壁厚）',
+      title: '2. 隅切り（斜め壁）＆ビルトイン車庫（辺別柱寸）',
+      tag: '斜め辺＋辺別柱寸(150/200mm)',
+      desc: '道路境界に沿った1.820m×1.820mの斜め隅切り壁（斜入力）と、RC壁厚200mm・木造柱寸150mmが混在する住宅のテスト用。',
+      siteName: '姶良市加治木町本町45（斜め隅切り・辺別柱寸）',
       buildings: [
         {
           label: '主たる建物',
@@ -1516,8 +1509,8 @@ document.addEventListener('DOMContentLoaded', function() {
     },
     {
       title: '3. L字型平屋建て（中庭ウッドデッキ入隅＋勝手口増築）',
-      tag: '平屋・2屋根区分 / 壁厚150・120mm',
-      desc: '中庭を抱えるL字型の平屋主屋（かわらぶき・壁厚150mm）に、北東側へ鋼板ぶきの水回り・勝手口（壁厚120mm）を増築した間取り。',
+      tag: '平屋・2屋根区分 / 柱寸150・120mm',
+      desc: '中庭を抱えるL字型の平屋主屋（かわらぶき・柱寸150mm）に、北東側へ鋼板ぶきの水回り・勝手口（柱寸120mm）を増築した間取り。',
       siteName: '姶良市東餅田458-2（L字平屋・増築）',
       buildings: [
         {
@@ -1556,7 +1549,7 @@ document.addEventListener('DOMContentLoaded', function() {
     },
     {
       title: '4. 現代モダン2階建て（吹き抜け欠き込み・1F始点ずれ）',
-      tag: '軽量鉄骨2階建 / 壁厚160mm',
+      tag: '軽量鉄骨2階建 / 柱寸160mm',
       desc: '1階に玄関・袖壁（0.455m凹凸）を持つ10辺形状。2階は吹き抜け部分を除いたコの字型平面（1F始点ずれ 横:0.910m, 縦:-1.820m）。',
       siteName: '姶良市宮島町32-11（吹き抜けモダン邸）',
       buildings: [
@@ -1610,7 +1603,7 @@ document.addEventListener('DOMContentLoaded', function() {
     },
     {
       title: '5. 農家住宅（母屋2階建＋附属建物 車庫・物置）',
-      tag: '複数棟構成 / 壁厚150mm・120mm',
+      tag: '複数棟構成 / 柱寸150mm・120mm',
       desc: '下屋付きの大きな母屋（木造2階建）と、敷地内別棟の附属建物 符号1（軽量鉄骨造・車庫物置）の2棟セット。',
       siteName: '姶良市蒲生町上久徳890（母屋＋車庫）',
       buildings: [
@@ -1681,7 +1674,7 @@ document.addEventListener('DOMContentLoaded', function() {
     },
     {
       title: '6. 増改築古民家（3屋根区分・0.455m凹凸15辺＋附属物置）',
-      tag: '3区分複雑形状 / 壁厚105mm',
+      tag: '3区分複雑形状 / 柱寸105mm',
       desc: 'かわらぶき主屋に亜鉛メッキ鋼板ぶき・セメントかわらぶきの2箇所を増築した15辺凹凸形状＋附属建物（物置）。',
       siteName: '○○市○○1234-5（3区分複雑形状）',
       buildings: [
@@ -1835,7 +1828,7 @@ document.addEventListener('DOMContentLoaded', function() {
           offsetX: 0,
           offsetY: 0,
           edges: [
-            { type: 'H', len: '', lenY: '', wall: '', secIdx: 0 }
+            { type: 'H', len: '', lenY: '', wall: '0', secIdx: 0 }
           ],
           extensions: []
         }
@@ -1847,11 +1840,13 @@ document.addEventListener('DOMContentLoaded', function() {
     createBuildingData('主たる建物')
   ];
 
-  // 旧バージョン(v1.18以前)のデータ形式も自動マイグレーション
+  // 旧バージョンデータの自動マイグレーション＆デフォルト柱寸(壁厚)='0'保証
   function normalizeBuildingsData() {
     buildings.forEach(function(b) {
       if (!b.splitMode) b.splitMode = 'auto';
-      var legacyWall = (b.wallThickness !== undefined && b.wallThickness !== null) ? String(b.wallThickness) : '';
+      var legacyWall = (b.wallThickness !== undefined && b.wallThickness !== null && String(b.wallThickness).trim() !== '')
+        ? String(b.wallThickness)
+        : '0';
       b.floors.forEach(function(f, fIdx) {
         if (fIdx === 0) {
           f.offsetX = 0;
@@ -1883,7 +1878,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           }
           if (e.lenY === undefined || e.lenY === null) e.lenY = '';
-          if (e.wall === undefined || e.wall === null) {
+          if (e.wall === undefined || e.wall === null || String(e.wall).trim() === '') {
             e.wall = legacyWall;
           }
         });
@@ -2060,7 +2055,7 @@ document.addEventListener('DOMContentLoaded', function() {
       .replace(/"/g, '&quot;');
   }
 
-  // 辺の種別と符号から方向ラベル＆矢印を取得（下・左はマイナス入力ルール準拠）
+  // 辺の種別と符号から方向ラベル＆矢印を取得
   function getEdgeDirectionMeta(edge) {
     var t = edge.type || 'H';
     var vx = 0;
@@ -2082,7 +2077,6 @@ document.addEventListener('DOMContentLoaded', function() {
       if (vy < -1e-6) return { typeText: '縦', arrow: '↓', oppArrow: '↑', dxSign: 0, dySign: 1 };
       return { typeText: '縦', arrow: '↑', oppArrow: '↓', dxSign: 0, dySign: -1 };
     }
-    // 斜め
     var arr = '↗';
     var opp = '↙';
     if (vx >= 0 && vy >= 0) { arr = '↗'; opp = '↙'; }
@@ -2167,7 +2161,11 @@ document.addEventListener('DOMContentLoaded', function() {
   function addFloor() {
     var bldg = getCurBldg();
     var nextNum = bldg.floors.length + 1;
-    var defaultWall = document.getElementById('bulkWallInput').value || (bldg.floors[0] && bldg.floors[0].edges[0] ? bldg.floors[0].edges[0].wall : '');
+    var bulkVal = String(document.getElementById('bulkWallInput').value || '').trim();
+    var firstFloorWall = (bldg.floors[0] && bldg.floors[0].edges[0] && String(bldg.floors[0].edges[0].wall).trim() !== '')
+      ? String(bldg.floors[0].edges[0].wall)
+      : '0';
+    var defaultWall = (bulkVal !== '' && bulkVal !== '0') ? bulkVal : firstFloorWall;
     bldg.floors.push({
       name: nextNum + '階',
       offsetX: 0,
@@ -2214,7 +2212,7 @@ document.addEventListener('DOMContentLoaded', function() {
         type: e.type || 'H',
         len: e.len || '',
         lenY: e.lenY || '',
-        wall: e.wall || '',
+        wall: (e.wall !== undefined && String(e.wall).trim() !== '') ? String(e.wall) : '0',
         secIdx: e.secIdx || 0
       };
     });
@@ -2245,7 +2243,10 @@ document.addEventListener('DOMContentLoaded', function() {
     var nextType = predictNextEdgeType(curFloor);
     var lastEdge = edges.length > 0 ? edges[edges.length - 1] : null;
     var nextSec = lastEdge ? (lastEdge.secIdx || 0) : 0;
-    var nextWall = (lastEdge && lastEdge.wall !== '') ? lastEdge.wall : (document.getElementById('bulkWallInput').value || '');
+    var bulkVal = String(document.getElementById('bulkWallInput').value || '').trim();
+    var nextWall = (lastEdge && String(lastEdge.wall).trim() !== '')
+      ? String(lastEdge.wall)
+      : (bulkVal !== '' ? bulkVal : '0');
     edges.push({ type: nextType, len: '', lenY: '', wall: nextWall, secIdx: nextSec });
     activeEdgeIdx = edges.length - 1;
     saveToLocalStorage();
@@ -2260,11 +2261,12 @@ document.addEventListener('DOMContentLoaded', function() {
     var baseEdge = edges[idx];
     var nextType = 'H';
     var nextSec = 0;
-    var nextWall = document.getElementById('bulkWallInput').value || '';
+    var bulkVal = String(document.getElementById('bulkWallInput').value || '').trim();
+    var nextWall = bulkVal !== '' ? bulkVal : '0';
     if (baseEdge) {
       nextType = (baseEdge.type === 'H') ? 'V' : 'H';
       nextSec = baseEdge.secIdx || 0;
-      if (baseEdge.wall !== '') nextWall = baseEdge.wall;
+      if (String(baseEdge.wall).trim() !== '') nextWall = String(baseEdge.wall);
     }
     edges.splice(idx + 1, 0, { type: nextType, len: '', lenY: '', wall: nextWall, secIdx: nextSec });
     curFloor.extensions.forEach(function(ext) {
@@ -2378,9 +2380,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function applyBulkWallToFloor() {
     var rawVal = String(document.getElementById('bulkWallInput').value || '').replace(/-/g, '').trim();
+    var applyVal = rawVal !== '' ? rawVal : '0';
+    document.getElementById('bulkWallInput').value = applyVal;
     var curFloor = getCurFloor();
     curFloor.edges.forEach(function(e) {
-      e.wall = rawVal;
+      e.wall = applyVal;
     });
     saveToLocalStorage();
     renderAll();
@@ -2391,9 +2395,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var outer = computeOuterPoints(curFloor.edges, curFloor.offsetX, curFloor.offsetY);
     if (outer.geomCheck.hasError) return;
 
-    // 画面座標系 dxMm(右+)・dyMm(下+) から入力座標系(右+・上+)へ変換
     var remMmX = -outer.dxMm;
-    var remMmY = outer.dyMm; // 残変位(上+・下-)
+    var remMmY = outer.dyMm;
 
     if (Math.abs(remMmX) < 1 && Math.abs(remMmY) < 1) return;
 
@@ -2414,7 +2417,10 @@ document.addEventListener('DOMContentLoaded', function() {
     var edges = curFloor.edges;
     var lastEdge = edges.length > 0 ? edges[edges.length - 1] : null;
     var lastSec = lastEdge ? (lastEdge.secIdx || 0) : 0;
-    var lastWall = (lastEdge && lastEdge.wall !== '') ? lastEdge.wall : (document.getElementById('bulkWallInput').value || '');
+    var bulkVal = String(document.getElementById('bulkWallInput').value || '').trim();
+    var lastWall = (lastEdge && String(lastEdge.wall).trim() !== '')
+      ? String(lastEdge.wall)
+      : (bulkVal !== '' ? bulkVal : '0');
 
     var emptyStartIdx = edges.length;
     while (emptyStartIdx > 0) {
@@ -2432,7 +2438,7 @@ document.addEventListener('DOMContentLoaded', function() {
         edges[targetIdx].type = item.type;
         edges[targetIdx].len = item.len;
         edges[targetIdx].lenY = '';
-        if (edges[targetIdx].wall === '') edges[targetIdx].wall = lastWall;
+        if (String(edges[targetIdx].wall).trim() === '') edges[targetIdx].wall = lastWall;
       } else {
         edges.push({ type: item.type, len: item.len, lenY: '', wall: lastWall, secIdx: lastSec });
       }
@@ -2620,7 +2626,7 @@ document.addEventListener('DOMContentLoaded', function() {
     html.push('    <th>対象建物</th><td><b>' + escapeHtml(bldg.label) + '</b>（全' + bldg.floors.length + '階）</td>');
     html.push('  </tr>');
     html.push('  <tr>');
-    html.push('    <th>壁厚設定</th><td>辺別指定（各辺の壁厚より半壁厚算出）</td>');
+    html.push('    <th>柱寸(壁厚)</th><td>辺別指定（各辺の柱寸(壁厚)より半壁厚算出）</td>');
     html.push('    <th>床面積合計</th><td><b style="font-size:10.5pt;">' + totalFloored.toFixed(2) + ' ㎡</b></td>');
     html.push('  </tr>');
     html.push('</table>');
@@ -2692,16 +2698,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
       html.push('  <div class="pr-two-col">');
       html.push('    <div class="pr-col-left">');
-      html.push('      <div class="pr-sub-title">辺長・方向・壁厚一覧（' + (isCenter ? '壁芯' : '実測') + '）</div>');
+      html.push('      <div class="pr-sub-title">辺長・方向・柱寸(壁厚)一覧（' + (isCenter ? '壁芯' : '実測') + '）</div>');
       html.push('      <table class="pr-table" style="margin-bottom:0;">');
-      html.push('        <thead><tr><th style="width:36px;">辺</th><th style="width:36px;">区分</th><th style="width:52px;">方向</th><th>寸法 (m)</th><th style="width:58px;">壁厚</th></tr></thead><tbody>');
+      html.push('        <thead><tr><th style="width:36px;">辺</th><th style="width:36px;">区分</th><th style="width:52px;">方向</th><th>寸法 (m)</th><th style="width:72px;">柱寸(壁厚)</th></tr></thead><tbody>');
 
       for (var i = 0; i < fData.activePts.length - 1; i++) {
         var len = Math.hypot(fData.activePts[i + 1].x - fData.activePts[i].x, fData.activePts[i + 1].y - fData.activePts[i].y);
         var ed = fData.edges[i];
         var meta = getEdgeDirectionMeta(ed);
         var sBadge = CIRCLED_NUMS[ed.secIdx || 0] || '①';
-        var wStr = (ed.wall !== '' && !isNaN(parseFloat(ed.wall))) ? (parseFloat(ed.wall) + 'mm') : '-';
+        var wStr = (ed.wall !== '' && !isNaN(parseFloat(ed.wall))) ? (parseFloat(ed.wall) + 'mm') : '0mm';
         html.push('        <tr>');
         html.push('          <td class="center">#' + (i + 1) + '</td>');
         html.push('          <td class="center">' + sBadge + '</td>');
@@ -3078,7 +3084,7 @@ document.addEventListener('DOMContentLoaded', function() {
         stepXMm = Math.round(hx * 1000);
       } else if (t === 'V') {
         var vy = parseFloat(e.len) || 0;
-        stepYMm = -Math.round(vy * 1000); // 上(+)は画面Yのマイナス、下(-)は画面Yのプラス
+        stepYMm = -Math.round(vy * 1000);
       } else if (t === 'D') {
         var dxVal = parseFloat(e.len) || 0;
         var dyVal = parseFloat(e.lenY) || 0;
@@ -3127,7 +3133,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
   }
 
-  // 辺別壁厚（halfWallsM配列）および斜め辺に対応した壁芯ポリゴン算出
+  // 辺別柱寸(壁厚)（halfWallsM配列）および斜め辺に対応した壁芯ポリゴン算出
   function computeOffsetPolygon(pts, halfWallsM, edges, isStrictlyClosed) {
     var hasAnyOffset = Array.isArray(halfWallsM) && halfWallsM.some(function(w) { return w > 1e-7; });
     if (pts.length < 4 || !hasAnyOffset) {
@@ -3223,7 +3229,6 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
 
-        // 平行辺同士で壁厚が異なる場合（段差）は前辺終点→次辺始点をつなぐ
         if (Math.hypot(L1.p2.x - L2.p1.x, L1.p2.y - L2.p1.y) > 1e-5) {
           offsetPts.push({ x: L1.p2.x, y: L1.p2.y });
         }
@@ -3631,7 +3636,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var hasMultipleSecs = curBldg.sections.length > 1;
     document.getElementById('secHint').style.display = hasMultipleSecs ? 'block' : 'none';
 
-    // 3. 辺リスト（縦/横/斜 + 辺別壁厚）
+    // 3. 辺リスト（縦/横/斜 + 辺別柱寸(壁厚)）
     var listEl = document.getElementById('edgeList');
     listEl.innerHTML = '';
     curFloor.edges.forEach(function(edge, idx) {
@@ -3672,7 +3677,6 @@ document.addEventListener('DOMContentLoaded', function() {
       inputWrap.className = 'len-input-wrap';
 
       if (eType === 'D') {
-        // 斜め辺：横(X) と 縦(Y) の2入力
         var subX = document.createElement('div');
         subX.className = 'diag-sub-wrap';
         var tagX = document.createElement('span');
@@ -3754,16 +3758,15 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       row.appendChild(inputWrap);
 
-      // 辺ごとの壁厚(mm)入力欄
+      // 辺ごとの柱寸(壁厚)(mm)入力欄（プレースホルダー廃止・デフォルト0）
       var wInp = document.createElement('input');
       wInp.type = 'number';
       wInp.inputMode = 'numeric';
       wInp.min = '0';
       wInp.step = '1';
-      wInp.placeholder = '壁厚';
       wInp.className = 'wall-edge-inp';
-      wInp.title = 'この辺の壁厚(mm)';
-      wInp.value = edge.wall !== undefined ? edge.wall : '';
+      wInp.title = 'この辺の柱寸(壁厚)(mm)';
+      wInp.value = (edge.wall !== undefined && edge.wall !== null) ? edge.wall : '0';
       selectAllOnFocus(wInp);
       wInp.addEventListener('focus', function() { setActiveEdgeHighlight(idx); });
       wInp.addEventListener('blur', function() { if (activeEdgeIdx === idx) setActiveEdgeHighlight(-1); });
@@ -4154,11 +4157,11 @@ document.addEventListener('DOMContentLoaded', function() {
       banner.innerHTML = '<span>⚠ ' + reason + '</span><span>要修正</span>';
     } else if (isCenter && currentFloorData.hasCenterFlip) {
       banner.className = 'closure-banner closure-ng';
-      banner.innerHTML = '<span>⚠ 壁厚より狭い凹凸があるため壁芯線が反転しています</span><span>壁厚確認</span>';
+      banner.innerHTML = '<span>⚠ 柱寸(壁厚)より狭い凹凸があるため壁芯線が反転しています</span><span>柱寸確認</span>';
     } else if (currentFloorData.outer.isClosed) {
       if (isCenter && currentFloorData.hasMissingWall) {
         banner.className = 'closure-banner closure-warn';
-        banner.innerHTML = '<span>⚠ 壁厚が未入力の辺があります（0mmで計算中）</span><span>閉合OK</span>';
+        banner.innerHTML = '<span>⚠ 柱寸(壁厚)が未入力の辺があります（0mmで計算中）</span><span>閉合OK</span>';
       } else {
         banner.className = 'closure-banner closure-ok';
         banner.innerHTML = '<span>✔ 閉合 OK</span><span>誤差: ' + err.toFixed(3) + ' m</span>';
