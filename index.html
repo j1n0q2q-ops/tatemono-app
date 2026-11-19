@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>建物図面・現場野帳アプリ v1.13</title>
+<title>建物図面・現場野帳アプリ v1.14</title>
 <style>
   :root {
     --primary: #2563eb;
@@ -671,6 +671,9 @@
     border: 1px solid var(--border);
     border-radius: 6px;
     display: block;
+    touch-action: pan-y;
+  }
+  canvas.zoomed {
     touch-action: none;
   }
   .zoom-controls {
@@ -1076,7 +1079,7 @@
   <!-- アプリタイトル＆バージョン表示 -->
   <div class="app-ver-bar">
     <span class="app-ver-title">建物図面・現場野帳アプリ</span>
-    <span class="app-ver-badge" id="appVersionBadge">v1.13</span>
+    <span class="app-ver-badge" id="appVersionBadge">v1.14</span>
   </div>
 
   <!-- 実測 / 壁芯 切替トグル -->
@@ -1276,7 +1279,7 @@ window.onerror = function(msg, url, line) {
 };
 
 document.addEventListener('DOMContentLoaded', function() {
-  var APP_VERSION = 'v1.13';
+  var APP_VERSION = 'v1.14';
   var verBadge = document.getElementById('appVersionBadge');
   if (verBadge) verBadge.textContent = APP_VERSION;
 
@@ -1309,11 +1312,37 @@ document.addEventListener('DOMContentLoaded', function() {
   var dragStartY = 0;
   var pinchStartDist = 0;
   var pinchStartZoom = 1.0;
+  var lastTapTime = 0;
+
+  var canvasEl = document.getElementById('viewCanvas');
+
+  function updateCanvasTouchClass() {
+    if (!canvasEl) return;
+    if (camZoom > 1.01) {
+      canvasEl.classList.add('zoomed');
+    } else {
+      canvasEl.classList.remove('zoomed');
+    }
+  }
+
+  function clampPan() {
+    if (camZoom <= 1.01) {
+      camPanX = 0;
+      camPanY = 0;
+      return;
+    }
+    var rect = canvasEl ? canvasEl.getBoundingClientRect() : { width: 320, height: 270 };
+    var maxX = (rect.width || 320) * 0.45 * (camZoom - 1);
+    var maxY = (rect.height || 270) * 0.45 * (camZoom - 1);
+    camPanX = Math.max(-maxX, Math.min(maxX, camPanX));
+    camPanY = Math.max(-maxY, Math.min(maxY, camPanY));
+  }
 
   function resetCamera() {
     camZoom = 1.0;
     camPanX = 0;
     camPanY = 0;
+    updateCanvasTouchClass();
   }
 
   function selectAllOnFocus(inp) {
@@ -2093,7 +2122,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       html.push('<div class="pr-floor-block">');
       html.push('  <div class="pr-floor-head">');
-      html.push('    <div class="pr-fh-left">' + escapeHtml(bldg.label + ' ' + fData.name) + offsetBadgeHtml + '</div>');
+      html.push('    <div class="pr-fh-left">' + escapeHtml(bldg.label + '（' + fData.name + '）') + offsetBadgeHtml + '</div>');
       html.push('    <div class="pr-fh-right">床面積: ' + fData.area.toFixed(2) + ' ㎡（' + (fData.area * 0.3025).toFixed(2) + '坪 / 切捨前: ' + fData.rawArea.toFixed(4) + '㎡）｜ ' + closureTxt + '</div>');
       html.push('  </div>');
 
@@ -2128,10 +2157,11 @@ document.addEventListener('DOMContentLoaded', function() {
         html.push('      <table class="pr-table" style="margin-bottom:0;">');
         html.push('        <thead><tr><th>対象辺・方向</th><th>距離 (m)</th><th>図面表記</th></tr></thead><tbody>');
         fData.extLines.forEach(function(ex) {
+          var figLabel = formatSetbackFloor1(ex.dist) + (isCenter ? '(芯)' : '');
           html.push('        <tr>');
           html.push('          <td class="center">辺#' + ex.edgeNum + ' ' + escapeHtml(ex.sideText) + '</td>');
           html.push('          <td class="num">' + ex.dist.toFixed(3) + ' m</td>');
-          html.push('          <td class="center"><b>' + formatSetbackFloor1(ex.dist) + '</b></td>');
+          html.push('          <td class="center"><b>' + escapeHtml(figLabel) + '</b></td>');
           html.push('        </tr>');
         });
         html.push('        </tbody></table>');
@@ -2271,10 +2301,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
   document.getElementById('btnZoomIn').addEventListener('click', function() {
     camZoom = Math.min(5.0, camZoom * 1.25);
+    updateCanvasTouchClass();
+    clampPan();
     calculateAndDraw();
   });
   document.getElementById('btnZoomOut').addEventListener('click', function() {
-    camZoom = Math.max(0.5, camZoom / 1.25);
+    camZoom = Math.max(1.0, camZoom / 1.25);
+    updateCanvasTouchClass();
+    clampPan();
     calculateAndDraw();
   });
   document.getElementById('btnZoomReset').addEventListener('click', function() {
@@ -2282,12 +2316,25 @@ document.addEventListener('DOMContentLoaded', function() {
     calculateAndDraw();
   });
 
-  var canvasEl = document.getElementById('viewCanvas');
+  // タッチ操作：通常倍率(1.0x)ではページ縦スクロールを妨げず、拡大時のみパン移動を有効化
   canvasEl.addEventListener('touchstart', function(e) {
     if (e.touches.length === 1) {
-      isDragging = true;
-      dragStartX = e.touches[0].clientX - camPanX;
-      dragStartY = e.touches[0].clientY - camPanY;
+      var now = Date.now();
+      if (now - lastTapTime < 280) {
+        resetCamera();
+        calculateAndDraw();
+        lastTapTime = 0;
+        return;
+      }
+      lastTapTime = now;
+
+      if (camZoom > 1.01) {
+        isDragging = true;
+        dragStartX = e.touches[0].clientX - camPanX;
+        dragStartY = e.touches[0].clientY - camPanY;
+      } else {
+        isDragging = false;
+      }
     } else if (e.touches.length === 2) {
       isDragging = false;
       pinchStartDist = Math.hypot(
@@ -2299,16 +2346,19 @@ document.addEventListener('DOMContentLoaded', function() {
   }, { passive: true });
 
   canvasEl.addEventListener('touchmove', function(e) {
-    if (e.touches.length === 1 && isDragging) {
+    if (e.touches.length === 1 && isDragging && camZoom > 1.01) {
       camPanX = e.touches[0].clientX - dragStartX;
       camPanY = e.touches[0].clientY - dragStartY;
+      clampPan();
       calculateAndDraw();
     } else if (e.touches.length === 2 && pinchStartDist > 0) {
       var curDist = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
       );
-      camZoom = Math.max(0.5, Math.min(5.0, pinchStartZoom * (curDist / pinchStartDist)));
+      camZoom = Math.max(1.0, Math.min(5.0, pinchStartZoom * (curDist / pinchStartDist)));
+      updateCanvasTouchClass();
+      clampPan();
       calculateAndDraw();
     }
   }, { passive: true });
@@ -3870,7 +3920,7 @@ document.addEventListener('DOMContentLoaded', function() {
           continue;
         }
 
-        // シンプル配置：辺の中点のすぐ外側（必要時のみすぐ内側・わずかなスライド）に直感配置
+        // シンプル配置：辺の中点のすぐ外側・内側・わずかなスライドの計6候補で直感配置
         ctx.save();
         ctx.font = 'bold 10px sans-serif';
         var text = '#' + (i + 1) + ':' + segLen.toFixed(3);
@@ -3884,7 +3934,9 @@ document.addEventListener('DOMContentLoaded', function() {
           { n: baseN, t: 0 },
           { n: -baseN, t: 0 },
           { n: baseN, t: 12 },
-          { n: baseN, t: -12 }
+          { n: baseN, t: -12 },
+          { n: -baseN, t: 14 },
+          { n: -baseN, t: -14 }
         ];
 
         var bestCand = null;
