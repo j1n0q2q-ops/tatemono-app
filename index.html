@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>建物図面・現場野帳アプリ v1.17</title>
+<title>建物図面・現場野帳アプリ v1.18</title>
 <style>
   :root {
     --primary: #2563eb;
@@ -473,7 +473,7 @@
   .sec-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 7px;
+    gap: 8px;
   }
   .sec-field.full-width {
     grid-column: 1 / -1;
@@ -494,20 +494,25 @@
     font-size: 0.86rem;
     background: #fff;
   }
+  .sec-field input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: #eff6ff;
+  }
   .quick-chip-row {
     display: flex;
-    gap: 3px;
+    gap: 4px;
     flex-wrap: wrap;
     margin-top: 4px;
   }
   .quick-chip {
-    padding: 2px 6px;
-    font-size: 0.7rem;
+    padding: 2px 7px;
+    font-size: 0.72rem;
     font-weight: bold;
     border: 1px solid #cbd5e1;
     background: #ffffff;
     color: #475569;
-    border-radius: 4px;
+    border-radius: 5px;
     cursor: pointer;
     touch-action: manipulation;
   }
@@ -582,56 +587,6 @@
     border-radius: 6px;
     font-size: 0.95rem;
     text-align: right;
-  }
-
-  /* 自己診断（セルフチェック）パネル */
-  .diag-panel {
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top: 1px dashed #cbd5e1;
-  }
-  .diag-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-  }
-  .diag-title {
-    font-size: 0.78rem;
-    font-weight: bold;
-    color: #475569;
-  }
-  .btn-diag {
-    padding: 5px 10px;
-    border-radius: 6px;
-    border: 1px solid #94a3b8;
-    background: #f8fafc;
-    color: #1e293b;
-    font-size: 0.76rem;
-    font-weight: bold;
-    cursor: pointer;
-    touch-action: manipulation;
-  }
-  .btn-diag:active {
-    background: #e2e8f0;
-  }
-  .diag-result {
-    margin-top: 7px;
-    padding: 8px 10px;
-    border-radius: 7px;
-    font-size: 0.76rem;
-    line-height: 1.45;
-    display: none;
-  }
-  .diag-result.pass {
-    background: #f0fdf4;
-    border: 1px solid #86efac;
-    color: #166534;
-  }
-  .diag-result.fail {
-    background: #fef2f2;
-    border: 1px solid #fca5a5;
-    color: #991b1b;
   }
 
   /* キャンバス上部凡例バー */
@@ -743,7 +698,7 @@
     padding: 8px;
   }
   .stat-label { font-size: 0.74rem; color: var(--muted); }
-  .stat-val { font-size: 1.02rem; font-weight: bold; margin-top: 2px; }
+  .stat-val { font-size: 1.04rem; font-weight: bold; margin-top: 2px; }
   .stat-sub { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
 
   .closure-banner {
@@ -760,6 +715,7 @@
   }
   .closure-ok { background: #dcfce7; color: var(--ok); border: 1px solid #86efac; }
   .closure-ng { background: #fee2e2; color: var(--ng); border: 1px solid #fca5a5; }
+  .closure-warn { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
   .closure-empty { background: #f1f5f9; color: var(--muted); border: 1px solid #cbd5e1; }
   .btn-auto-close {
     background: #dc2626;
@@ -1201,7 +1157,7 @@
   <!-- アプリタイトル＆バージョン表示 -->
   <div class="app-ver-bar">
     <span class="app-ver-title">建物図面・現場野帳アプリ</span>
-    <span class="app-ver-badge" id="appVersionBadge">v1.17</span>
+    <span class="app-ver-badge" id="appVersionBadge">v1.18</span>
   </div>
 
   <!-- 実測 / 壁芯 切替トグル -->
@@ -1301,8 +1257,8 @@
     <!-- 2階以上の基準位置オフセット（1階始点からのずれ） -->
     <div id="floorOffsetBar" class="floor-offset-bar" style="display:none;">
       <span class="floor-offset-label">1階始点からのずれ:</span>
-      <span class="offset-pair">X(→) <input type="number" inputmode="decimal" step="0.001" id="inpFloorOffsetX" class="offset-inp" value="0"></span>
-      <span class="offset-pair">Y(↓) <input type="number" inputmode="decimal" step="0.001" id="inpFloorOffsetY" class="offset-inp" value="0"> m</span>
+      <span class="offset-pair">X(→) <input type="number" inputmode="decimal" step="0.001" id="inpFloorOffsetX" class="offset-inp" value=""></span>
+      <span class="offset-pair">Y(↓) <input type="number" inputmode="decimal" step="0.001" id="inpFloorOffsetY" class="offset-inp" value=""> m</span>
     </div>
 
     <div id="secHint" style="font-size:0.75rem; color:#475569; margin-bottom:6px; display:none;">
@@ -1325,7 +1281,7 @@
     <button type="button" id="btnAddExt" class="btn btn-ext" style="width:100%;">＋ 離れ（延長線）を追加</button>
   </div>
 
-  <!-- 3. 建物メモ（種類・構造・屋根の種類）・壁厚・自己診断 -->
+  <!-- 3. 建物メモ（種類・構造・屋根の種類）・壁厚 -->
   <div class="card">
     <div class="card-header">
       <span id="memoTitle" class="header-title-text">主たる建物：種類・構造・屋根のメモ</span>
@@ -1336,7 +1292,7 @@
     <div class="sub-grid" style="border-top: 1px solid #e2e8f0; padding-top: 10px;">
       <div class="field-item">
         <label>外壁厚 (mm)</label>
-        <input type="number" inputmode="decimal" min="0" step="1" id="wallThickness" value="150">
+        <input type="number" inputmode="decimal" min="0" step="1" id="wallThickness" value="" placeholder="未入力">
         <div class="preset-row">
           <button type="button" class="preset-chip" data-wall="105">105</button>
           <button type="button" class="preset-chip" data-wall="120">120</button>
@@ -1349,17 +1305,8 @@
       </div>
       <div class="field-item">
         <label>壁芯オフセット片側</label>
-        <input type="text" id="halfWallDisplay" value="75.0 mm" disabled style="background:#f1f5f9; color:#64748b;">
+        <input type="text" id="halfWallDisplay" value="-" disabled style="background:#f1f5f9; color:#64748b;">
       </div>
-    </div>
-
-    <!-- 計算ロジック自己診断（セルフチェック） -->
-    <div class="diag-panel">
-      <div class="diag-header">
-        <span class="diag-title">🔍 計算ロジック自己診断（面積・壁芯・区分整合チェック）</span>
-        <button type="button" id="btnRunSelfCheck" class="btn-diag">自動検証を実行</button>
-      </div>
-      <div id="diagResultBox" class="diag-result"></div>
     </div>
   </div>
 
@@ -1379,31 +1326,6 @@
 <!-- PDF印刷用専用エリア -->
 <div id="printReportArea"></div>
 
-<!-- 入力サジェスト用データリスト -->
-<datalist id="listKind">
-  <option value="居宅"></option>
-  <option value="店舗"></option>
-  <option value="事務所"></option>
-  <option value="倉庫"></option>
-  <option value="車庫"></option>
-  <option value="物置"></option>
-  <option value="居宅・店舗"></option>
-</datalist>
-<datalist id="listStruct">
-  <option value="木造"></option>
-  <option value="軽量鉄骨造"></option>
-  <option value="鉄骨造"></option>
-  <option value="鉄筋コンクリート造"></option>
-</datalist>
-<datalist id="listRoof">
-  <option value="かわらぶき"></option>
-  <option value="セメントかわらぶき"></option>
-  <option value="合金メッキ鋼板ぶき"></option>
-  <option value="亜鉛メッキ鋼板ぶき"></option>
-  <option value="スレートぶき"></option>
-  <option value="陸屋根"></option>
-</datalist>
-
 <script>
 window.onerror = function(msg, url, line) {
   var alertBox = document.getElementById('jsAlert');
@@ -1414,7 +1336,7 @@ window.onerror = function(msg, url, line) {
 };
 
 document.addEventListener('DOMContentLoaded', function() {
-  var APP_VERSION = 'v1.17';
+  var APP_VERSION = 'v1.18';
   var verBadge = document.getElementById('appVersionBadge');
   if (verBadge) verBadge.textContent = APP_VERSION;
 
@@ -1445,7 +1367,7 @@ document.addEventListener('DOMContentLoaded', function() {
       buildings: [
         {
           label: '主たる建物',
-          wallThickness: 150,
+          wallThickness: '150',
           splitMode: 'auto',
           sections: [
             { kind: '居宅', structure: '木造', roof: 'かわらぶき', note: '' }
@@ -1493,7 +1415,7 @@ document.addEventListener('DOMContentLoaded', function() {
       buildings: [
         {
           label: '主たる建物',
-          wallThickness: 150,
+          wallThickness: '150',
           splitMode: 'auto',
           sections: [
             { kind: '居宅', structure: '木造', roof: 'かわらぶき', note: '既存主屋' },
@@ -1534,7 +1456,7 @@ document.addEventListener('DOMContentLoaded', function() {
       buildings: [
         {
           label: '主たる建物',
-          wallThickness: 160,
+          wallThickness: '160',
           splitMode: 'auto',
           sections: [
             { kind: '居宅', structure: '軽量鉄骨造', roof: 'スレートぶき', note: '' }
@@ -1589,7 +1511,7 @@ document.addEventListener('DOMContentLoaded', function() {
       buildings: [
         {
           label: '主たる建物',
-          wallThickness: 150,
+          wallThickness: '150',
           splitMode: 'auto',
           sections: [
             { kind: '居宅', structure: '木造', roof: 'かわらぶき', note: '母屋' }
@@ -1629,7 +1551,7 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         {
           label: '附属建物 符号1',
-          wallThickness: 120,
+          wallThickness: '120',
           splitMode: 'auto',
           sections: [
             { kind: '車庫・物置', structure: '軽量鉄骨造', roof: '亜鉛メッキ鋼板ぶき', note: '東側車庫' }
@@ -1662,7 +1584,7 @@ document.addEventListener('DOMContentLoaded', function() {
       buildings: [
         {
           label: '主たる建物',
-          wallThickness: 180,
+          wallThickness: '180',
           splitMode: 'auto',
           sections: [
             { kind: '居宅', structure: '鉄骨造', roof: '合金メッキ鋼板ぶき', note: '' }
@@ -1720,7 +1642,7 @@ document.addEventListener('DOMContentLoaded', function() {
       buildings: [
         {
           label: '主たる建物',
-          wallThickness: 105,
+          wallThickness: '105',
           splitMode: 'auto',
           sections: [
             { kind: '居宅', structure: '木造', roof: 'かわらぶき', note: '' },
@@ -1771,7 +1693,7 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         {
           label: '附属建物 符号1',
-          wallThickness: 150,
+          wallThickness: '150',
           splitMode: 'auto',
           sections: [
             { kind: '物置', structure: '木造', roof: 'スレートぶき', note: '' }
@@ -1857,21 +1779,13 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  function createDefaultExtensions() {
-    return [
-      { edgeIdx: 0, side: 'end', dist: '' },
-      { edgeIdx: 1, side: 'end', dist: '' },
-      { edgeIdx: 2, side: 'end', dist: '' }
-    ];
-  }
-
-  function createBuildingData(label, defaultKind) {
+  function createBuildingData(label) {
     return {
       label: label,
-      wallThickness: 150,
+      wallThickness: '',
       splitMode: 'auto',
       sections: [
-        { kind: defaultKind, structure: '木造', roof: 'かわらぶき', note: '' }
+        { kind: '', structure: '', roof: '', note: '' }
       ],
       floors: [
         {
@@ -1879,24 +1793,22 @@ document.addEventListener('DOMContentLoaded', function() {
           offsetX: 0,
           offsetY: 0,
           edges: [
-            { dir: 'R', len: '', secIdx: 0 },
-            { dir: 'D', len: '', secIdx: 0 },
-            { dir: 'L', len: '', secIdx: 0 },
-            { dir: 'U', len: '', secIdx: 0 }
+            { dir: 'R', len: '', secIdx: 0 }
           ],
-          extensions: createDefaultExtensions()
+          extensions: []
         }
       ]
     };
   }
 
   var buildings = [
-    createBuildingData('主たる建物', '居宅')
+    createBuildingData('主たる建物')
   ];
 
   function normalizeFloorsData() {
     buildings.forEach(function(b) {
       if (!b.splitMode) b.splitMode = 'auto';
+      if (b.wallThickness === undefined || b.wallThickness === null) b.wallThickness = '';
       b.floors.forEach(function(f, fIdx) {
         if (fIdx === 0) {
           f.offsetX = 0;
@@ -2054,7 +1966,7 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     siteName = '';
-    buildings = [createBuildingData('主たる建物', '居宅')];
+    buildings = [createBuildingData('主たる建物')];
     currentBldgIdx = 0;
     currentFloorIdx = 0;
     activeEdgeIdx = -1;
@@ -2103,7 +2015,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function addBuilding() {
     var subNum = buildings.length;
-    buildings.push(createBuildingData('附属建物 符号' + subNum, '物置'));
+    buildings.push(createBuildingData('附属建物 符号' + subNum));
     currentBldgIdx = buildings.length - 1;
     currentFloorIdx = 0;
     activeEdgeIdx = -1;
@@ -2143,12 +2055,9 @@ document.addEventListener('DOMContentLoaded', function() {
       offsetX: 0,
       offsetY: 0,
       edges: [
-        { dir: 'R', len: '', secIdx: 0 },
-        { dir: 'D', len: '', secIdx: 0 },
-        { dir: 'L', len: '', secIdx: 0 },
-        { dir: 'U', len: '', secIdx: 0 }
+        { dir: 'R', len: '', secIdx: 0 }
       ],
-      extensions: createDefaultExtensions()
+      extensions: []
     });
     currentFloorIdx = bldg.floors.length - 1;
     activeEdgeIdx = -1;
@@ -2424,12 +2333,11 @@ document.addEventListener('DOMContentLoaded', function() {
   function addSection() {
     var bldg = getCurBldg();
     if (bldg.sections.length >= 6) return;
-    var baseSec = bldg.sections[0];
     bldg.sections.push({
-      kind: baseSec ? baseSec.kind : '居宅',
-      structure: baseSec ? baseSec.structure : '木造',
-      roof: '合金メッキ鋼板ぶき',
-      note: '増築部分'
+      kind: '',
+      structure: '',
+      roof: '',
+      note: ''
     });
     saveToLocalStorage();
     renderAll();
@@ -2458,108 +2366,6 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // =========================================================
-  // 自己診断（セルフチェック）実行エンジン
-  // =========================================================
-  function runSelfDiagnostics() {
-    var results = [];
-    var allPass = true;
-
-    function recordTest(name, ok, detail) {
-      if (!ok) allPass = false;
-      results.push((ok ? '✔ [PASS] ' : '✘ [FAIL] ') + name + ': ' + detail);
-    }
-
-    var t1Edges = [
-      { dir: 'R', len: '5', secIdx: 1 },
-      { dir: 'D', len: '2', secIdx: 1 },
-      { dir: 'R', len: '2', secIdx: 0 },
-      { dir: 'U', len: '2', secIdx: 2 },
-      { dir: 'R', len: '2', secIdx: 2 },
-      { dir: 'D', len: '2', secIdx: 2 },
-      { dir: 'D', len: '3', secIdx: 0 },
-      { dir: 'L', len: '7', secIdx: 0 },
-      { dir: 'U', len: '2', secIdx: 0 },
-      { dir: 'L', len: '2', secIdx: 1 },
-      { dir: 'U', len: '3', secIdx: 1 }
-    ];
-    var t1Outer = computeOuterPoints(t1Edges, 0, 0);
-    var t1Total = calcArea(t1Outer.pts);
-    var t1SecAuto = computeSectionAreasAndBridges(t1Outer.pts, t1Edges, 3, 'auto');
-    var t1Sum = t1SecAuto.areas[0] + t1SecAuto.areas[1] + t1SecAuto.areas[2];
-    var t1Ok = t1Outer.isClosed && Math.abs(t1Total - 37.0) < 1e-4 && Math.abs(t1Sum - t1Total) < 1e-4 && !t1SecAuto.isBridgeOutside;
-    recordTest(
-      '3区分凹型11辺 面積総和＆L字自動分割',
-      t1Ok,
-      '全体=' + t1Total.toFixed(2) + '㎡ / 区分計=' + t1Sum.toFixed(2) + '㎡ (①' + t1SecAuto.areas[0].toFixed(2) + ' + ②' + t1SecAuto.areas[1].toFixed(2) + ' + ③' + t1SecAuto.areas[2].toFixed(2) + ')'
-    );
-
-    var t2Edges = [
-      { dir: 'R', len: '5', secIdx: 0 },
-      { dir: 'R', len: '5', secIdx: 1 },
-      { dir: 'D', len: '5', secIdx: 1 },
-      { dir: 'L', len: '5', secIdx: 1 },
-      { dir: 'L', len: '5', secIdx: 0 },
-      { dir: 'U', len: '5', secIdx: 0 }
-    ];
-    var t2Outer = computeOuterPoints(t2Edges, 0, 0);
-    var t2Center = computeOffsetPolygon(t2Outer.pts, 0.075, t2Edges, true);
-    var t2SecCenter = computeSectionAreasAndBridges(t2Center, t2Edges, 2, 'auto');
-    var t2Diff = Math.abs(t2SecCenter.areas[0] - t2SecCenter.areas[1]);
-    var t2TotalC = calcArea(t2Center);
-    var t2Ok = (t2Diff < 1e-4) && Math.abs(t2TotalC - 47.7725) < 1e-4;
-    recordTest(
-      '直線途中区分切替の壁芯対称性',
-      t2Ok,
-      '壁芯全体=' + t2TotalC.toFixed(4) + '㎡ / 左右差=' + t2Diff.toFixed(5) + '㎡'
-    );
-
-    var sampleFailNames = [];
-    HOUSE_SAMPLES.forEach(function(smp, idx) {
-      smp.buildings.forEach(function(b) {
-        b.floors.forEach(function(f) {
-          var o = computeOuterPoints(f.edges, f.offsetX || 0, f.offsetY || 0);
-          var tot = calcArea(o.pts);
-          var sRes = computeSectionAreasAndBridges(o.pts, f.edges, b.sections.length, b.splitMode || 'auto');
-          var sSum = sRes.areas.reduce(function(a, c) { return a + c; }, 0);
-          if (!o.isClosed || o.geomCheck.hasError || Math.abs(tot - sSum) > 1e-3) {
-            sampleFailNames.push('サンプル' + (idx + 1) + '(' + f.name + ')');
-          }
-        });
-      });
-    });
-    recordTest(
-      '収録サンプル6種・全棟全階 閉合＆区分面積一致',
-      sampleFailNames.length === 0,
-      sampleFailNames.length === 0 ? '全6サンプル・全階層 閉合誤差0.000m＆区分面積完全一致' : ('異常: ' + sampleFailNames.join(', '))
-    );
-
-    var curB = getCurBldg();
-    var curBPass = true;
-    var curBDetails = [];
-    curB.floors.forEach(function(f) {
-      var o = computeOuterPoints(f.edges, f.offsetX || 0, f.offsetY || 0);
-      var tot = calcArea(o.pts);
-      var sRes = computeSectionAreasAndBridges(o.pts, f.edges, curB.sections.length, curB.splitMode || 'auto');
-      var sSum = sRes.areas.reduce(function(a, b) { return a + b; }, 0);
-      if (tot > 0.001 && Math.abs(tot - sSum) > 1e-3) {
-        curBPass = false;
-      }
-      curBDetails.push(f.name + ':' + tot.toFixed(2) + '㎡ vs 区分計' + sSum.toFixed(2) + '㎡');
-    });
-    recordTest(
-      '現在入力中データ(' + curB.label + ')整合性',
-      curBPass,
-      curBDetails.join(' / ')
-    );
-
-    var box = document.getElementById('diagResultBox');
-    box.style.display = 'block';
-    box.className = 'diag-result ' + (allPass ? 'pass' : 'fail');
-    box.innerHTML = '<b>' + (allPass ? '✅ 全自動検証テスト合格 (ALL PASS)' : '⚠ 一部テストで不整合検出') + '</b><br>' +
-      results.map(escapeHtml).join('<br>');
-  }
-
-  // =========================================================
   // PDFレポート（A4印刷用DOM＋実測/壁芯モード別・全棟・全階高精細図面）生成＆出力
   // =========================================================
   function buildBuildingReportHtml(bldg, modeKey, dateStr, isFirstSection, offCanvas) {
@@ -2568,8 +2374,12 @@ document.addEventListener('DOMContentLoaded', function() {
     var modePillClass = isCenter ? 'pr-mode-center' : 'pr-mode-outer';
     var modePillText = isCenter ? '壁芯基準（登記求積用）' : '実測基準（外法野帳）';
 
-    var wallThickMm = Math.max(0, parseFloat(bldg.wallThickness) || 0);
+    var rawWt = String(bldg.wallThickness === undefined || bldg.wallThickness === null ? '' : bldg.wallThickness).trim();
+    var hasWt = (rawWt !== '' && !isNaN(parseFloat(rawWt)));
+    var wallThickMm = hasWt ? Math.max(0, parseFloat(rawWt)) : 0;
     var halfWallM = (wallThickMm / 2) / 1000.0;
+    var wallThickText = hasWt ? (wallThickMm + ' mm（片側 ' + (wallThickMm / 2).toFixed(1) + ' mm）') : '未入力（0 mm扱い）';
+
     var numSections = bldg.sections.length;
     var splitMode = bldg.splitMode || 'auto';
 
@@ -2650,8 +2460,8 @@ document.addEventListener('DOMContentLoaded', function() {
     html.push('    <th>対象建物</th><td><b>' + escapeHtml(bldg.label) + '</b>（全' + bldg.floors.length + '階）</td>');
     html.push('  </tr>');
     html.push('  <tr>');
-    html.push('    <th>外壁厚</th><td>' + wallThickMm + ' mm（片側 ' + (wallThickMm / 2).toFixed(1) + ' mm）</td>');
-    html.push('    <th>床面積合計</th><td><b style="font-size:10.5pt;">' + totalFloored.toFixed(2) + ' ㎡</b>（' + (totalFloored * 0.3025).toFixed(2) + ' 坪）</td>');
+    html.push('    <th>外壁厚</th><td>' + escapeHtml(wallThickText) + '</td>');
+    html.push('    <th>床面積合計</th><td><b style="font-size:10.5pt;">' + totalFloored.toFixed(2) + ' ㎡</b></td>');
     html.push('  </tr>');
     html.push('</table>');
 
@@ -2713,7 +2523,7 @@ document.addEventListener('DOMContentLoaded', function() {
       html.push('<div class="pr-floor-block">');
       html.push('  <div class="pr-floor-head">');
       html.push('    <div class="pr-fh-left">' + escapeHtml(bldg.label + '（' + fData.name + '）') + offsetBadgeHtml + '</div>');
-      html.push('    <div class="pr-fh-right">床面積: ' + fData.area.toFixed(2) + ' ㎡（' + (fData.area * 0.3025).toFixed(2) + '坪 / 切捨前: ' + fData.rawArea.toFixed(4) + '㎡）｜ ' + closureTxt + '</div>');
+      html.push('    <div class="pr-fh-right">床面積: ' + fData.area.toFixed(2) + ' ㎡（切捨前: ' + fData.rawArea.toFixed(4) + '㎡）｜ ' + closureTxt + '</div>');
       html.push('  </div>');
 
       html.push('  <div class="pr-drawing-box">');
@@ -2833,7 +2643,6 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('btnNewSite').addEventListener('click', resetToNewSite);
   document.getElementById('btnExportPdfBoth').addEventListener('click', function() { exportPdfReport(true); });
   document.getElementById('btnExportPdfSingle').addEventListener('click', function() { exportPdfReport(false); });
-  document.getElementById('btnRunSelfCheck').addEventListener('click', runSelfDiagnostics);
 
   document.getElementById('btnJumpInputs').addEventListener('click', function() {
     var target = document.getElementById('edgeInputCard');
@@ -2885,15 +2694,15 @@ document.addEventListener('DOMContentLoaded', function() {
   var wallInp = document.getElementById('wallThickness');
   selectAllOnFocus(wallInp);
   wallInp.addEventListener('input', function(e) {
-    var val = Math.max(0, parseFloat(e.target.value) || 0);
-    getCurBldg().wallThickness = val;
+    var cleanVal = String(e.target.value).replace(/-/g, '');
+    getCurBldg().wallThickness = cleanVal;
     saveToLocalStorage();
     calculateAndDraw();
   });
 
   document.querySelectorAll('.preset-chip').forEach(function(chip) {
     chip.addEventListener('click', function() {
-      var w = parseFloat(chip.getAttribute('data-wall')) || 150;
+      var w = chip.getAttribute('data-wall') || '';
       getCurBldg().wallThickness = w;
       document.getElementById('wallThickness').value = w;
       saveToLocalStorage();
@@ -3636,13 +3445,13 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('btnDeleteBldg').style.display = currentBldgIdx > 0 ? 'inline-block' : 'none';
     document.getElementById('btnCopyFloor').style.display = currentFloorIdx > 0 ? 'inline-block' : 'none';
     document.getElementById('btnToggle1FGuide').style.display = currentFloorIdx > 0 ? 'inline-block' : 'none';
-    document.getElementById('wallThickness').value = curBldg.wallThickness;
+    document.getElementById('wallThickness').value = (curBldg.wallThickness !== undefined && curBldg.wallThickness !== null) ? curBldg.wallThickness : '';
 
     var offsetBar = document.getElementById('floorOffsetBar');
     if (currentFloorIdx > 0) {
       offsetBar.style.display = 'flex';
-      document.getElementById('inpFloorOffsetX').value = curFloor.offsetX || 0;
-      document.getElementById('inpFloorOffsetY').value = curFloor.offsetY || 0;
+      document.getElementById('inpFloorOffsetX').value = curFloor.offsetX || '';
+      document.getElementById('inpFloorOffsetY').value = curFloor.offsetY || '';
     } else {
       offsetBar.style.display = 'none';
     }
@@ -3813,7 +3622,7 @@ document.addEventListener('DOMContentLoaded', function() {
       extListEl.appendChild(row);
     });
 
-    // 5. 種類・構造・屋根の区分リスト（クイック選択チップ付）
+    // 5. 種類・構造・屋根の区分リスト（略称クイックチップ付・入力補助なし）
     var secListEl = document.getElementById('secList');
     secListEl.innerHTML = '';
     curBldg.sections.forEach(function(sec, sIdx) {
@@ -3834,7 +3643,7 @@ document.addEventListener('DOMContentLoaded', function() {
       var noteInp = document.createElement('input');
       noteInp.type = 'text';
       noteInp.className = 'sec-note-inp';
-      noteInp.placeholder = sIdx === 0 ? '場所メモ（例：既存主屋）' : '場所メモ（例：北側増築部・下屋）';
+      noteInp.placeholder = '場所メモ（任意）';
       noteInp.value = sec.note;
       noteInp.addEventListener('input', function(e) { updateSection(sIdx, 'note', e.target.value); });
       topRow.appendChild(noteInp);
@@ -3855,10 +3664,42 @@ document.addEventListener('DOMContentLoaded', function() {
       grid.className = 'sec-grid';
 
       var fields = [
-        { key: 'kind', label: '種類', list: 'listKind', ph: '居宅', full: false, chips: ['居宅', '車庫', '物置'] },
-        { key: 'structure', label: '構造', list: 'listStruct', ph: '木造', full: false, chips: ['木造', '軽量鉄骨造', '鉄骨造'] },
-        { key: 'roof', label: '屋根の種類', list: 'listRoof', ph: 'かわらぶき', full: true, chips: ['かわらぶき', 'スレートぶき', '合金メッキ鋼板ぶき', '陸屋根'] }
+        {
+          key: 'kind',
+          label: '種類',
+          full: false,
+          chips: [
+            { label: '居宅', val: '居宅' },
+            { label: '車庫', val: '車庫' },
+            { label: '物置', val: '物置' },
+            { label: '店舗', val: '店舗' }
+          ]
+        },
+        {
+          key: 'structure',
+          label: '構造',
+          full: false,
+          chips: [
+            { label: '木造', val: '木造' },
+            { label: '軽鉄', val: '軽量鉄骨造' },
+            { label: '鉄骨', val: '鉄骨造' },
+            { label: 'RC',   val: '鉄筋コンクリート造' }
+          ]
+        },
+        {
+          key: 'roof',
+          label: '屋根の種類',
+          full: true,
+          chips: [
+            { label: 'かわら', val: 'かわらぶき' },
+            { label: 'スレート', val: 'スレートぶき' },
+            { label: '亜鉛', val: '亜鉛メッキ鋼板ぶき' },
+            { label: '合金', val: '合金メッキ鋼板ぶき' },
+            { label: '陸屋根', val: '陸屋根' }
+          ]
+        }
       ];
+
       fields.forEach(function(f) {
         var fDiv = document.createElement('div');
         fDiv.className = 'sec-field' + (f.full ? ' full-width' : '');
@@ -3866,8 +3707,6 @@ document.addEventListener('DOMContentLoaded', function() {
         lbl.textContent = f.label;
         var inp = document.createElement('input');
         inp.type = 'text';
-        inp.setAttribute('list', f.list);
-        inp.placeholder = f.ph;
         inp.value = sec[f.key];
         inp.addEventListener('input', function(e) { updateSection(sIdx, f.key, e.target.value); });
         fDiv.appendChild(lbl);
@@ -3876,14 +3715,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (f.chips && f.chips.length > 0) {
           var chipRow = document.createElement('div');
           chipRow.className = 'quick-chip-row';
-          f.chips.forEach(function(cText) {
+          f.chips.forEach(function(cItem) {
             var cBtn = document.createElement('button');
             cBtn.type = 'button';
             cBtn.className = 'quick-chip';
-            cBtn.textContent = cText;
+            cBtn.textContent = cItem.label;
             cBtn.addEventListener('click', function() {
-              inp.value = cText;
-              updateSection(sIdx, f.key, cText);
+              inp.value = cItem.val;
+              updateSection(sIdx, f.key, cItem.val);
             });
             chipRow.appendChild(cBtn);
           });
@@ -3964,9 +3803,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function calculateAndDraw() {
     var curBldg = getCurBldg();
-    var wallThickMm = Math.max(0, parseFloat(curBldg.wallThickness) || 0);
+    var rawWt = String(curBldg.wallThickness === undefined || curBldg.wallThickness === null ? '' : curBldg.wallThickness).trim();
+    var hasWallInput = (rawWt !== '' && !isNaN(parseFloat(rawWt)));
+    var wallThickMm = hasWallInput ? Math.max(0, parseFloat(rawWt)) : 0;
     var halfWallM = (wallThickMm / 2) / 1000.0;
-    document.getElementById('halfWallDisplay').value = (wallThickMm / 2).toFixed(1) + ' mm (' + halfWallM.toFixed(4) + ' m)';
+
+    document.getElementById('halfWallDisplay').value = hasWallInput
+      ? ((wallThickMm / 2).toFixed(1) + ' mm (' + halfWallM.toFixed(4) + ' m)')
+      : '未入力（0 mm扱い）';
 
     var isCenter = (viewMode === 'center');
     var badge = document.getElementById('modeBadge');
@@ -4058,8 +3902,13 @@ document.addEventListener('DOMContentLoaded', function() {
       banner.className = 'closure-banner closure-ng';
       banner.innerHTML = '<span>⚠ 外壁厚より狭い凹凸があるため壁芯線が反転しています</span><span>壁厚確認</span>';
     } else if (currentFloorData.outer.isClosed) {
-      banner.className = 'closure-banner closure-ok';
-      banner.innerHTML = '<span>✔ 閉合 OK</span><span>誤差: ' + err.toFixed(3) + ' m</span>';
+      if (isCenter && !hasWallInput) {
+        banner.className = 'closure-banner closure-warn';
+        banner.innerHTML = '<span>⚠ 外壁厚が未入力です（0mmで計算中）</span><span>閉合OK</span>';
+      } else {
+        banner.className = 'closure-banner closure-ok';
+        banner.innerHTML = '<span>✔ 閉合 OK</span><span>誤差: ' + err.toFixed(3) + ' m</span>';
+      }
     } else {
       banner.className = 'closure-banner closure-ng';
       var remX = (-currentFloorData.outer.dx).toFixed(3);
@@ -4079,11 +3928,11 @@ document.addEventListener('DOMContentLoaded', function() {
     else if (hasInput && !currentFloorData.outer.isClosed) warnTag = ' ※未閉合参考値';
 
     document.getElementById('floorAreaLabel').textContent = currentFloorData.name + ' 床面積（' + modeText + '）';
-    document.getElementById('floorAreaVal').textContent = currentFloorData.area.toFixed(2) + ' ㎡ (' + (currentFloorData.area * 0.3025).toFixed(2) + '坪)';
+    document.getElementById('floorAreaVal').textContent = currentFloorData.area.toFixed(2) + ' ㎡';
     document.getElementById('floorAreaSub').textContent = '端数切捨前: ' + currentFloorData.rawArea.toFixed(4) + ' ㎡' + warnTag;
 
     document.getElementById('totalAreaLabel').textContent = curBldg.label + ' 総面積（全' + curBldg.floors.length + '階）';
-    document.getElementById('totalAreaVal').textContent = bldgTotalFlooredArea.toFixed(2) + ' ㎡ (' + (bldgTotalFlooredArea * 0.3025).toFixed(2) + '坪)';
+    document.getElementById('totalAreaVal').textContent = bldgTotalFlooredArea.toFixed(2) + ' ㎡';
 
     var totalAreaSubEl = document.getElementById('totalAreaSub');
     if (buildings.length > 1) {
