@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>建物図面・現場野帳アプリ v1.15</title>
+<title>建物図面・現場野帳アプリ v1.16</title>
 <style>
   :root {
     --primary: #2563eb;
@@ -101,22 +101,22 @@
   /* 現場名・ファイル保存バー */
   .site-bar {
     display: flex;
-    gap: 5px;
+    gap: 4px;
     align-items: center;
     background: var(--card);
-    padding: 7px 9px;
+    padding: 7px 8px;
     border-radius: 10px;
     margin-bottom: 8px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.06);
   }
   .site-input {
     flex: 1;
-    min-width: 80px;
+    min-width: 56px;
     height: 35px;
-    padding: 4px 8px;
+    padding: 4px 7px;
     border: 1px solid var(--border);
     border-radius: 6px;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     font-weight: bold;
     color: var(--text);
   }
@@ -127,18 +127,19 @@
   }
   .site-btn {
     height: 35px;
-    padding: 0 8px;
+    padding: 0 7px;
     border: none;
     border-radius: 6px;
     font-weight: bold;
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     cursor: pointer;
     white-space: nowrap;
     touch-action: manipulation;
   }
-  .btn-save { background: #0f766e; color: #fff; }
-  .btn-load { background: #e2e8f0; color: #1e293b; }
-  .btn-new  { background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; }
+  .btn-sample { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+  .btn-save   { background: #0f766e; color: #fff; }
+  .btn-load   { background: #e2e8f0; color: #1e293b; }
+  .btn-new    { background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; }
 
   /* 建物タブ ＆ 階タブ */
   .tab-row {
@@ -874,6 +875,97 @@
   }
 
   /* =========================================================
+     実在間取りテストプリセット（モーダル）スタイル
+     ========================================================= */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+  }
+  .modal-backdrop.open {
+    display: flex;
+  }
+  .modal-card {
+    background: #ffffff;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+  }
+  .modal-head {
+    padding: 11px 14px;
+    background: #1e293b;
+    color: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+    font-size: 0.92rem;
+  }
+  .modal-close-btn {
+    background: rgba(255,255,255,0.18);
+    border: none;
+    color: #ffffff;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-weight: bold;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  .modal-body {
+    padding: 10px 12px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .sample-item {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 9px 11px;
+    background: #f8fafc;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+  .sample-item:active, .sample-item:hover {
+    background: #eff6ff;
+    border-color: var(--primary);
+  }
+  .sample-item-title {
+    font-weight: bold;
+    font-size: 0.88rem;
+    color: #0f172a;
+    margin-bottom: 3px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+  }
+  .sample-tag {
+    font-size: 0.68rem;
+    background: #dbeafe;
+    color: #1e40af;
+    padding: 1px 6px;
+    border-radius: 10px;
+    white-space: nowrap;
+  }
+  .sample-item-desc {
+    font-size: 0.76rem;
+    color: #475569;
+    line-height: 1.4;
+  }
+
+  /* =========================================================
      PDF出力（A4印刷用レポート）専用スタイル
      ========================================================= */
   #printReportArea {
@@ -893,7 +985,7 @@
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
     }
-    .container {
+    .container, .modal-backdrop {
       display: none !important;
     }
     #printReportArea {
@@ -1079,7 +1171,7 @@
   <!-- アプリタイトル＆バージョン表示 -->
   <div class="app-ver-bar">
     <span class="app-ver-title">建物図面・現場野帳アプリ</span>
-    <span class="app-ver-badge" id="appVersionBadge">v1.15</span>
+    <span class="app-ver-badge" id="appVersionBadge">v1.16</span>
   </div>
 
   <!-- 実測 / 壁芯 切替トグル -->
@@ -1094,9 +1186,10 @@
     </div>
   </div>
 
-  <!-- 現場名 ＆ ファイル保存・読込バー -->
+  <!-- 現場名 ＆ 例題・ファイル保存・読込バー -->
   <div class="site-bar">
     <input type="text" id="siteName" class="site-input" placeholder="現場名（例：姶良市〇〇邸）">
+    <button type="button" id="btnOpenSamples" class="site-btn btn-sample">🏠 例題</button>
     <button type="button" id="btnSaveFile" class="site-btn btn-save">💾 保存</button>
     <button type="button" id="btnLoadFile" class="site-btn btn-load">📂 読込</button>
     <button type="button" id="btnNewSite" class="site-btn btn-new">新規</button>
@@ -1241,6 +1334,17 @@
 
 </div>
 
+<!-- 実在間取りテストプリセット選択モーダル -->
+<div id="sampleModal" class="modal-backdrop">
+  <div class="modal-card">
+    <div class="modal-head">
+      <span>🏠 テスト用・実在戸建て間取りサンプル</span>
+      <button type="button" id="btnCloseSamples" class="modal-close-btn">閉じる</button>
+    </div>
+    <div class="modal-body" id="sampleListBody"></div>
+  </div>
+</div>
+
 <!-- PDF印刷用専用エリア -->
 <div id="printReportArea"></div>
 
@@ -1279,7 +1383,7 @@ window.onerror = function(msg, url, line) {
 };
 
 document.addEventListener('DOMContentLoaded', function() {
-  var APP_VERSION = 'v1.15';
+  var APP_VERSION = 'v1.16';
   var verBadge = document.getElementById('appVersionBadge');
   if (verBadge) verBadge.textContent = APP_VERSION;
 
@@ -1297,6 +1401,373 @@ document.addEventListener('DOMContentLoaded', function() {
 
   var SEC_COLORS = ['#2563eb', '#059669', '#9333ea', '#d97706', '#0891b2', '#be185d'];
   var CIRCLED_NUMS = ['①', '②', '③', '④', '⑤', '⑥'];
+
+  // =========================================================
+  // 様々な一軒家の実際の間取りテストデータ（全6パターン）
+  // ※外法実測値（壁芯＋外壁厚）で閉合・面積計算をリアルに再現
+  // =========================================================
+  var HOUSE_SAMPLES = [
+    {
+      title: '1. 標準総2階建て（尺モジュール・玄関ポーチ入隅）',
+      tag: '木造2階建 / 壁厚150mm',
+      desc: '1階に玄関ポーチ欠き込み(1.820m×0.910m)を持つ4LDK木造住宅。2階は1F始点からずれた総2階配置。1F重ね表示・標準壁芯変換の検証に最適。',
+      siteName: '姶良市西餅田120-5（標準4LDK木造）',
+      buildings: [
+        {
+          label: '主たる建物',
+          wallThickness: 150,
+          splitMode: 'auto',
+          sections: [
+            { kind: '居宅', structure: '木造', roof: 'かわらぶき', note: '' }
+          ],
+          floors: [
+            {
+              name: '1階',
+              offsetX: 0,
+              offsetY: 0,
+              edges: [
+                { dir: 'R', len: '7.430', secIdx: 0 },
+                { dir: 'D', len: '9.250', secIdx: 0 },
+                { dir: 'L', len: '5.610', secIdx: 0 },
+                { dir: 'U', len: '0.910', secIdx: 0 },
+                { dir: 'L', len: '1.820', secIdx: 0 },
+                { dir: 'U', len: '8.340', secIdx: 0 }
+              ],
+              extensions: [
+                { edgeIdx: 0, side: 'start', dist: '3.450' },
+                { edgeIdx: 1, side: 'end', dist: '4.120' },
+                { edgeIdx: 2, side: 'end', dist: '2.850' }
+              ]
+            },
+            {
+              name: '2階',
+              offsetX: 0,
+              offsetY: 0,
+              edges: [
+                { dir: 'R', len: '7.430', secIdx: 0 },
+                { dir: 'D', len: '7.430', secIdx: 0 },
+                { dir: 'L', len: '7.430', secIdx: 0 },
+                { dir: 'U', len: '7.430', secIdx: 0 }
+              ],
+              extensions: []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      title: '2. L字型平屋建て（中庭ウッドデッキ入隅＋勝手口増築）',
+      tag: '平屋・2屋根区分 / 壁厚150mm',
+      desc: '中庭を抱えるL字型の平屋主屋（かわらぶき）に、北東側へ鋼板ぶきの水回り・勝手口を増築した間取り。区分境界（自動L字）と主たる部分判定のテスト用。',
+      siteName: '姶良市東餅田458-2（L字平屋・増築）',
+      buildings: [
+        {
+          label: '主たる建物',
+          wallThickness: 150,
+          splitMode: 'auto',
+          sections: [
+            { kind: '居宅', structure: '木造', roof: 'かわらぶき', note: '既存主屋' },
+            { kind: '居宅', structure: '木造', roof: '合金メッキ鋼板ぶき', note: '北東側キッチン増築' }
+          ],
+          floors: [
+            {
+              name: '1階',
+              offsetX: 0,
+              offsetY: 0,
+              edges: [
+                { dir: 'R', len: '6.520', secIdx: 0 },
+                { dir: 'D', len: '3.640', secIdx: 0 },
+                { dir: 'R', len: '2.730', secIdx: 1 },
+                { dir: 'U', len: '1.820', secIdx: 1 },
+                { dir: 'R', len: '2.730', secIdx: 1 },
+                { dir: 'D', len: '5.610', secIdx: 1 },
+                { dir: 'L', len: '5.460', secIdx: 0 },
+                { dir: 'D', len: '3.640', secIdx: 0 },
+                { dir: 'L', len: '6.520', secIdx: 0 },
+                { dir: 'U', len: '11.070', secIdx: 0 }
+              ],
+              extensions: [
+                { edgeIdx: 0, side: 'start', dist: '5.200' },
+                { edgeIdx: 5, side: 'end', dist: '6.350' },
+                { edgeIdx: 8, side: 'end', dist: '3.800' }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      title: '3. 現代モダン2階建て（ビルトイン車庫・吹き抜け欠き込み）',
+      tag: '軽量鉄骨2階建 / 壁厚160mm',
+      desc: '1階に玄関・袖壁（0.455m凹凸）と突出リビングを持つ10辺形状。2階はLDK上部吹き抜け部分を除いたコの字型平面（1F始点ずれ X:0.910m）。',
+      siteName: '姶良市宮島町32-11（吹き抜けモダン邸）',
+      buildings: [
+        {
+          label: '主たる建物',
+          wallThickness: 160,
+          splitMode: 'auto',
+          sections: [
+            { kind: '居宅', structure: '軽量鉄骨造', roof: 'スレートぶき', note: '' }
+          ],
+          floors: [
+            {
+              name: '1階',
+              offsetX: 0,
+              offsetY: 0,
+              edges: [
+                { dir: 'R', len: '5.620', secIdx: 0 },
+                { dir: 'D', len: '1.820', secIdx: 0 },
+                { dir: 'R', len: '3.640', secIdx: 0 },
+                { dir: 'D', len: '7.440', secIdx: 0 },
+                { dir: 'L', len: '4.550', secIdx: 0 },
+                { dir: 'D', len: '0.455', secIdx: 0 },
+                { dir: 'L', len: '1.820', secIdx: 0 },
+                { dir: 'U', len: '0.455', secIdx: 0 },
+                { dir: 'L', len: '2.890', secIdx: 0 },
+                { dir: 'U', len: '9.260', secIdx: 0 }
+              ],
+              extensions: [
+                { edgeIdx: 0, side: 'start', dist: '2.450' },
+                { edgeIdx: 3, side: 'end', dist: '5.100' }
+              ]
+            },
+            {
+              name: '2階',
+              offsetX: 0.910,
+              offsetY: 1.820,
+              edges: [
+                { dir: 'R', len: '8.350', secIdx: 0 },
+                { dir: 'D', len: '7.440', secIdx: 0 },
+                { dir: 'L', len: '3.640', secIdx: 0 },
+                { dir: 'U', len: '2.730', secIdx: 0 },
+                { dir: 'L', len: '1.820', secIdx: 0 },
+                { dir: 'D', len: '2.730', secIdx: 0 },
+                { dir: 'L', len: '2.890', secIdx: 0 },
+                { dir: 'U', len: '7.440', secIdx: 0 }
+              ],
+              extensions: []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      title: '4. 農家住宅（母屋2階建＋附属建物 車庫・物置）',
+      tag: '複数棟構成 / 壁厚150mm・120mm',
+      desc: '下屋付きの大きな母屋（木造2階建）と、敷地内別棟の附属建物 符号1（軽量鉄骨造・車庫物置）の2棟セット。複数棟一括PDF出力の検証に最適。',
+      siteName: '姶良市蒲生町上久徳890（母屋＋車庫）',
+      buildings: [
+        {
+          label: '主たる建物',
+          wallThickness: 150,
+          splitMode: 'auto',
+          sections: [
+            { kind: '居宅', structure: '木造', roof: 'かわらぶき', note: '母屋' }
+          ],
+          floors: [
+            {
+              name: '1階',
+              offsetX: 0,
+              offsetY: 0,
+              edges: [
+                { dir: 'R', len: '11.070', secIdx: 0 },
+                { dir: 'D', len: '8.340', secIdx: 0 },
+                { dir: 'L', len: '3.640', secIdx: 0 },
+                { dir: 'D', len: '0.910', secIdx: 0 },
+                { dir: 'L', len: '7.430', secIdx: 0 },
+                { dir: 'U', len: '9.250', secIdx: 0 }
+              ],
+              extensions: [
+                { edgeIdx: 0, side: 'start', dist: '8.400' },
+                { edgeIdx: 1, side: 'end', dist: '11.200' },
+                { edgeIdx: 4, side: 'end', dist: '6.800' }
+              ]
+            },
+            {
+              name: '2階',
+              offsetX: 1.820,
+              offsetY: 0.910,
+              edges: [
+                { dir: 'R', len: '7.430', secIdx: 0 },
+                { dir: 'D', len: '5.610', secIdx: 0 },
+                { dir: 'L', len: '7.430', secIdx: 0 },
+                { dir: 'U', len: '5.610', secIdx: 0 }
+              ],
+              extensions: []
+            }
+          ]
+        },
+        {
+          label: '附属建物 符号1',
+          wallThickness: 120,
+          splitMode: 'auto',
+          sections: [
+            { kind: '車庫・物置', structure: '軽量鉄骨造', roof: '亜鉛メッキ鋼板ぶき', note: '東側車庫' }
+          ],
+          floors: [
+            {
+              name: '1階',
+              offsetX: 0,
+              offsetY: 0,
+              edges: [
+                { dir: 'R', len: '6.120', secIdx: 0 },
+                { dir: 'D', len: '5.580', secIdx: 0 },
+                { dir: 'L', len: '6.120', secIdx: 0 },
+                { dir: 'U', len: '5.580', secIdx: 0 }
+              ],
+              extensions: [
+                { edgeIdx: 0, side: 'end', dist: '2.150' },
+                { edgeIdx: 1, side: 'end', dist: '3.400' }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      title: '5. 狭小3階建て（メーターモジュール・斜線セットバック）',
+      tag: '鉄骨3階建 / 壁厚180mm',
+      desc: 'メーターモジュール（1.0m単位＋壁厚180mm）の都市型3階建て。北側斜線制限により2階(Y:+1.0m)、3階(Y:+2.0m)と階段状にセットバックする3階層データ。',
+      siteName: '鹿児島市中央町15-8（狭小3階建）',
+      buildings: [
+        {
+          label: '主たる建物',
+          wallThickness: 180,
+          splitMode: 'auto',
+          sections: [
+            { kind: '居宅', structure: '鉄骨造', roof: '合金メッキ鋼板ぶき', note: '' }
+          ],
+          floors: [
+            {
+              name: '1階',
+              offsetX: 0,
+              offsetY: 0,
+              edges: [
+                { dir: 'R', len: '5.180', secIdx: 0 },
+                { dir: 'D', len: '9.180', secIdx: 0 },
+                { dir: 'L', len: '5.180', secIdx: 0 },
+                { dir: 'U', len: '9.180', secIdx: 0 }
+              ],
+              extensions: [
+                { edgeIdx: 0, side: 'start', dist: '1.250' },
+                { edgeIdx: 0, side: 'end', dist: '1.400' },
+                { edgeIdx: 1, side: 'end', dist: '2.100' }
+              ]
+            },
+            {
+              name: '2階',
+              offsetX: 0,
+              offsetY: 1.000,
+              edges: [
+                { dir: 'R', len: '5.180', secIdx: 0 },
+                { dir: 'D', len: '8.180', secIdx: 0 },
+                { dir: 'L', len: '5.180', secIdx: 0 },
+                { dir: 'U', len: '8.180', secIdx: 0 }
+              ],
+              extensions: []
+            },
+            {
+              name: '3階',
+              offsetX: 0,
+              offsetY: 2.000,
+              edges: [
+                { dir: 'R', len: '5.180', secIdx: 0 },
+                { dir: 'D', len: '6.180', secIdx: 0 },
+                { dir: 'L', len: '5.180', secIdx: 0 },
+                { dir: 'U', len: '6.180', secIdx: 0 }
+              ],
+              extensions: []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      title: '6. 増改築古民家（3屋根区分・0.455m凹凸15辺＋附属物置）',
+      tag: '3区分複雑形状 / 壁厚105mm',
+      desc: 'かわらぶき主屋に亜鉛メッキ鋼板ぶき・セメントかわらぶきの2箇所を増築した15辺凹凸形状＋附属建物（物置）。区分バッジ・狭小ラベル配置の限界テスト用。',
+      siteName: '○○市○○1234-5（3区分複雑形状）',
+      buildings: [
+        {
+          label: '主たる建物',
+          wallThickness: 105,
+          splitMode: 'auto',
+          sections: [
+            { kind: '居宅', structure: '木造', roof: 'かわらぶき', note: '' },
+            { kind: '居宅', structure: '木造', roof: '亜鉛メッキ鋼板ぶき', note: '増築部分' },
+            { kind: '居宅', structure: '木造', roof: 'セメントかわらぶき', note: '増築部分2' }
+          ],
+          floors: [
+            {
+              name: '1階',
+              offsetX: 0,
+              offsetY: 0,
+              edges: [
+                { dir: 'R', len: '5.000', secIdx: 1 },
+                { dir: 'D', len: '2.000', secIdx: 1 },
+                { dir: 'R', len: '2.000', secIdx: 0 },
+                { dir: 'U', len: '2.000', secIdx: 2 },
+                { dir: 'R', len: '2.000', secIdx: 2 },
+                { dir: 'D', len: '2.000', secIdx: 2 },
+                { dir: 'D', len: '3.000', secIdx: 0 },
+                { dir: 'L', len: '5.000', secIdx: 0 },
+                { dir: 'D', len: '0.455', secIdx: 0 },
+                { dir: 'L', len: '1.000', secIdx: 0 },
+                { dir: 'U', len: '0.455', secIdx: 0 },
+                { dir: 'L', len: '1.000', secIdx: 0 },
+                { dir: 'U', len: '2.000', secIdx: 0 },
+                { dir: 'L', len: '2.000', secIdx: 1 },
+                { dir: 'U', len: '3.000', secIdx: 1 }
+              ],
+              extensions: [
+                { edgeIdx: 5, side: 'end', dist: '12.650' },
+                { edgeIdx: 0, side: 'start', dist: '5.370' },
+                { edgeIdx: 7, side: 'end', dist: '8.670' }
+              ]
+            },
+            {
+              name: '2階',
+              offsetX: 2.000,
+              offsetY: 2.000,
+              edges: [
+                { dir: 'R', len: '7.000', secIdx: 0 },
+                { dir: 'D', len: '3.000', secIdx: 0 },
+                { dir: 'L', len: '7.000', secIdx: 0 },
+                { dir: 'U', len: '3.000', secIdx: 0 }
+              ],
+              extensions: []
+            }
+          ]
+        },
+        {
+          label: '附属建物 符号1',
+          wallThickness: 150,
+          splitMode: 'auto',
+          sections: [
+            { kind: '物置', structure: '木造', roof: 'スレートぶき', note: '' }
+          ],
+          floors: [
+            {
+              name: '1階',
+              offsetX: 0,
+              offsetY: 0,
+              edges: [
+                { dir: 'R', len: '4.000', secIdx: 0 },
+                { dir: 'D', len: '4.000', secIdx: 0 },
+                { dir: 'L', len: '4.000', secIdx: 0 },
+                { dir: 'U', len: '4.000', secIdx: 0 }
+              ],
+              extensions: [
+                { edgeIdx: 0, side: 'end', dist: '6.500' },
+                { edgeIdx: 1, side: 'end', dist: '5.800' },
+                { edgeIdx: 2, side: 'start', dist: '6.700' }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ];
 
   var viewMode = 'outer';
   var siteName = '';
@@ -1435,6 +1906,46 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   loadFromLocalStorage();
+
+  // サンプル間取りプリセット読み込み処理
+  function loadSamplePreset(sampleIdx) {
+    var smp = HOUSE_SAMPLES[sampleIdx];
+    if (!smp) return;
+    siteName = smp.siteName;
+    buildings = JSON.parse(JSON.stringify(smp.buildings));
+    normalizeFloorsData();
+    currentBldgIdx = 0;
+    currentFloorIdx = 0;
+    resetCamera();
+    saveToLocalStorage();
+    closeSampleModal();
+    renderAll();
+  }
+
+  function openSampleModal() {
+    var listBody = document.getElementById('sampleListBody');
+    listBody.innerHTML = '';
+    HOUSE_SAMPLES.forEach(function(smp, idx) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'sample-item';
+      btn.innerHTML =
+        '<div class="sample-item-title">' +
+          '<span>' + escapeHtml(smp.title) + '</span>' +
+          '<span class="sample-tag">' + escapeHtml(smp.tag) + '</span>' +
+        '</div>' +
+        '<div class="sample-item-desc">' + escapeHtml(smp.desc) + '</div>';
+      btn.addEventListener('click', function() {
+        loadSamplePreset(idx);
+      });
+      listBody.appendChild(btn);
+    });
+    document.getElementById('sampleModal').classList.add('open');
+  }
+
+  function closeSampleModal() {
+    document.getElementById('sampleModal').classList.remove('open');
+  }
 
   // 不動産登記規則第115条準拠：床面積の小数点第2位未満切り捨て
   function floorArea2(val) {
@@ -1945,6 +2456,27 @@ document.addEventListener('DOMContentLoaded', function() {
       '壁芯全体=' + t2TotalC.toFixed(4) + '㎡ / 左右差=' + t2Diff.toFixed(5) + '㎡'
     );
 
+    // 全6種サンプル間取りデータの閉合＆面積整合テスト
+    var sampleFailNames = [];
+    HOUSE_SAMPLES.forEach(function(smp, idx) {
+      smp.buildings.forEach(function(b) {
+        b.floors.forEach(function(f) {
+          var o = computeOuterPoints(f.edges, f.offsetX || 0, f.offsetY || 0);
+          var tot = calcArea(o.pts);
+          var sRes = computeSectionAreasAndBridges(o.pts, f.edges, b.sections.length, b.splitMode || 'auto');
+          var sSum = sRes.areas.reduce(function(a, c) { return a + c; }, 0);
+          if (!o.isClosed || o.geomCheck.hasError || Math.abs(tot - sSum) > 1e-3) {
+            sampleFailNames.push('サンプル' + (idx + 1) + '(' + f.name + ')');
+          }
+        });
+      });
+    });
+    recordTest(
+      '収録サンプル6種・全棟全階 閉合＆区分面積一致',
+      sampleFailNames.length === 0,
+      sampleFailNames.length === 0 ? '全6サンプル・全階層 閉合誤差0.000m＆区分面積完全一致' : ('異常: ' + sampleFailNames.join(', '))
+    );
+
     var curB = getCurBldg();
     var curBPass = true;
     var curBDetails = [];
@@ -2018,6 +2550,7 @@ document.addEventListener('DOMContentLoaded', function() {
         rawArea: rawArea,
         area: flooredArea,
         secAreas: secRes.areas,
+        secPolys: secRes.secPolys,
         bridges: secRes.bridges,
         isBridgeOutside: secRes.isBridgeOutside,
         extLines: extLines,
@@ -2223,6 +2756,12 @@ document.addEventListener('DOMContentLoaded', function() {
     siteName = e.target.value;
     saveToLocalStorage();
   });
+  document.getElementById('btnOpenSamples').addEventListener('click', openSampleModal);
+  document.getElementById('btnCloseSamples').addEventListener('click', closeSampleModal);
+  document.getElementById('sampleModal').addEventListener('click', function(e) {
+    if (e.target === this) closeSampleModal();
+  });
+
   document.getElementById('btnSaveFile').addEventListener('click', exportSiteFile);
   document.getElementById('btnLoadFile').addEventListener('click', function() {
     var fi = document.getElementById('fileInput');
@@ -2404,6 +2943,14 @@ document.addEventListener('DOMContentLoaded', function() {
       if (intersect) inside = !inside;
     }
     return inside;
+  }
+
+  function isPointStrictlyInsideAnyPoly(pt, polyList) {
+    if (!polyList || polyList.length === 0) return false;
+    for (var i = 0; i < polyList.length; i++) {
+      if (isPointStrictlyInsidePolygon(pt, polyList[i])) return true;
+    }
+    return false;
   }
 
   function isSegmentInsideOrOnPolygon(p1, p2, polyPts) {
@@ -2728,14 +3275,25 @@ document.addEventListener('DOMContentLoaded', function() {
     return (sign * s2) / 2.0;
   }
 
+  function toClosedLoop(loopPts) {
+    if (!loopPts || loopPts.length < 3) return [];
+    var res = loopPts.map(function(p) { return { x: p.x, y: p.y }; });
+    res.push({ x: res[0].x, y: res[0].y });
+    return res;
+  }
+
   function computeSectionAreasAndBridges(pts, edges, numSections, splitMode) {
     var areas = [];
+    var secPolys = [];
     var bridges = [];
     var isBridgeOutside = false;
-    for (var s = 0; s < numSections; s++) areas.push(0);
+    for (var s = 0; s < numSections; s++) {
+      areas.push(0);
+      secPolys.push([]);
+    }
 
     if (!pts || pts.length < 4 || !edges || edges.length === 0) {
-      return { areas: areas, bridges: bridges, isBridgeOutside: false };
+      return { areas: areas, secPolys: secPolys, bridges: bridges, isBridgeOutside: false };
     }
 
     var totalSigned2 = 0;
@@ -2745,7 +3303,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var sign = totalSigned2 >= 0 ? 1 : -1;
     var totalArea = Math.abs(totalSigned2) / 2.0;
     if (totalArea <= 1e-6) {
-      return { areas: areas, bridges: bridges, isBridgeOutside: false };
+      return { areas: areas, secPolys: secPolys, bridges: bridges, isBridgeOutside: false };
     }
 
     var nEdges = Math.min(edges.length, pts.length - 1);
@@ -2806,6 +3364,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       if (arcs.length === 1) {
         areas[arcs[0].secIdx] += remTotalArea;
+        secPolys[arcs[0].secIdx].push(closedCurPts);
         break;
       }
 
@@ -2829,6 +3388,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var loop0 = a0Pts.slice();
         if (corner) loop0.push(corner);
         var area0 = calcSignedLoopArea(loop0, sign);
+        secPolys[arc0.secIdx].push(toClosedLoop(loop0));
 
         var a1Pts = [];
         for (var k = 0; k <= arc1.count; k++) {
@@ -2838,6 +3398,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var loop1 = a1Pts.slice();
         if (corner) loop1.push(corner);
         var area1 = calcSignedLoopArea(loop1, sign);
+        secPolys[arc1.secIdx].push(toClosedLoop(loop1));
 
         if (area0 >= -1e-5 && area1 >= -1e-5 && Math.abs((area0 + area1) - remTotalArea) < 0.05) {
           areas[arc0.secIdx] += Math.max(0, area0);
@@ -2874,12 +3435,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (cutArea > 1e-5 && cutArea < remTotalArea - 1e-5) {
           var insideOk = isBridgeLineInsidePolygon(bLine, closedCurPts);
           if (!bestCand) {
-            bestCand = { arc: arc, bLine: bLine, corner: corner, cutArea: cutArea, insideOk: insideOk };
+            bestCand = { arc: arc, bLine: bLine, corner: corner, cutLoop: cutLoop, cutArea: cutArea, insideOk: insideOk };
           } else {
             if (insideOk && !bestCand.insideOk) {
-              bestCand = { arc: arc, bLine: bLine, corner: corner, cutArea: cutArea, insideOk: insideOk };
+              bestCand = { arc: arc, bLine: bLine, corner: corner, cutLoop: cutLoop, cutArea: cutArea, insideOk: insideOk };
             } else if (insideOk === bestCand.insideOk && cutArea < bestCand.cutArea) {
-              bestCand = { arc: arc, bLine: bLine, corner: corner, cutArea: cutArea, insideOk: insideOk };
+              bestCand = { arc: arc, bLine: bLine, corner: corner, cutLoop: cutLoop, cutArea: cutArea, insideOk: insideOk };
             }
           }
         }
@@ -2903,10 +3464,12 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         });
         areas[bestSec] += remTotalArea;
+        secPolys[bestSec].push(closedCurPts);
         break;
       }
 
       areas[bestCand.arc.secIdx] += bestCand.cutArea;
+      secPolys[bestCand.arc.secIdx].push(toClosedLoop(bestCand.cutLoop));
       pushUniqueBridge(bestCand.bLine, closedCurPts);
 
       var sIdxNode = bestCand.arc.startNodeIdx;
@@ -2959,7 +3522,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    return { areas: areas, bridges: bridges, isBridgeOutside: isBridgeOutside };
+    return { areas: areas, secPolys: secPolys, bridges: bridges, isBridgeOutside: isBridgeOutside };
   }
 
   function renderAll() {
@@ -3346,6 +3909,7 @@ document.addEventListener('DOMContentLoaded', function() {
         rawArea: rawArea,
         area: flooredArea,
         secAreas: floorSecAreas,
+        secPolys: secRes.secPolys,
         bridges: secRes.bridges,
         isBridgeOutside: secRes.isBridgeOutside,
         extLines: extLines,
@@ -3652,7 +4216,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var oy = Math.min(box.y2, b.y2) - Math.max(box.y1, b.y1);
         if (ox > 0 && oy > 0) {
           var area = ox * oy;
-          penalty += (b.type === 'label') ? (area * 10 + 300) : area;
+          penalty += (b.type === 'label') ? (area * 12 + 400) : area;
         }
       }
       return penalty;
@@ -3957,14 +4521,14 @@ document.addEventListener('DOMContentLoaded', function() {
         var outNy = -sux * outSign;
 
         secMidPoints[sIdx].push({ x: mx, y: my, inNx: -outNx, inNy: -outNy, lenPx: slen });
-        secInteriorCandidates[sIdx].push({ x: mx - outNx * 16, y: my - outNy * 16 });
-        secInteriorCandidates[sIdx].push({ x: mx - outNx * 28, y: my - outNy * 28 });
+        secInteriorCandidates[sIdx].push({ x: mx - outNx * 14, y: my - outNy * 14 });
+        secInteriorCandidates[sIdx].push({ x: mx - outNx * 24, y: my - outNy * 24 });
 
         if (mx < 4 || mx > W - 4 || my < 4 || my > H - 4) {
           continue;
         }
 
-        // シンプル配置：辺の中点のすぐ外側・内側・わずかなスライド＋狭小凹凸用2段外側候補
+        // シンプル配置：辺の中点のすぐ外側・内側・スライド＋狭小凹凸用の多段回避
         ctx.save();
         ctx.font = 'bold 10px sans-serif';
         var text = '#' + (i + 1) + ':' + segLen.toFixed(3);
@@ -3973,18 +4537,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
         var halfProj = (tw / 2) * Math.abs(outNx) + (th / 2) * Math.abs(outNy);
         var baseN = Math.ceil(halfProj + 5);
+        var isShortSeg = (slen < 34);
 
-        var candidates = [
-          { n: baseN, t: 0 },
-          { n: -baseN, t: 0 },
-          { n: baseN, t: 14 },
-          { n: baseN, t: -14 },
-          { n: baseN + 12, t: 0 },
-          { n: baseN + 12, t: 16 },
-          { n: baseN + 12, t: -16 },
-          { n: -baseN, t: 14 },
-          { n: -baseN, t: -14 }
-        ];
+        var candidates = isShortSeg
+          ? [
+              { n: baseN, t: -16 },
+              { n: baseN, t: 16 },
+              { n: baseN + 12, t: -18 },
+              { n: baseN + 12, t: 18 },
+              { n: baseN, t: 0 },
+              { n: -baseN, t: -14 },
+              { n: -baseN, t: 14 },
+              { n: -baseN, t: 0 }
+            ]
+          : [
+              { n: baseN, t: 0 },
+              { n: -baseN, t: 0 },
+              { n: baseN, t: 14 },
+              { n: baseN, t: -14 },
+              { n: baseN + 12, t: 0 },
+              { n: baseN + 12, t: 16 },
+              { n: baseN + 12, t: -16 },
+              { n: -baseN, t: 14 },
+              { n: -baseN, t: -14 }
+            ];
 
         var bestCand = null;
         for (var cIdx = 0; cIdx < candidates.length; cIdx++) {
@@ -4036,7 +4612,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    // 区分丸バッジ（①, ②, ③）を必ず各区画（建物ポリゴン内部）内に配置
+    // 区分丸バッジ（①, ②, ③）を「該当区分の区画ポリゴン内部」に厳密配置
     if (hasMultipleSecs) {
       ctx.save();
       ctx.font = 'bold 11px sans-serif';
@@ -4044,18 +4620,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
       var spiralOffsets = [
         { dx: 0, dy: 0 },
-        { dx: 0, dy: -12 }, { dx: 0, dy: 12 }, { dx: -12, dy: 0 }, { dx: 12, dy: 0 },
-        { dx: -10, dy: -10 }, { dx: 10, dy: -10 }, { dx: -10, dy: 10 }, { dx: 10, dy: 10 },
-        { dx: 0, dy: -22 }, { dx: 0, dy: 22 }, { dx: -22, dy: 0 }, { dx: 22, dy: 0 }
+        { dx: 0, dy: -10 }, { dx: 0, dy: 10 }, { dx: -10, dy: 0 }, { dx: 10, dy: 0 },
+        { dx: -9, dy: -9 }, { dx: 9, dy: -9 }, { dx: -9, dy: 9 }, { dx: 9, dy: 9 },
+        { dx: 0, dy: -18 }, { dx: 0, dy: 18 }, { dx: -18, dy: 0 }, { dx: 18, dy: 0 }
       ];
 
       curBldg.sections.forEach(function(sec, sIdx) {
         var anchors = secInteriorCandidates[sIdx];
         var mids = secMidPoints[sIdx];
-        if (!anchors || anchors.length === 0) return;
+        var mySecPolys = (curData.secPolys && curData.secPolys[sIdx]) ? curData.secPolys[sIdx] : [];
+        if ((!anchors || anchors.length === 0) && mySecPolys.length === 0) return;
 
         var allAnchors = [];
-        // 1. 該当区分の辺中点の重心（L字やコの字の区画の中心付近）
+
+        // 1. 該当区分ポリゴンの重心・バウンディングボックス中心を最優先候補に追加
+        mySecPolys.forEach(function(spoly) {
+          if (spoly.length >= 4) {
+            var sx = 0, sy = 0, cnt = spoly.length - 1;
+            var pMinX = Infinity, pMaxX = -Infinity, pMinY = Infinity, pMaxY = -Infinity;
+            for (var k = 0; k < cnt; k++) {
+              sx += spoly[k].x;
+              sy += spoly[k].y;
+              if (spoly[k].x < pMinX) pMinX = spoly[k].x;
+              if (spoly[k].x > pMaxX) pMaxX = spoly[k].x;
+              if (spoly[k].y < pMinY) pMinY = spoly[k].y;
+              if (spoly[k].y > pMaxY) pMaxY = spoly[k].y;
+            }
+            allAnchors.push(toScreen((pMinX + pMaxX) / 2, (pMinY + pMaxY) / 2));
+            allAnchors.push(toScreen(sx / cnt, sy / cnt));
+          }
+        });
+
+        // 2. 該当区分の辺中点の加重平均
         if (mids && mids.length > 0) {
           var wSum = 0, wx = 0, wy = 0;
           mids.forEach(function(m) {
@@ -4066,8 +4662,11 @@ document.addEventListener('DOMContentLoaded', function() {
           });
           allAnchors.push({ x: wx / wSum, y: wy / wSum });
         }
-        // 2. 各辺の内側候補点（浅め・深め）
-        anchors.forEach(function(a) { allAnchors.push(a); });
+
+        // 3. 各辺の内側候補点
+        if (anchors) {
+          anchors.forEach(function(a) { allAnchors.push(a); });
+        }
 
         var bestBadge = null;
         for (var aIdx = 0; aIdx < allAnchors.length; aIdx++) {
@@ -4080,7 +4679,11 @@ document.addEventListener('DOMContentLoaded', function() {
             var insidePenalty = 0;
             if (isPolyClosed) {
               var wPt = toWorld(bx, by);
-              if (!isPointStrictlyInsidePolygon(wPt, pts)) {
+              if (mySecPolys.length > 0) {
+                if (!isPointStrictlyInsideAnyPoly(wPt, mySecPolys)) {
+                  insidePenalty = 80000;
+                }
+              } else if (!isPointStrictlyInsidePolygon(wPt, pts)) {
                 insidePenalty = 50000;
               }
             }
